@@ -22,6 +22,8 @@ else
 	exit 0
 fi
 
+echo "$timestamp updating PiE server"
+
 echo "$timestamp In folder: $PWD" # called from commander, we get /home/pi/pie/admin_app
 cd ..
 
