@@ -1,0 +1,168 @@
+<span ng-if="status.trial.config.hardware.serial.useSerial">
+	<button type="button"
+		class="btn btn-link btn-sm"
+		ng-click="showMotor = ! showMotor">
+		<span ng-show="showMotor">
+			<i class="fa fa-chevron-down" aria-hidden="true"></i>
+		</span>
+		<span ng-show="! showMotor">
+			<i class="fa fa-chevron-right" aria-hidden="true"></i>
+		</span>
+	</button>
+	Motor
+
+<span ng-if="showMotor">
+	<ng-form name="arduinoForm" ng-controller="arduinoFormController">
+
+		<button type="button"
+			class="btn btn-primary btn-sm"
+			ng-disabled="arduinoForm.$invalid || ! allowParamEdit()"
+			ng-click="submitForm()">
+			Upload to Arduino
+		</button>
+
+	<!-- this gets reset in treadmill.js with $scope.arduinoForm.$setPristine()-->
+	<span ng-if="arduinoForm.$dirty" style="color:red;">
+	Please upload changes
+	</span>
+
+	<span ng-show="status.serialError != ''" style="color:red">
+		{{ status.serialError }}
+	</span>
+
+	<div class="table-responsive">
+	<table class="table short-row" style="border-left: 3px solid gray; width: auto;">
+	<tr>
+	<td>
+		<label>Epochs
+		<input style="width: 5em" 
+			name = "numberofrepeats"
+			type="number"
+			ng-model="data.motorNumEpochs"
+			ng-change="motorParamChange()"
+			ng-disabled="! allowParamEdit()"	
+			min="1"
+			step="1"
+			required>
+		</label>
+	</td>
+	<td>		
+		<label>Epoch Duration (ms)
+		<input style="width: 6em" 
+			type="number"
+			ng-model="data.motorRepeatDuration"
+			ng-change="motorParamChange()"
+			ng-disabled="! allowParamEdit()"	
+			min="1"
+			step="1"
+			required>
+		</label>
+				
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+		
+		<label>Delay (ms)
+		<input style="width: 5em" 
+			type="number"
+			ng-model="data.motorDel"
+			ng-change="motorParamChange()"
+			ng-disabled="! allowParamEdit()"	
+			min="0"
+			step="1"
+			required>
+		</label>
+	</td>
+	<td>		
+		<label>Pulse Duration (ms)
+		<input style="width: 5em" 
+			type="number"
+			ng-model="data.motorDur"
+			ng-change="motorParamChange()"
+			ng-disabled="! allowParamEdit()"	
+			min="0"
+			step="1"
+			required>
+		</label>
+				
+	</td>
+	</tr>
+
+	<tr>
+	<td>
+
+		<label>Speed (au)
+		<input style="width: 5em" 
+			type="number"
+			ng-model="data.motorSpeed"
+			ng-change="motorParamChange()"
+			ng-disabled="! allowParamEdit()"	
+			min="1"
+			step="1"
+			max="700"
+			required>
+		</label>
+	</td>
+	<td>		
+		<label>Direction
+		<select name="" 
+			ng-init="data.motorDirection" 
+			ng-model="data.motorDirection" 
+			ng-Change="motorParamChange()" 
+			ng-disabled="! allowParamEdit()"	
+			>
+		  <option value="Forward">Forward</option>
+		  <option value="Reverse">Reverse</option>
+		</select>
+		</label>
+  
+	</td>
+	</tr>
+	<tr>
+	<td>		
+		<label>During Pulse
+		<select name="" 
+			ng-init="data.duringPulse" 
+			ng-model="data.duringPulse" 
+			ng-Change="motorParamChange()" 
+			ng-disabled="! allowParamEdit()"	
+			>
+		  <option value="Rotate">Rotate</option>
+		  <option value="Locked">Locked</option>
+		  <option value="Free">Free</option>
+		</select>
+		</label>
+  
+	</td>
+	<td>		
+		<label>Between Pulse
+		<select name="" 
+			ng-init="data.betweenPulse" 
+			ng-model="data.betweenPulse" 
+			ng-Change="motorParamChange()" 
+			ng-disabled="! allowParamEdit()"	
+			>
+		  <option value="Locked">Locked</option>
+		  <option value="Free">Free</option>
+		</select>
+		</label>
+  
+	</td>
+	
+	</tr>
+	
+	<!-- PLOTLY -->
+	<tr>
+	<td colspan=2>
+		<div id="test_plotly" ng-controller="arduinoFormController"></div>
+	</td>
+	</tr>
+
+	</table>
+	</div>
+	</ng-form> <!-- motor parameters -->
+
+</span> <!-- showMotor -->
+</span> <!-- use serial -->

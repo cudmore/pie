@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20180603
+# Purpose: Bash script to install uv4l for video streaming
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+echo '==='
+echo '=== install-uv4l: Configuring source repositories for uv4l'
+echo '==='
+
+curl http://www.linux-projects.org/listing/uv4l_repo/lrkey.asc | sudo apt-key add -
+
+# check if stretch_install is already in file /etc/apt/sources.list
+if cat /etc/os-release | grep -q "stretch"
+then
+	echo 'install-uv4l: Good, you are running Raspian Stretch'
+	uv4l_deb='deb http://www.linux-projects.org/listing/uv4l_repo/raspbian/stretch stretch main'
+fi
+
+if cat /etc/os-release | grep -q "jessie"
+then
+	echo 'install-uv4l: Good, you are running Raspian Jessie'
+	uv4l_deb='deb http://www.linux-projects.org/listing/uv4l_repo/raspbian/ jessie  main'
+fi
+
+# if uv4l_deb is empty, neither stretch or jessie -->> ERROR
+if [[ -z  $uv4l_deb  ]] && echo "ERROR: uv4l will only install on raspian jessie or stretch"
+then
+	#exit 1
+	echo ''
+else
+
+	#echo '=== 3/5 checking /etc/apt/sources.list'
+	if grep -xq "$uv4l_deb" /etc/apt/sources.list
+	then
+		# found
+		echo '=== install-uv4l: /etc/apt/sources.list already has the line'
+		echo '   ' $uv4l_deb
+		echo ''
+	else
+		# not found
+		echo '=== install-uv4l: Appending line to /etc/apt/sources.list'
+		echo '   ' $uv4l_deb
+		echo $uv4l_deb | sudo tee -a /etc/apt/sources.list
+	fi
+
+	echo ' '
+	echo '==='
+	echo '=== install-uv4l: Installing uv4l (please wait)'
+	echo "    You may get 'GPG error' but this is expected and OK"
+	echo "    You may get 'WARNING: The following packages cannot be authenticated!' but this is expected and OK"
+	echo '==='
+	sudo apt-get -qq update
+	sudo apt-get -qq --allow-unauthenticated install uv4l uv4l-server uv4l-raspicam
+
+fi
+
+#echo ' '
+#echo '==='
+#echo '=== Installing libav-tools (e.g. avconv)'
+#echo '==='
+#sudo apt-get -qq install libav-tools
+
+echo ' '
+if [[ -z  $uv4l_deb  ]];
+then
+	echo 'install-uv4l: ERROR, uv4l did NOT install, you need to be running raspian jessie or stretch. Streaming will not work'
+else
+	echo 'install-uv4l: Done installing uv4l'
+fi
+#echo 'Done installing libav-tools (e.g. avconv)'
+
+exit 0

@@ -1,0 +1,45 @@
+## Release Notes
+
+## To Do
+
+### 20180710
+
+(1) motor interface
+
+- make setup not engage motor
+
+- add motor on, motor off to web interface
+   pass to teensy with serial useMotor/motorOn, see trial.useMotor
+
+//When set LOW, all STEP commands are ignored and all FET functionality is turned off. Must be pulled HIGH to enable STEP control
+const int motorResetPin = 19;
+//Logic Input. Enables the FET functionality within the motor driver. If set to HIGH, the FETs will be disabled, and the IC will not drive the motor. If set to LOW, all FETs will be enabled, allowing motor control.
+const int motorEnabledPin = 20; //low to engage, high to dis-engage
+
+(2) finish writing docs for 'scope' configuration.
+
+(3) make sure all my config files still load
+
+(4) add 'last response' to interface
+   - update self.lastResponse throughout code
+
+(5) add devnotes.md
+
+ - keep version info up to date
+ - add section of decreasing size of .png
+
+(6) look at starting ./pie at boot, make sure it catches the serial
+
+
+## Reduce png file size
+
+see:
+
+https://www.cyberciti.biz/faq/linux-unix-optimize-lossless-png-images-with-optipng-command/
+
+sudo apt-get install optipng
+
+## Remember
+
+Pins GPIO2 and GPIO3 have fixed pull-up resistors, but for other pins this can be configured in software.
+

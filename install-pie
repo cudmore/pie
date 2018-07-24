@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20180603
+#
+# Purpose: Bash script to install PiE server
+#	1) create a python3 virtual environment in env/
+#	2) install pie_app/requirements.txt
+#	3) install a systemctl service treadmill.service
+#
+# Usage:
+#	./install-pie
+#
+# Once this is all done, the PiE server can be used as follows
+#
+#	cd ~/pie
+#	./pie start
+#	./pie stop
+#	./pie restart
+#	./pie status
+#	./pie enable		# start pie server at boot
+#	./pie disable		# do not start pie server at boot
+#
+#	./pie run			# run the PiE server on command line, useful for debugging
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+ip=`hostname -I | xargs`
+
+systemctl is-active --quiet treadmill.service
+if [ $? -eq 0 ]
+then
+	sudo systemctl stop treadmill.service 
+	echo '=== install-pie: stopped the background PiE server'
+else
+	echo '=== install-pie: background PiE server was not running'
+fi
+
+#if ! type "pip" > /dev/null; then
+#	echo '==='
+#	echo "=== install-pie: Installing pip"
+#	echo '==='
+#	sudo apt-get -qy install python-pip
+#fi
+
+if ! type "virtualenv" > /dev/null; then
+	echo '==='
+	echo "=== install-pie: Installing virtualenv"
+	echo '==='
+	#sudo /usr/bin/easy_install virtualenv
+	#pip install virtualenv
+	sudo apt-get -qy install python-virtualenv
+fi
+
+if [ ! -d "env/" ]; then
+	echo '==='
+	echo "=== install-pie: Making Python 3 virtual environment in $PWD/env"
+	echo '==='
+	if ! type "virtualenv" > /dev/null; then
+		echo -e 'install-pie: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
+		exit 0
+	else
+		mkdir env
+		virtualenv -p python3 --no-site-packages env
+	fi
+else
+	echo '==='
+	echo "=== install-pie: Python 3 virtual environment already exists in $PWD/env"
+	echo '==='
+fi
+
+echo '==='
+echo "=== install-pie: Activating Python 3 virtual environment in $PWD/env"
+echo '==='
+source env/bin/activate
+
+echo ' '
+echo '==='
+echo '=== install-pie: Installing pie_app/requirements.txt'
+echo '==='
+pip install -r pie_app/requirements.txt
+
+echo '==='
+echo "=== install-pie: Deactivating Python 3 virtual environment in $PWD/env"
+echo '==='
+deactivate
+
+echo ' '
+echo '==='
+echo '=== install-pie: Installing libav-tools (avconv) please wait ...'
+sudo apt-get -qy install libav-tools
+
+echo '=== install-pie: Done installing libav-tools (avconv)'
+echo '==='
+
+echo ' '
+echo '=== install-pie: Copying pie_app/install/treadmill.service  ->  /etc/systemd/system/treadmill.service'
+sudo cp pie_app/install/treadmill.service /etc/systemd/system/treadmill.service
+sudo chmod 664 /etc/systemd/system/treadmill.service
+sudo systemctl daemon-reload
+sudo systemctl enable treadmill.service
+sudo systemctl start treadmill.service
+
+echo '=== install-pie: Copying admin_app/install/pieadmin.service  ->  /etc/systemd/system/pieadmin.service'
+sudo cp admin_app/install/pieadmin.service /etc/systemd/system/pieadmin.service
+sudo chmod 664 /etc/systemd/system/pieadmin.service
+
+echo '=== install-pie: reloading daemons'
+sudo systemctl daemon-reload
+
+echo '=== install-pie: enable and start pieadmin.service'
+sudo systemctl enable pieadmin.service
+sudo systemctl start pieadmin.service
+
+echo '=== install-pie: enable and start treadmill.service'
+sudo systemctl enable treadmill.service
+sudo systemctl start treadmill.service
+
+#
+# DONE
+#
+
+echo ' '
+
+systemctl is-active --quiet pieadmin.service
+if [ $? -eq 0 ]
+then
+	echo ''
+	#echo -e "${GREEN}Success${NC}: The PiE admin server is running and will run at boot."
+else
+	echo -e "${RED}ERROR${NC}: The PiE admin server is not running."
+fi
+
+systemctl is-active --quiet treadmill.service
+if [ $? -eq 0 ]
+then
+	echo -e "${GREEN}Success${NC}: The PiE server is running and will run at boot."
+	echo "Browse the PiE server at http://$ip:5010"
+else
+	echo -e "${RED}ERROR${NC}: The PiE server is not running."
+fi
+echo ' '

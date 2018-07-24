@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20180607
+# Purpose: Bash script to install and run commander_app
+#	1) create a python3 virtual environment
+#	2) install commander_app/requirements.txt
+#	3) install a systemctl service videowall.service
+#
+# Usage:
+#	./install-commander
+#
+# Once this is all done, commander server can be used as follows
+#	cd ~/pie/commander
+#	./commander start
+#	./commander stop
+#	./commander restart
+#	./commander status
+#	./commander enable		# start commander server at boot
+#	./commander disable		# do not start commander server at boot
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+ip=`hostname -I | xargs`
+
+sudo systemctl stop videowall.service
+
+if ! type "pip" > /dev/null; then
+	echo '==='
+	echo "=== Installing pip"
+	echo '==='
+	sudo apt-get -y install python-pip
+fi
+
+if ! type "virtualenv" > /dev/null; then
+	echo '==='
+	echo "=== Installing virtualenv"
+	echo '==='
+	sudo /usr/bin/easy_install virtualenv
+fi
+
+if [ ! -d "env/" ]; then
+	echo '==='
+	echo "=== Making Python 3 virtual environment in $PWD/env"
+	echo '==='
+	mkdir env
+	virtualenv -p python3 --no-site-packages env
+else
+	echo '==='
+	echo "=== Python 3 virtual environment already exists in $PWD/env"
+	echo '==='
+fi
+
+source env/bin/activate
+
+echo ' '
+echo '==='
+echo '=== Installing commander Python requirements with pip'
+echo '==='
+pip install -r requirements.txt
+
+deactivate
+
+# copy 
+echo ' '
+echo '==='
+echo '=== Configuring systemctl in /etc/systemd/system/videowall.service'
+echo '==='
+sudo cp install/videowall.service /etc/systemd/system/videowall.service
+sudo chmod 664 /etc/systemd/system/videowall.service
+sudo systemctl daemon-reload
+sudo systemctl enable videowall.service
+sudo systemctl start videowall.service
+
+
+if false;
+then
+	echo ' '
+	echo '==='
+	echo '=== Configuring git server in ~/commander.git'
+	echo '    You will get non critical errors if you run this script more than once'
+	echo '==='
+
+	# this would clone a copy of PiE
+	mkdir ~/commander.git
+	cd ~/commander.git
+	git init --bare
+	git clone https://github.com/cudmore/pie.git
+
+	echo ' '
+	echo '==='
+	echo '=== Installing sshpass and configuring ssh-keygen rsa'
+	echo '==='
+
+	sudo apt-get install --yes sshpass
+
+	#ssh-keygen
+	rm /home/pi/.ssh/id_rsa
+	#rm /home/pi/.ssh/id_rsa.pub
+	ssh-keygen -t rsa -N '' -f /home/pi/.ssh/id_rsa
+
+fi
+
+echo ' '
+echo 'Done installing commander server.'
+echo 'The commander server will run at boot.'
+echo "Browse the commander server at http://$ip:8000"
+
+

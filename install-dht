@@ -1,0 +1,57 @@
+# Robert Cudmore
+# 20180625
+
+# This bash script will attempt to install the Adafruit Python DHT library
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+echo '==='
+echo "=== Activating Python 3 virtual environment in $PWD/env"
+echo '==='
+
+source env/bin/activate
+
+echo '==='
+echo "=== sudo apt-get install --yes python3-dev"
+echo '==='
+
+sudo apt-get install --yes python3-dev
+
+echo '==='
+echo "=== cd"
+echo '==='
+
+cd
+
+if [ -d "Adafruit_Python_DHT" ]; then
+	echo '==='
+	echo "=== rm -Rf Adafruit_Python_DHT"
+	echo '==='
+	rm -Rf Adafruit_Python_DHT
+fi
+
+echo '==='
+echo "=== git clone https://github.com/adafruit/Adafruit_Python_DHT.git"
+echo '==='
+
+git clone https://github.com/adafruit/Adafruit_Python_DHT.git
+
+echo '==='
+echo "=== cd Adafruit_Python_DHT"
+echo '==='
+
+cd Adafruit_Python_DHT
+
+echo '==='
+echo "=== python setup.py install"
+echo '==='
+
+python setup.py install
+
+deactivate
+
+echo ' '
+echo 'Done: Adafruit_Python_DHT is now installed'

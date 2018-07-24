@@ -1,0 +1,6 @@
+RPi.GPIO
+picamera
+
+flask
+flask-cors
+pyserial

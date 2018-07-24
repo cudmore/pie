@@ -1,0 +1,438 @@
+<!doctype html>
+<html ng-app="demo">
+	<head>
+
+		<link rel="stylesheet" href="static/treadmill.css">
+		<link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="static/angular-ui-switch.min.css">
+
+		<script src="static/angular/angular.min.js"></script>
+		<script src="static/angular/angular-route.js">
+
+		<script src="static/bootstrap/js/bootstrap.min.js"></script>
+		<script src="static/angular-ui-switch.min.js"></script>
+  
+      	<script src="static/treadmill.js"></script>
+
+		<script src="static/plotly/plotly-1.38.3.min.js"></script>
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link rel="shortcut icon" href="static/favicon.ico">
+
+	</head>
+
+<style>
+input.ng-invalid {
+    background-color:pink;
+}
+
+.table td, .table th {
+    border: none;
+}
+
+table.table.table-condensed {
+    border: 1px solid black;
+}
+
+
+.table.short-row td {
+   line-height: 20px;
+   min-height: 20px;
+   height: 20px;
+}
+.table.short-row td {
+  padding-top: 5px;
+  padding-bottom: 1px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+/* Container holding the image and the text */
+.myImgContainer {
+    position: relative;
+    text-align: center;
+    color: white;
+}
+
+/* Bottom left text */
+.bottom-left {
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    color: red;
+    font-family:'Courier New';
+    font-size:30px;
+}
+</style>
+
+
+<body>
+	<div ng-controller="treadmill">
+	
+	<div class="table-responsive">
+	<table class="table" style="width: auto;">
+
+	<tr>
+	<td>
+	{{ status.trial.systemInfo.hostname }}
+	</td>
+	<td>
+	{{ status.trial.systemInfo.ip }}
+	</td>
+	<td>
+	{{ status.trial.runtime.currentDate }} {{ status.trial.runtime.currentTime }}
+	</td>
+	<td>
+		<A HREF="{{myUrl}}videolist" target="_blank" style="color: #000000;"><i class="fa fa-database" aria-hidden="true"></i></a>
+	</td>
+	<td>
+		<A HREF="{{myUrl}}log" target="_blank" style="color: #000000;"><i class="fa fa-list-alt" aria-hidden="true"></i></a>
+	</td>
+	<td>
+		<A HREF="{{myUrl}}environment" target="environment" style="color: #000000;"><i class="fa fa-thermometer-half" aria-hidden="true"></i></a>
+	</td>
+	<td>
+		<A HREF="https://github.com/cudmore/pie" target="_blank" style="color: #000000;"><i class="fa fa-question" aria-hidden="true"></i></A>
+	</td>
+	</tr>
+
+	</table>
+	</div>
+
+<!-- ** ** -->
+
+	<div class="table-responsive">
+	<table class="table short-row" style="width: auto;">
+	<tr>
+		
+		<td style="vertical-align:top">
+		</td>
+
+		<td style="vertical-align:top">
+		<switch 
+			class="small" 
+			ng-model="status.trial.config.hardware.eventOut[1].state" 
+			ng-change="submitLEDForm()" 
+			disabled="status.trial.config.lights.auto" 
+			on="On" off="Off">
+		</switch>
+		White
+		<td>
+
+		<td>
+		<switch 
+			class="small" 
+			ng-model="status.trial.config.hardware.eventOut[2].state" 
+			ng-change="submitLEDForm()" 
+			disabled="status.trial.config.lights.auto" 
+			on="On" off="Off">
+		</switch>
+		IR<td>
+
+	</tr>
+	</table>
+	</div>
+	
+	<ng-form name="animalForm" ng-controller="configFormController">
+	<div class="table-responsive">
+	<table class="table short-row" style="width: auto;">
+	<tr>
+	<td>
+		<label>ID
+		<input style="width: 5em" 
+			name = "animalID"
+			type="text"
+			ng-model="configData.trial.config.trial.animalID"
+			ng-change="animalParamChange(animalFormw)"
+			ng-disabled="! allowParamEdit()" 
+			>
+		</label>
+	</td>
+	<td>
+		<label>Condition
+		<input style="width: 5em" 
+			name = "conditionID"
+			type="text"
+			ng-model="configData.trial.config.trial.conditionID"
+			ng-change="animalParamChange(animalForm.$valid)"
+			ng-disabled="! allowParamEdit()" 
+			>
+		</label>
+	</td>
+
+	</tr> 
+	
+	</table>
+	</div>
+	</ng-form>
+	
+<!-- ** ** -->
+	
+
+	<div class="table-responsive">
+	<table class="table" style="width: auto;">
+
+	<tr>
+		<td>Recording</td>
+		<td>
+		<span ng-if="! isState('recording')">
+		<button type="button"
+			class="btn btn-success btn-sm"
+			ng-click="buttonCallback('startRecord')"
+			ng-disabled="! isState('idle')">
+			Start Recording
+		</button>
+		</span>
+	
+		<span ng-if="isState('recording')">
+		<button type="button"
+			class="btn btn-danger btn-sm"
+			ng-click="buttonCallback('stopRecord')">
+			Stop Recording
+		</button>
+		</span>
+		</td>
+		
+		
+		<!-- <td rowspan=3 style="border-left: 3px solid gray;"> -->
+		<td rowspan="{{ status.trial.config.hardware.allowArming && 3 || 2 }}" style="border-left: 3px solid gray;">
+		<!-- State: {{ status.trial.runtime.cameraState }} -->
+		Trial: {{ status.trial.runtime.trialNum }}
+		<span ng-if="isState('recording') || isState('armedrecording')">
+			<i class="fa fa-circle-o-notch fa-spin" style="font-size:24px"></i>
+		</span>
+		<BR>
+		Repeat: {{ status.trial.runtime.currentEpoch }} of 
+		<span ng-if="status.trial.config.trial.repeatInfinity">
+		Forever<BR>
+		</span>
+		<span ng-if="! status.trial.config.trial.repeatInfinity">
+		{{ status.trial.config.trial.numberOfRepeats }}<BR>
+		</span>
+		Elapsed (sec): {{ status.trial.runtime.secondsElapsedStr }} of {{ status.trial.config.trial.repeatDuration }}<BR>
+		File: {{ status.trial.runtime.currentFile }}<BR>
+		<span ng-if="isState('armedrecording')">
+			Frame: {{ status.trial.runtime.numFrames }}
+		</span>
+		</td>
+		
+	</tr>
+		
+	<tr>
+		<td>Streaming</td>
+		<td>
+		<span ng-if="! isState('streaming')">
+		<button type="button"
+			class="btn btn-success btn-sm"
+			ng-click="buttonCallback('startStream')"
+			ng-disabled="! isState('idle')">
+			Start Streaming
+		</button>
+		</span>
+	
+		<span ng-if="isState('streaming')">
+		<button type="button"
+			class="btn btn-danger btn-sm"
+			ng-click="buttonCallback('stopStream')">
+			Stop Streaming
+		</button>
+		</span>
+		</td>
+		<td></td>		
+	</tr>
+	
+	<tr ng-if="status.trial.config.hardware.allowArming">
+		<td>
+		<label>
+		<input type="checkbox" 
+			ng-model="isArmed" 
+			ng-change="buttonCallback('toggleArm')" 
+			ng-disabled="isState('recording') || isState('streaming') || isState('armedrecording')" 
+			/>		
+		Arm</label>
+		</td>
+
+		<td>
+		<span ng-if="! isState('armedrecording')">
+		<button type="button"
+			class="btn btn-success btn-sm"
+			ng-click="buttonCallback('startArmVideo')"
+			ng-disabled="! isState('armed')">
+			Start Trial
+		</button>
+		</span>
+
+		<span ng-if="isState('armedrecording')">
+		<button type="button"
+			class="btn btn-danger btn-sm"
+			ng-click="buttonCallback('stopArmVideo')">
+			Stop Trial
+		</button>
+		</span>
+		</td>
+		
+	</tr>
+	
+	<tr>
+		<td colspan="3">
+		Last Action: {{ status.trial.runtime.lastResponse }}
+		</td>
+	</tr>
+			
+	</table>
+
+	<!-- lastimage -->
+	<button type="button"
+		class="btn btn-link btn-sm"
+		ng-click="showLastImage = ! showLastImage">
+		<span ng-show="showLastImage">
+			<i class="fa fa-chevron-down" aria-hidden="true"></i>
+		</span>
+		<span ng-show="! showLastImage">
+			<i class="fa fa-chevron-right" aria-hidden="true"></i>
+		</span>
+	</button>
+	Last Still Image
+
+<div ng-if="! showLastImage">
+</div>
+<span ng-show="showLastImage">
+	<div class="table-responsive">
+	<table class="table" style="width: auto;">
+	<tr>
+		<td>
+		<span ng-show="true || showStill">	
+			<div class="myImgContainer">
+			<IMG SRC="{{lastImage}}" width=640 height=480>	
+			<div class="bottom-left">{{ status.trial.runtime.lastStillTime }}</div>
+			</div>
+		</span>	
+		</td>
+	</tr>
+	</table>
+	</div>
+</span>
+</div>
+
+<!-- streaming -->
+<span ng-if="isState('streaming')">
+Stream<BR>
+<iframe ng-src="{{myStreamUrl}}" width="{{streamWidth}}" height="{{streamHeight}}"></iframe>
+</span>
+
+
+<!-- *******************************************************************-->
+<!-- arduino motor form -->
+<div ng-include="'templates/partials/motor_table.html'"></div>
+<!-- arduino motor form -->
+<!-- *******************************************************************-->
+
+
+<!-- *******************************************************************-->
+<!-- config form -->
+<div ng-include="'templates/partials/config_table.html'"></div>
+<!-- config form -->
+<!-- *******************************************************************-->
+	
+	
+<!-- server status -->
+<div>
+</div>
+
+<span ng-if="showDebug">
+
+	<button type="button"
+		class="btn btn-link btn-sm"
+		ng-click="showConfigTable = ! showConfigTable">
+		<span ng-show="showConfigTable">
+			<i class="fa fa-chevron-down" aria-hidden="true"></i>
+		</span>
+		<span ng-show="! showConfigTable">
+			<i class="fa fa-chevron-right" aria-hidden="true"></i>
+		</span>
+	</button>
+	Debug
+
+<span ng-if="showConfigTable">
+
+	<!-- status.trial.runtime -->
+	<table class="myTable-small" style="border: 1px solid #ddd;">
+	<tr>
+	<th>status.trial.runtime</th>
+	<th></th>
+	</tr>
+	<tr ng-repeat="(x,y) in status.trial.runtime">
+		<td>{{ x }}</td>
+		<td>{{ y }}</td>
+	</tr>
+	</table>
+
+	<!-- status.trial.config -->
+	<table class="myTable-small" style="border: 1px solid #ddd;">
+	<tr>
+	<th>status.trial.config</th>
+	<th></th>
+	</tr>
+	<tr ng-repeat="(x,y) in status.trial.config">
+	<td>
+		<table>
+			<tr>
+			<th>
+			<b>{{ x }}</b>
+			</th>
+			<th></th>
+			</tr>
+			
+		  	<tr ng-repeat="(x,y) in y">
+				<td>{{ x }}</td>
+				<td>{{ y }}</td>
+		  	</tr>
+		</table>
+	</td>
+	</tr>
+	</table>
+	
+	<!-- status.trial.systemInfo -->
+	<table class="myTable-small" style="border: 1px solid #ddd;">
+	<tr>
+	<th>status.trial.systemInfo</th>
+	<th></th>
+	</tr>
+	<tr ng-repeat="(x,y) in status.trial.systemInfo">	
+		<td>{{ x }}</td>
+		<td>{{ y }}</td>
+	</tr>
+	</table>
+	
+	<!-- camer -->
+	<table>
+	<tr>
+	<th>status.trial.runtime.cameraQueue</th>
+	</tr>
+	<tr ng-repeat="x in status.trial.runtime.cameraQueue">	
+		<td>
+			{{ x }}
+		</td>
+	</tr>
+	</table>
+
+	<!-- serial -->
+	<table>
+	<tr>
+	<th>status.trial.runtime.serialQueue</th>
+	</tr>
+	<tr ng-repeat="x in status.trial.runtime.serialQueue">	
+		<td>
+			{{ x }}
+		</td>
+	</tr>
+	</table>
+
+</span> <!-- showConfigTable -->
+</span> <!-- ng-if="showDebug" -->
+
+	</div> <!-- ng-controller -->
+</body>
+</html>

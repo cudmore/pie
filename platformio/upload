@@ -1,0 +1,35 @@
+# Robert Cudmore
+# 20180710
+#
+# Purpose:
+#	Bash script to upload code to a microcontroller using platformio
+#
+# 	Assumes platformio has been installed into a Python 2.7 virtual environment
+#	using ./install-platformio
+#
+#	Do not upload code while PiE server is running as it maintains a permanent
+#	connection to serial at /dev/ttyACM0
+#
+
+function usage(){
+    echo "./upload - Illegal parameters"
+    echo "Usage:"
+    echo "   ./upload teensy31		- Upload ./treadmill code to Teensy 3.1/3.2"
+    echo "   ./upload teensy35		- Upload ./treadmill code to Teensy 3.5"
+}
+
+echo "Remember, PiE server can not be running while uploading code !!!"
+
+case "$1" in
+	teensy31)
+		sudo ./env/bin/platformio run --project-dir ./treadmill -e teensy31 --target upload
+		;;
+	teensy35)
+		sudo ./env/bin/platformio run --project-dir ./treadmill -e teensy35 --target upload
+		;;
+	*) usage
+		;;
+		
+esac
+
+# exit

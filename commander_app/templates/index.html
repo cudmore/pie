@@ -1,0 +1,591 @@
+<!doctype html>
+<html ng-app="commander">
+	<head>
+		<title>Commander</title>
+
+		<link rel="stylesheet" href="/static/commander.css">
+
+		<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="/static/angular-ui-switch.min.css">
+
+		<script src="/static/angular/angular.min.js"></script>
+		<script src="/static/bootstrap/js/bootstrap.min.js"></script>
+		<script src="/static/angular-ui-switch.min.js"></script>
+
+    	<script src="/static/commander.js"></script>
+
+	    <!-- <script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.6.6/angular-material.min.js"></script> -->
+	    <!-- <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.js"></script> -->
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<link rel="shortcut icon" href="static/favicon.ico">
+
+	<style>
+		input.ng-invalid {
+		    background-color:pink;
+		}
+	</style>
+	
+	</head>
+
+<body>
+	<div ng-controller="commander">
+
+	<!-- configure video wall -->
+	<span ng-if="showServerConfig==0">
+		<button ng-click="toggleServerConfig()" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+	</span>
+	<span ng-if="showServerConfig==1">
+		<button ng-click="toggleServerConfig()" class="btn btn-default btn-sm"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+	</span>
+	
+	<span>Server Swarm</span>
+
+<!-- i am cheating, this will fail when there are no servers -->
+	<span style="float:right">{{ videoArray[0].status.trial.runtime.currentDate}} {{ videoArray[0].status.trial.runtime.currentTime}}</span>
+	
+	<span ng-show="showServerConfig">
+		<button ng-click="refreshStatusButton()" class="btn btn-default btn-sm"><i class="fa fa-refresh fa-1x" aria-hidden="true"></i></button>
+
+		<table class="myTable" >
+		<tr>
+			<th ng-show="editIPList">IP</th>
+			<th></th> <!-- hostname -->
+			<th>State</th>
+			<th>Record</th>
+			<th>Auto lights</th>
+			<th>White</th>
+			<th>IR</th>
+			<th>ID</th>
+			<th>Condition</th>
+			<th>Repeat Forever</th>
+			<th>Number of Repeats</th>
+			<th>Repeat Duration (sec)</th>
+			<th>Elapsed (sec)</th>
+			<th>Trial</th>
+			<th>Repeat</th>
+			<th>File</th>
+		<tr>
+
+		<tr ng-repeat="server in serverList track by $index">
+		<td ng-show="editIPList">
+			<form class="form-inline" ng-submit="setServer($index,server)">
+				<span ng-show="editIPList">
+				<button type="button" class="btn btn-danger btn-sm" ng-click="removeServer($index)">
+				<i class="fa fa-minus fa-1x" aria-hidden="true"></i>
+				</button>
+				</span>
+				
+				<input style="width: 9em" 
+		   		type="string" 
+		   		ng-model="server"
+		   		/>
+			</form>
+		</td>
+		
+			<td ng-if="! videoArray[$index].isAlive" style="background-color:#FF0000">
+				<A HREF="{{ videoArray[$index].restUrl }}" target="_{{videoArray[$index].status.trial.systemInfo.hostname}}">{{ videoArray[$index].status.trial.systemInfo.hostname }}</a>
+			</td>
+			<td ng-if="videoArray[$index].isAlive">
+				<A HREF="{{ videoArray[$index].restUrl }}" target="_{{videoArray[$index].status.trial.systemInfo.hostname}}">{{ videoArray[$index].status.trial.systemInfo.hostname }}</a>
+			</td>
+				
+		<td>
+		{{ videoArray[$index].status.trial.runtime.cameraState }}
+		</td>
+
+
+		<td>
+			<span ng-if="isState($index,'idle')">
+				<button type="button" 
+					class="btn btn-success btn-sm" 
+					ng-click="startstoprecord($index, 1)" 
+					ng-disabled="isState($index,'streaming')">
+				<i class="fa fa-play fa-1x" aria-hidden="true"></i> Start
+				</button>
+			</span>
+			<span ng-if="isState($index,'recording')">
+				<button type="button" class="btn btn-danger btn-sm" ng-click="startstoprecord($index, 0)">
+				<i class="fa fa-stop fa-1x" aria-hidden="true"></i> Stop
+				</button>
+			</span>
+		</td>
+
+		<!-- <td>{{ videoArray[$index].config.lights.auto && "On" || "Off"}}</td> -->
+		<td>
+		<span>
+		<input type="checkbox" 
+			ng-disabled="true || ! isState($index,'idle')" 
+			ng-model="videoArray[$index].status.trial.config.lights.auto" 
+			ng-change="mySubmit($index, 'lights.auto',videoArray[$index].status.trial.config.lights.auto)" 
+		/>		
+		</td>
+		
+		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[1].state && "On" || "Off"}}
+		  <!--
+		  <span class="fa-stack fa-lg">
+		  <i class="fa fa-lightbulb-o fa-stack-1x"></i>
+		  <i class="fa fa-times fa-stack-2x"></i>
+		  </span>
+		  -->
+		</td>
+		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[2].state && "On" || "Off"}}</td>
+		
+
+		<!-- <td>{{ videoArray[$index].status.server.animalID }}</td> -->
+		<td>
+		   <input style="width: 5em" 
+		   	type="text" 
+			ng-disabled="! isState($index,'idle')" 
+		   	ng-model="videoArray[$index].status.trial.config.trial.animalID" 
+		   	ng-change="submitAnimalForm($index)"
+		   	ng-required="false"
+		   	/>
+		</td>
+		
+
+		<!-- <td>{{ videoArray[$index].status.server.conditionID }}</td> -->
+		<td>
+		   <input style="width: 5em" 
+		   	type="text" 
+			ng-disabled="! isState($index,'idle')" 
+		   	ng-model="videoArray[$index].status.trial.config.trial.conditionID" 
+		   	ng-change="submitAnimalForm($index)"
+		   	ng-required="false"
+		   	/>
+		</td>
+
+		<!-- <th>Repeat Forever</th> -->
+		<td>
+		<input type="checkbox" 
+			ng-disabled="! isState($index,'idle')" 
+			ng-model="videoArray[$index].status.trial.config.trial.repeatInfinity" 
+			ng-change="submitConfigForm($index)" 
+			ng-disabled="isState($index,'recording')"
+		/>		
+		</td>
+
+		<!-- <th>Number of Repeats</th> -->
+		<td>
+		   	<span ng-if="videoArray[$index].status.trial.config.trial.repeatInfinity">
+			Inf
+			</span>
+		   <span ng-if="! videoArray[$index].status.trial.config.trial.repeatInfinity">
+		   <input style="width: 5em" 
+		   	type="number" 
+			ng-disabled="! isState($index,'idle')" 
+		   	ng-model="videoArray[$index].status.trial.config.trial.numberOfRepeats" 
+		   	ng-change="submitConfigForm($index)"
+		   	ng-required="true"
+		   	min="1"
+		   	step="1"
+		   	/>
+		   	</span>
+		</td>
+		
+		<!-- <th>Repeat Duration</th> -->
+		<td>
+		   <input style="width: 5em" 
+		   	type="number" 
+			ng-disabled="! isState($index,'idle')" 
+		   	ng-model="videoArray[$index].status.trial.config.trial.repeatDuration" 
+		   	ng-change="submitConfigForm($index)"
+		   	ng-required="true"
+		   	min="0.5"
+		   	step="0.001"
+		   	/>
+		</td>
+
+		<td>{{ videoArray[$index].status.trial.runtime.secondsElapsedStr | number:0 }}</td>
+
+		<td>{{ videoArray[$index].status.trial.runtime.trialNum }}</td>
+		<td>{{ videoArray[$index].status.trial.runtime.currentEpoch }}</td>
+		
+		<!-- file name -->
+		<td>
+			<A HREF="{{ videoArray[$index].restUrl }}videolist" target="_{{ videoArray[$index].restUrl }}" style="color: #000000;"><i class="fa fa-hdd-o" aria-hidden="true"></i></a>
+			{{ videoArray[$index].status.trial.runtime.currentFile }}
+		</td>
+		
+		</tr>
+		</table>
+		
+	</span> <!-- showServerConfig -->
+
+
+<!-- -->
+<span ng-if="showServerConfig2==0">
+	<button ng-click="toggleshowServerConfig2()" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+</span>
+<span ng-if="showServerConfig2==1">
+	<button ng-click="toggleshowServerConfig2()" class="btn btn-default btn-sm"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+</span>
+Configure
+
+<div class="commander_indent2">
+
+<div ng-show="showServerConfig2">
+		<button type="button" class="btn btn-success btn-sm" ng-click="addServer()">
+		Add Server <i class="fa fa-plus fa-1x" aria-hidden="true"></i>
+		</button>
+
+		<button type="button" class="btn btn-success btn-sm" ng-click="saveServers()">
+		Save Servers <i class="fa fa-save fa-1x" aria-hidden="true"></i>
+		</button>
+
+		<input type="checkbox" ng-model="$scope.editIPList" ng-change="toggleEditIPList()"/>
+		<!-- <input type="checkbox" ng-model="doDebug" ng-change="changeDebug(doDebug)"/> -->
+		Edit server list
+
+</div>
+</div>
+
+
+
+<!-- original video wall -->
+	<span ng-if="showServerPanel==0">
+		<button ng-click="toggleVideoPanels()" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+	</span>
+	<span ng-if="showServerPanel==1">
+		<button ng-click="toggleVideoPanels()" class="btn btn-default btn-sm"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+	</span>
+	
+	Video Wall
+
+	<div class="container-fluid">
+  	<div class="row" ng-show="showServerPanel" >
+
+	<div class="col-lg-6" ng-repeat="oneVideo in videoArray track by $index">
+	<div class="myborder"> 
+	<!-- <td ng-repeat="oneVideo in videoArray track by $index"> -->
+		<!-- show timelapse -->
+		<span ng-if="isState($index,'recording') || (! isState($index,'recording') && ! isState($index,'streaming'))">
+		<div class="embed-responsive">
+		<canvas class="mycanvas" ng-attr-id="{{oneVideo.image.canvasID}}" width="640" height="480"/>
+		</div>
+		</span>
+
+		<!-- show stream -->
+		<span ng-if="isState($index,'streaming')">
+		<!-- <iframe class="my_iframe" ng-src="{{oneVideo.myStreamUrl}}" width="{{oneVideo.streamWidth}}" height="{{oneVideo.streamHeight}}"></iframe> -->
+		<div class="embed-responsive embed-responsive-4by3">
+		  <iframe class="embed-responsive-item" ng-src="{{oneVideo.myStreamUrl}}"></iframe>
+		</div>
+		</span>
+
+
+		<div class="commander_indent">
+			{{oneVideo.status.trial.systemInfo.hostname}} <A HREF="{{oneVideo.restUrl}}" target="_blank">{{oneVideo.status.trial.systemInfo.ip}}</A> 
+			{{oneVideo.status.trial.runtime.currentTime}}<BR>
+		</div>
+		
+		<!-- lights -->
+		<div class="commander_indent">
+		Lights
+
+		<span>
+		<input type="checkbox" 
+			ng-model="oneVideo.status.trial.config.lights.auto" 
+			ng-change="submitLEDForm($index)" 
+			ng-disabled="isState($index,'recording')"/>		
+		Auto
+		</span>
+
+		<span>
+		<input type="checkbox" 
+			ng-model="oneVideo.status.trial.config.hardware.eventOut[1].state" 
+			ng-change="submitLEDForm($index)" 
+			ng-disabled="isState($index,'recording') || oneVideo.status.trial.config.lights.auto"/>		
+		White
+		</span>
+		<span>
+		<input type="checkbox" 
+			ng-model="oneVideo.status.trial.config.hardware.eventOut[2].state" 
+			ng-change="submitLEDForm($index)" 
+			ng-disabled="isState($index,'recording') || oneVideo.status.trial.config.lights.auto"/>		
+		IR
+		</span>
+		</div>
+		
+		<!-- RECORDING -->
+		<div class="commander_indent">
+		Recording
+			<span ng-if="isState($index,'recording')"><B style="color:green;">Recording</B></span>
+			<span ng-if="! isState($index,'recording')"><B style="color:red;">Stopped</B></span>
+	
+			<span ng-if="! isState($index,'recording')">
+				<button type="button" 
+					class="btn btn-success btn-sm" 
+					ng-click="startstoprecord(oneVideo.myIdx, 1)" 
+					ng-disabled="isState($index,'streaming')">
+				<i class="fa fa-play fa-1x" aria-hidden="true"></i> Start
+				</button>
+			</span>
+			<span ng-if="isState($index,'recording')">
+				<button type="button" class="btn btn-danger btn-sm" ng-click="startstoprecord(oneVideo.myIdx, 0)">
+				<i class="fa fa-stop fa-1x" aria-hidden="true"></i> Stop
+				</button>
+			<!-- {{ oneVideo.status.currentFile }} -->
+			{{ oneVideo.status.trial.timeRemaining }} sec remaining
+			<!-- {{ oneVideo.config.fileDuration }} -->
+			</span>
+		</div>
+		
+		<!-- STREAMING -->
+		<div class="commander_indent">
+		Streaming
+		<span ng-if="isState($index,'streaming')"><B style="color:green;">Streaming</B></span>
+		<span ng-if="! isState($index,'streaming')"><B style="color:red;">Stopped</B></span>
+
+		<span ng-if="! isState($index,'streaming')">
+			<button type="button" 
+				class="btn btn-success btn-sm" 
+				ng-click="startstopstream(oneVideo.myIdx, 1)" 
+				ng-disabled="isState($index,'recording')">
+			<i class="fa fa-play fa-1x" aria-hidden="true"></i> Start
+			</button>
+		</span>
+		<span ng-if="isState($index,'streaming')">
+			<button type="button" class="btn btn-danger btn-sm" ng-click="startstopstream(oneVideo.myIdx, 0)">
+			<i class="fa fa-stop fa-1x" aria-hidden="true"></i> Stop
+			</button>
+		</span>
+		</div>
+		
+
+		<!-- server status and config -->
+	<div class="commander_indent">
+	<span ng-if="doDebug">
+		
+		<span ng-if="oneVideo.showConfig==0">
+			<button ng-click="toggleConfig(oneVideo.myIdx)" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+		</span>
+		<span ng-if="oneVideo.showConfig==1">
+			<button ng-click="toggleConfig(oneVideo.myIdx)" class="btn btn-default btn-sm"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+		</span>
+	
+		Config
+		
+		<span ng-if="oneVideo.showConfig">
+		<!-- status table -->
+		<table class="myTable-small">
+		<tr style="vertical-align:top">
+		
+		<td>
+		<table class="myTable-small" style="border: 1px solid black">
+		  <tr ng-repeat="(x,y) in oneVideo.status">
+				<td>{{ x }}</td>
+				<td>{{ y }}</td>
+		  </tr>
+		</table>
+		</td>
+		
+		<!-- config table -->
+		<td>
+		<table class="myTable-small indent" style="border: 1px solid black" ng-repeat="(x,y) in oneVideo.config">
+		  <tr>
+		  <td>
+		  <b>{{ x }}</b>
+		  </td>
+		  <td></td>
+		  </tr>
+		  <tr ng-repeat="(x,y) in y">
+				<td>{{ x }}</td>
+				<td>{{ y }}</td>
+		  </tr>
+		</table>
+		</td>
+		</tr>
+		</table>
+		</span>
+	</span>
+	</div> <!-- server status <div class="commander_indent">-->
+	
+	</div>
+	</div>
+	<!-- </td> -->
+	
+	</div>
+	</div>
+	<!-- </tr> -->
+	<!-- </table> -->
+
+<!-- SWARM status -->
+<span ng-if="showSwarmStatus==0">
+	<button ng-click="toggleshowSwarmStatus()" class="btn btn-default btn-sm"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>
+</span>
+<span ng-if="showSwarmStatus==1">
+	<button ng-click="toggleshowSwarmStatus()" class="btn btn-default btn-sm"><i class="fa fa-chevron-down" aria-hidden="true"></i></button>
+</span>
+Swarm Status
+
+<!-- complete status of all servers -->
+<!-- {{ videoArray[0] }} -->
+
+<div ng-show="showSwarmStatus">
+<table class="myTable" style='font-family:"Courier New", Courier, monospace; font-size:80%'>
+	<tr>
+	<!-- system -->
+	<th>IP</th>
+	<th>Hostname</th>
+	<th>Log</th>
+	<th>Load Homecage Config</th>
+	<th>Restart Server</th>
+	<th>Reboot Pi</th>
+	<th>Update Software</th>
+	<th>Debian Version</th>
+	<th>system uptime</th>
+	<th>GB Remaining</th>
+	<th>GB Size</th>
+	<!-- server -->
+	<th>python version</th>
+	<th>server version</th>
+	<th>server uptime</th>
+
+	<th>state</th>
+	<th>animalID</th>
+	<th>conditionID</th>
+	<th>Trial Num</th>
+
+	<th>Auto lights</th>
+	<th>Sunrise (h)</th>
+	<th>Sunset (h)</th>
+	<th>White</th>
+	<th>IR</th>
+
+	<th>video resolution</th>
+	<th>fps</th>
+	<th>convert to mp4</th>
+
+	<th>Repeat Duration (s)</th>
+	
+	<th>Repeat Forever</th>
+	<th>Number of Repeats</th>
+	</tr>
+	<tr ng-repeat="server in serverList track by $index">
+		<!-- system -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.ip }}</td>
+		<td>{{ videoArray[$index].status.trial.systemInfo.hostname }}</td>
+
+		<td>
+		<A HREF="{{ videoArray[$index].restUrl }}log" target="_{{videoArray[$index].status.system.hostname}} log" >Log</a>
+		</td>
+		
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="loadPieConfig($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-file fa-1x" aria-hidden="true"></i> Load Homecage Config
+		</td>
+		
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="restartserver($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-refresh fa-1x" aria-hidden="true"></i> Restart PiE
+		</td>
+		
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="rebootmachine($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-power-off fa-1x" aria-hidden="true"></i> Reboot
+		</td>
+		
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="updatesoftware($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-cloud-download fa-1x" aria-hidden="true"></i> Update		
+		</td>
+
+		<td>{{ videoArray[$index].status.trial.systemInfo.debianVersion }}</td>
+		<td>{{ videoArray[$index].status.trial.systemInfo.systemUptime }}</td> <!-- needs updating -->
+
+		<td>
+		{{ videoArray[$index].status.trial.systemInfo.gbRemaining }} <!-- needs updating -->
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="refreshsysteminfo($index)" 
+				ng-disabled="! isState($index,'idle')">
+			Refresh		
+		</td>
+		
+		<td>{{ videoArray[$index].status.trial.systemInfo.gbSize }}</td> <!-- needs updating -->
+		<!-- server -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.pythonVersion }}</td>
+		<td>{{ videoArray[$index].status.trial.systemInfo.version }}</td> <!-- bTrial version -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.uptime }}</td> <!-- uptime of the treadmill server -->
+
+		<td>{{ videoArray[$index].status.trial.runtime.cameraState }}</td> <!-- status -->
+		<td>{{ videoArray[$index].status.trial.config.trial.animalID }}</td>
+		<td>{{ videoArray[$index].status.trial.config.trial.conditionID }}</td>
+		<td>{{ videoArray[$index].status.trial.runtime.trialNum }}</td> <!-- status -->
+
+		<td>{{ videoArray[$index].status.trial.config.lights.auto }}</td> <!-- config -->
+		<td>{{ videoArray[$index].status.trial.config.lights.sunrise }}</td> <!-- config -->
+		<td>{{ videoArray[$index].status.trial.config.lights.sunset }}</td> 
+		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[1].state }}</td> <!-- ir -->
+		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[2].state }}</td> <!-- white -->
+
+		<td>{{ videoArray[$index].status.trial.config.video.resolution }}</td>
+		<td>{{ videoArray[$index].status.trial.config.video.fps }}</td>
+		<td>{{ videoArray[$index].status.trial.config.video.converttomp4 }}</td>
+
+		<td>{{ videoArray[$index].status.trial.config.trial.repeatDuration }}</td>
+		
+		<td>{{ videoArray[$index].status.trial.config.trial.repeatInfinity }}</td>
+		<td>{{ videoArray[$index].status.trial.config.trial.numberOfRepeats }}</td>
+	</tr>
+</table>
+
+<p>
+Last Action: {{ lastAction }}
+</p>
+
+<!-- admin status -->
+	<table>
+	<tr ng-repeat="server in serverList track by $index">
+		<td>
+		{{ videoArray[$index].status.trial.systemInfo.ip }}
+		</td>
+		<td>
+		{{ videoArray[$index].status.trial.systemInfo.hostname }}
+		</td>
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="clearbashqueue($index)" 
+				ng-disabled="! isState($index,'idle')">
+			Clear		
+		</td>
+		<td>	
+			<table class="myTable-small">
+				<tr ng-repeat="x in videoArray[$index].adminStatus.runtime.bashQueue track by $index">
+					<td style="background-color:black">
+					<span style="color:white">
+						{{ x }}
+					</span>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<BR>
+					</td>	
+				</tr>
+			</table>
+		</td>	
+	</tr>
+	</table>
+
+</div>
+
+	</div> <!-- ng-controller -->
+</body>
+</html>

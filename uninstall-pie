@@ -1,0 +1,19 @@
+# stop
+echo "=== stopping PiE server and Admin server"
+sudo systemctl stop treadmill.service
+sudo systemctl stop pieadmin.service
+
+# disable
+echo "=== disabling services"
+sudo systemctl disable treadmill.service
+sudo systemctl disable pieadmin.service
+
+# remove
+echo "=== removing files in /etc/systemd/system/"
+sudo rm /etc/systemd/system/treadmill.service
+sudo rm /etc/systemd/system/pieadmin.service
+
+echo "==="
+echo "PiE server and admin server have been uninstalled"
+echo "You can now remove the PiE server folder with 'sudo rm -Rf ~/pie'"
+echo "You can fetch a new copy with 'cd; git clone https://github.com/cudmore/pie.git"

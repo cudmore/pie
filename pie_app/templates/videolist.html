@@ -1,0 +1,88 @@
+<!doctype html>
+<html ng-app="demo">
+	<head>
+
+	<title>{% block title %}{{ systemInfo.hostname }} files{% endblock %}</title>
+
+		<link rel="stylesheet" href="/static/hello.css">
+		<link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="/static/font-awesome-4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="/static/angular-ui-switch.min.css">
+
+		<script src="/static/angular/angular.min.js"></script>
+		<script src="/static/bootstrap/js/bootstrap.min.js"></script>
+		<script src="/static/angular-ui-switch.min.js"></script>
+
+    	<script src="/static/hello.js"></script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<style>
+			.videoTable {
+			    border-collapse: collapse;
+			    width: 65%;
+			    //table-layout: fixed;
+			}
+			.videoTable tbody tr:nth-child(even){
+				background-color: #EEEEEE;
+				/* color: #fff; */
+			}
+			.videoTable td {
+				font-size: 1.1em;
+ 				padding: 8px;
+			}
+			.videoTable th {
+				font-size: 1.1em;
+ 				padding: 8px;
+ 				text-align:left;
+			}
+		</style>
+		
+	</head>
+
+<body>
+
+	<!--
+	<video src="http://192.168.1.15:5000/videolist/20171201_091431.mp4" controls>
+	</video>
+	-->
+	
+	{{ systemInfo.hostname }} {{ systemInfo.ip }} {{ abs_path }}
+	<BR>
+		
+	<table class="videoTable">
+		<tr>
+		<th>File</th>
+		<!--
+		<th>Width</th>
+		<th>Height</th>
+		<th>FPS</th>
+		<th>Duration (sec)</th>
+		-->
+		<th>Size</th>
+		</tr>
+		{% for file in files %}			
+			<!--
+			<tr>
+				{{ file }}
+			</tr>
+			-->
+			
+			<tr>
+		
+			<td><a href="/videolist{{ file.path }}">{{ file.file }}</a></td>
+			
+			<!--
+			<td> {{ file.width }}</td>
+			<td> {{ file.height }}</td>
+			<td> {{ file.fps }}</td>
+			<td> {{ file.duration }}</td>
+			-->
+			<td> {{ file.size }}</td>
+		
+			</tr>
+		{% endfor %}
+	</table>
+
+</body>
+</html>

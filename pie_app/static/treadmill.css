@@ -1,0 +1,93 @@
+html {
+  font-size: 1em;
+}
+
+html {
+	margin-top: 20px;
+	margin-right: 20px;
+	margin-bottom: 20px;
+	margin-left: 20px;
+}
+
+span.mysmall {
+    font-size: .8em;
+}
+
+.myTable0 {
+    border-collapse: collapse;
+    width: 100%;
+    //table-layout: fixed;
+}
+
+.myTable0 td {
+    border: 0px solid #ddd;
+    padding: 4px;
+}
+
+.myTable0 td:nth-child(1){ width:100px; }
+.myTable0 td:nth-child(2){ width:100px; }
+.myTable0 td:nth-child(3){ width:100px; }
+.myTable0 td:nth-child(4){ width:50px; }
+
+.myTable {
+    border-collapse: collapse;
+    width: 90%;
+    //table-layout: fixed;
+}
+
+.myTable td {
+    border: 0px solid #ddd;
+    padding: 4px;
+}
+
+.myTable td:nth-child(1){ width:150px; }
+.myTable td:nth-child(2){ width:150px; }
+.myTable td:nth-child(3){ width:250px; }
+
+.myTable-small {
+	font-size: 12px;
+	width: auto;
+}
+
+.myTable-small tr {
+   line-height: 20px;
+   min-height: 20px;
+   height: 20px;
+}
+
+.indent {
+    margin-left: 40px;
+}
+
+.indent2 {
+    margin-left: 40px;
+}
+
+.my_hr { 
+    display: block;
+    margin-top: 0em; //0.5em;
+    margin-bottom: 0em; //0.5em;
+    margin-left: auto;
+    margin-right: auto;
+    border-style: inset;
+    border-width: 1px;
+}
+
+.videoTable {
+	border-collapse: collapse;
+	width: 65%;
+	//table-layout: fixed;
+}
+.videoTable tbody tr:nth-child(even){
+	background-color: #EEEEEE;
+	/* color: #fff; */
+}
+.videoTable td {
+	font-size: 1.1em;
+	padding: 8px;
+}
+.videoTable th {
+	font-size: 1.1em;
+	padding: 8px;
+	text-align:left;
+}

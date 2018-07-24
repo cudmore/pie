@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20180505
+#
+# provide a simple nterface to interact with systemctl and treadmill.service
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+function usage(){
+    echo "./pieadmin - Illegal parameters"
+    echo "Usage:"
+    echo "   ./pieadmin start		- start background pieadmin server"
+    echo "   ./pieadmin stop		- stop background pieadmin server"
+    echo "   ./pieadmin status		- check the status of background pieadmin server"
+    echo "   -----------------"
+    echo "   ./pieadmin enable		- enable background pieadmin server at boot"
+    echo "   ./pieadmin disable	- disable background pieadmin server at boot"
+    echo "   -----------------"
+    echo "   ./pieadmin run		- run pieadmin server on command line"
+}
+
+myip=`hostname -I | xargs`
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+case "$1" in
+	start) 
+		systemctl is-active --quiet pieadmin.service
+		if [ $? -eq 0 ]
+		then
+			echo 'background pieadmin server already running at http://$myip:5010"'
+		else
+			sudo systemctl start pieadmin.service 
+			systemctl is-active --quiet pieadmin.service
+			if [ $? -eq 0 ]
+			then
+				echo "background pieadmin server now running at http://$myip:5011"
+			else
+				echo -e "${RED}ERROR${NC}: starting background pieadmin server"
+			fi
+		fi
+		;;
+	
+	stop)
+		systemctl is-active --quiet pieadmin.service
+		if [ $? -eq 0 ]
+		then
+			sudo systemctl stop pieadmin.service 
+			echo 'background pieadmin server stopped'
+		else
+			echo 'background pieadmin server not running'
+		fi
+		;;
+	
+	restart) sudo systemctl restart pieadmin.service 
+		systemctl is-active --quiet pieadmin.service
+		if [ $? -eq 0 ]
+		then
+			echo "background pieadmin server now running at http://$myip:5011"
+		else
+			echo "error starting background pieadmin server"
+		fi
+		;;
+	
+	status) 
+		sudo systemctl --no-pager -l status pieadmin.service 
+		;;
+	enable) sudo systemctl enable pieadmin.service 
+		echo "pieadmin server will run at boot"
+		;;
+	disable) sudo systemctl disable pieadmin.service 
+		echo "pieadmin server will not run at boot"
+		;;
+	run)
+		systemctl is-active --quiet pieadmin.service
+		if [ $? -eq 0 ]
+		then
+			echo -e "${RED}ERROR${NC}: background pieadmin server is already running."
+			echo "Stop the background PiE server with './pieadmin stop' and try again."
+			#sudo systemctl stop treadmill.service 
+			exit 0
+		fi
+		#source env/bin/activate
+		python admin.py
+		;;
+	*) usage
+		;;
+esac
+
+#exit 0

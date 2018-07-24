@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# 20180619
+#
+# bash script to
+#	1) create a pytohn 2 virtual environment in env/
+#	2) install platformio
+#	3) upload treadmill code to teensy
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+# copy
+echo '==='
+echo '=== sudo cp install/49-teensy.rules /etc/udev/rules.d/49-teensy.rules'
+echo '==='
+sudo cp install/49-teensy.rules /etc/udev/rules.d/49-teensy.rules
+
+if [ ! -d "env/" ]; then
+	echo '==='
+	echo "=== Making Python 2 virtual environment in $PWD/env"
+	echo '==='
+	mkdir env
+	virtualenv -p python2 --no-site-packages env
+else
+	echo '==='
+	echo "=== Python 2 virtual environment already exists in $PWD/env"
+	echo '==='
+fi
+
+echo '==='
+echo "=== Activating Python 2 virtual environment in $PWD/env"
+echo '==='
+source env/bin/activate
+
+echo '==='
+echo "=== Installing platformio"
+echo '==='
+
+pip install -U platformio
+
+#echo '==='
+#echo "=== Uploading treadmill code to teensy"
+#echo '==='
+
+#cd treadmill
+#sudo ../env/bin/platformio run --target upload
+
+echo ""
+echo "Done installing platformio into Python 2 virtual environment $PWD/env"
+echo "To upload the treadmill code to a teensy 3.1/3.2"
+echo "  cd ~/pie/platformio"
+echo "  ./upload teensy31"
+echo "To upload the treadmill code to a teensy 3.5"
+echo "  cd ~/pie/platformio"
+echo "  ./upload teensy35"

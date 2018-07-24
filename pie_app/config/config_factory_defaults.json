@@ -1,0 +1,138 @@
+{
+    "trial": {
+        "numberOfRepeats": 1,
+        "repeatDuration": 10,
+        "trialNum": 2,
+        "animalID": "",
+        "conditionID": "",
+        "includeHostname": false,
+        "repeatInfinity": false,
+        "savePath": "/home/pi/video"
+    },
+    "hardware": {
+        "eventIn": [
+            {
+                "idx": 0,
+                "enabled": false,
+                "pin": 24,
+                "bouncetime": 20,
+                "polarity": "rising",
+                "pull_up_down": "down",
+                "name": "triggerIn"
+            },
+            {
+                "idx": 1,
+                "enabled": false,
+                "pin": 23,
+                "bouncetime": 20,
+                "polarity": "rising",
+                "pull_up_down": "down",
+                "name": "frame"
+            },
+            {
+                "idx": 2,
+                "enabled": false,
+                "pin": 8,
+                "bouncetime": 20,
+                "polarity": "both",
+                "pull_up_down": "down",
+                "name": "arduinoMotor"
+            },
+            {
+                "idx": 3,
+                "enabled": false,
+                "pin": 7,
+                "bouncetime": 20,
+                "polarity": "rising",
+                "pull_up_down": "down",
+                "name": "arduinoNewEpoch"
+            },
+            {
+                "idx": 4,
+                "enabled": false,
+                "pin": 30,
+                "bouncetime": 20,
+                "polarity": "rising",
+                "pull_up_down": "down",
+                "name": "user1"
+            },
+            {
+                "idx": 5,
+                "enabled": false,
+                "pin": 31,
+                "bouncetime": 20,
+                "polarity": "rising",
+                "pull_up_down": "down",
+                "name": "user2"
+            }
+        ],
+        "serial": {
+            "port": "/dev/ttyACM0",
+            "baud": 115200,
+            "useSerial": false
+        },
+        "dhtsensor": {
+            "sensorType": "AM2302",
+            "continuouslyLog": false,
+            "temperatureInterval": 60,
+            "readtemperature": false,
+            "pin": 4
+        },
+        "allowArming": false,
+        "eventOut": [
+            {
+                "idx": 0,
+                "enabled": true,
+                "defaultValue": true,
+                "state": true,
+                "name": "triggerOut",
+                "pin": 15
+            },
+            {
+                "idx": 1,
+                "enabled": true,
+                "defaultValue": false,
+                "state": false,
+                "name": "whiteLED",
+                "pin": 19
+            },
+            {
+                "idx": 2,
+                "enabled": true,
+                "defaultValue": false,
+                "state": false,
+                "name": "irLED",
+                "pin": 18
+            }
+        ]
+    },
+    "lights": {
+        "sunset": 19,
+        "auto": false,
+        "sunrise": 7
+    },
+    "video": {
+        "stillInterval": 2.1,
+        "useCamera": true,
+        "resolution": "640,480",
+        "bufferSeconds": 10,
+        "captureStill": true,
+        "led": false,
+        "fps": 30,
+        "streamResolution": "640,480",
+        "converttomp4": true
+    },
+    "motor": {
+        "preDur": 0,
+        "postDur": 0,
+        "motorDel": 1000,
+        "motorRepeatDuration": 3000,
+        "useMotor": "motorOn",
+        "motorDirection": "Forward",
+        "motorSpeed": 100,
+        "motorNumEpochs": 3,
+        "motorDur": 1000,
+        "duringPulse": "Rotate",
+        "betweenPulse": "Locked"
+    }
+}

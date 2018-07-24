@@ -1,0 +1,28 @@
+.AppleDouble
+.DS_Store
+*.pyc
+
+__pycache__
+
+env/
+platformio/env/
+commander_app/env/
+
+# ignore all platformio compiled code
+.pioenvs
+
+# pie_App logs
+pie_app/logs/environment.log
+pie_app/pie.log
+pie_app/static/still.jpg
+admin_app/admin.log
+
+# commander logs
+commander_app/admin.log
+commander_app/commander.log
+commander_app/config/config_commander.txt
+
+# this will be created when use saves config
+# when we update software, we need to trash this
+pie_app/config/config_default.json
+

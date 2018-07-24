@@ -1,0 +1,52 @@
+#  20180506
+
+function usage(){
+    echo "commander - Usage"
+    echo "   commander start"
+    echo "   commander stop"
+    echo "   commander restart"
+    echo "   commander status"
+    echo "   commander enable	- start at boot"
+    echo "   commander disable	- do not start at boot"
+    echo "   -----------------"
+    echo "   commander run     - run commander on command line"
+    echo "   commander debug     - run commander on command line (debug mode)"
+}
+
+myip=`hostname -I | xargs`
+
+case "$1" in
+	start) 
+		sudo systemctl start videowall.service
+		echo "commander server started, http://$myip:8000"
+		;;
+	stop) 
+		sudo systemctl stop videowall.service
+		echo "commander server stopped"
+		;;
+	restart) 
+		sudo systemctl restart videowall.service
+		;;
+	status) 
+		sudo systemctl status videowall.service
+		;;
+	enable)
+		sudo systemctl enable videowall.service
+		echo "commander server will start at boot"
+		;;
+	disable) 
+		sudo systemctl disable videowall.service
+		echo "commander server will not start at boot"
+		;;
+	debug) source env/bin/activate
+		python commander.py debug
+		;;
+	run) source env/bin/activate
+		python commander.py
+		;;
+	*) usage
+		;;
+esac
+
+exit 0
+

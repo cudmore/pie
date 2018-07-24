@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20180505
+#
+# provide an interface to start, stop, and run the PiE server
+
+if [ $(id -u) = 0 ]; then
+   echo "Do not run with sudo. Try again without sudo"
+   exit 1
+fi
+
+function usage(){
+    echo "./pie - Illegal parameters"
+    echo "Usage:"
+    echo "   ./pie start		- start background PiE server"
+    echo "   ./pie stop			- stop background PiE server"
+    echo "   ./pie status		- check the status of background PiE server"
+    echo "   -----------------"
+    echo "   ./pie enable		- enable background PiE server at boot"
+    echo "   ./pie disable		- disable background PiE server at boot"
+    echo "   -----------------"
+    echo "   ./pie run			- run PiE server on command line"
+}
+
+myip=`hostname -I | xargs`
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+case "$1" in
+	start) 
+		systemctl is-active --quiet treadmill.service
+		if [ $? -eq 0 ]
+		then
+			echo "background PiE server already running at http://$myip:5010"
+		else
+			sudo systemctl start treadmill.service 
+			systemctl is-active --quiet treadmill.service
+			if [ $? -eq 0 ]
+			then
+				echo "background PiE server now running at http://$myip:5010"
+			else
+				echo -e "${RED}ERROR${NC}: background PiE server did not start"
+			fi
+		fi
+		;;
+	
+	stop)
+		systemctl is-active --quiet treadmill.service
+		if [ $? -eq 0 ]
+		then
+			sudo systemctl stop treadmill.service 
+			echo 'background PiE server stopped'
+		else
+			echo 'background PiE server not running'
+		fi
+		;;
+	
+	restart) sudo systemctl restart treadmill.service 
+		systemctl is-active --quiet treadmill.service
+		if [ $? -eq 0 ]
+		then
+			echo "background PiE server now running at http://$myip:5010"
+		else
+			echo -e "${RED}ERROR${NC}: background PiE server did not start"
+		fi
+		;;
+	
+	status) 
+		sudo systemctl --no-pager -l status treadmill.service 
+		;;
+	enable) sudo systemctl enable treadmill.service 
+		echo "pie server will run at boot"
+		;;
+	disable) sudo systemctl disable treadmill.service 
+		echo "pie server will not run at boot"
+		;;
+	run)
+		systemctl is-active --quiet treadmill.service
+		if [ $? -eq 0 ]
+		then
+			echo -e "${RED}ERROR${NC}: background PiE server is already running."
+			echo "Stop the background PiE server with './pie stop' and try again."
+			#sudo systemctl stop treadmill.service 
+			exit 0
+		fi
+		source env/bin/activate
+		cd pie_app
+		python treadmill_app.py
+		;;
+	debug)
+		systemctl is-active --quiet treadmill.service
+		if [ $? -eq 0 ]
+		then
+			echo -e "${RED}ERROR${NC}: background PiE server is already running."
+			echo "Stop the background PiE server with './pie stop' and try again."
+			#sudo systemctl stop treadmill.service 
+			exit 0
+		fi
+		source env/bin/activate
+		cd pie_app
+		python treadmill_app.py debug
+		;;
+	*) usage
+		;;
+esac
+
+#exit 0
