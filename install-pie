@@ -43,6 +43,15 @@ else
 	echo '=== install-pie: background PiE server was not running'
 fi
 
+systemctl is-active --quiet pieadmin.service
+if [ $? -eq 0 ]
+then
+	sudo systemctl stop pieadmin.service 
+	echo '=== install-pie: stopped the background pieadmin server'
+else
+	echo '=== install-pie: background pieadmin server was not running'
+fi
+
 #if ! type "pip" > /dev/null; then
 #	echo '==='
 #	echo "=== install-pie: Installing pip"
