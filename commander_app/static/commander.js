@@ -296,7 +296,7 @@ angular.module('commander', ['uiSwitch'])
 	// restart PiE server
 	$scope.restartserver = function (idx) {
 		console.log("restartserver()", idx);		
-		var restartOK = $window.confirm('Are you sure you want to restart the PiE server');
+		var restartOK = $window.confirm('Are you sure you want to restart the PiE server "' + $scope.videoArray[idx].status.trial.systemInfo.hostname + '"');
 		if (restartOK) {
 			url = $scope.videoArray[idx].adminUrl + 'api/restartserver'
 			console.log(url)
@@ -313,7 +313,7 @@ angular.module('commander', ['uiSwitch'])
 	// rebootmachine pi
 	$scope.rebootmachine = function (idx) {
 		console.log("rebootmachine()", idx);		
-		var rebootOK = $window.confirm('Are you sure you want to reboot the pi');
+		var rebootOK = $window.confirm('Are you sure you want to reboot "' + $scope.videoArray[idx].status.trial.systemInfo.hostname + '"');
 		if (rebootOK) {
 			url = $scope.videoArray[idx].adminUrl + 'api/rebootmachine'
 			console.log(url)
@@ -330,9 +330,28 @@ angular.module('commander', ['uiSwitch'])
 	// update software
 	$scope.updatesoftware = function (idx) {
 		console.log("updatesoftware()", idx);		
-		var updateOK = $window.confirm('Are you sure you want to update the Pie server software?');
+		var updateOK = $window.confirm('Are you sure you want to update the PiE server software for "' + $scope.videoArray[idx].status.trial.systemInfo.hostname + '"');
 		if (updateOK) {
 			url = $scope.videoArray[idx].adminUrl + 'api/updatesoftware'
+			console.log(url)
+			$http.get(url).
+        		then(function(response) {
+        	    	$scope.videoArray[idx].adminStatus = response.data;
+        	    	//console.log('$scope.videoArray[idx].adminStatus:', $scope.videoArray[idx].adminStatus)
+        	    	
+        		}, function errorCallback(response) {
+        			console.log('updatesoftware() error url:', url)
+        		});
+        }
+	};
+
+	//
+	// update software
+	$scope.reverttostable = function (idx) {
+		console.log("updatesoftware()", idx);		
+		var updateOK = $window.confirm('Are you sure you want to revert the PiE server software to stable version for "' + $scope.videoArray[idx].status.trial.systemInfo.hostname + '"');
+		if (updateOK) {
+			url = $scope.videoArray[idx].adminUrl + 'api/reverttostable'
 			console.log(url)
 			$http.get(url).
         		then(function(response) {
@@ -380,7 +399,7 @@ angular.module('commander', ['uiSwitch'])
 		console.log("startstoprecord()", idx, startstop);		
 		stopOK = 1;
 		if (startstop == 0) {
-			stopOK = $window.confirm('Are you sure you want to stop the recording?');
+			stopOK = $window.confirm('Are you sure you want to stop the recording on  "' + $scope.videoArray[idx].status.trial.systemInfo.hostname + '"');
 		}
 		if (stopOK) {
 			if (startstop) {

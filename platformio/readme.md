@@ -36,6 +36,8 @@ And select the following
 
 ### 2) Add user pi to dialout group
 
+This is handled by `install-platformio`.
+
 	sudo usermod -a -G dialout pi
 
 ### 3) Create a `/etc/udev/rules.d/49-teensy.rules` file
@@ -300,7 +302,7 @@ sudo apt-get install screen
 screen /dev/ttyACM0 115200
 ```
 
-You might have to hit 'return' to get it going. Exit screen with `ctrl+a then type ':' then type 'quit'`
+You might have to hit `return` to get it going. Exit screen with `ctrl+a` then type `:` then type `quit`
 
 ## udev rules
 

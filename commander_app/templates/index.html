@@ -432,9 +432,10 @@ Swarm Status
 	<th>Hostname</th>
 	<th>Log</th>
 	<th>Load Homecage Config</th>
-	<th>Restart Server</th>
+	<th>Restart PiE Server</th>
 	<th>Reboot Pi</th>
 	<th>Update Software</th>
+	<th>Revert To Stable</th>
 	<th>Debian Version</th>
 	<th>system uptime</th>
 	<th>GB Remaining</th>
@@ -478,7 +479,7 @@ Swarm Status
 				class="btn btn-info btn-sm" 
 				ng-click="loadPieConfig($index)" 
 				ng-disabled="! isState($index,'idle')">
-			<i class="fa fa-file fa-1x" aria-hidden="true"></i> Load Homecage Config
+			<i class="fa fa-file fa-1x" aria-hidden="true"></i> Load
 		</td>
 		
 		<td>
@@ -503,6 +504,14 @@ Swarm Status
 				ng-click="updatesoftware($index)" 
 				ng-disabled="! isState($index,'idle')">
 			<i class="fa fa-cloud-download fa-1x" aria-hidden="true"></i> Update		
+		</td>
+
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="reverttostable($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-cloud-download fa-1x" aria-hidden="true"></i> Stable		
 		</td>
 
 		<td>{{ videoArray[$index].status.trial.systemInfo.debianVersion }}</td>

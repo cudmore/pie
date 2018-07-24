@@ -3,7 +3,7 @@
 # 20180619
 #
 # bash script to
-#	1) create a pytohn 2 virtual environment in env/
+#	1) create a python 2 virtual environment in env/
 #	2) install platformio
 #	3) upload treadmill code to teensy
 
@@ -14,9 +14,15 @@ fi
 
 # copy
 echo '==='
-echo '=== sudo cp install/49-teensy.rules /etc/udev/rules.d/49-teensy.rules'
+echo '=== copying install/49-teensy.rules  -> /etc/udev/rules.d/49-teensy.rules'
 echo '==='
 sudo cp install/49-teensy.rules /etc/udev/rules.d/49-teensy.rules
+
+# user
+echo '==='
+echo '=== sudo usermod -a -G dialout pi'
+echo '==='
+sudo usermod -a -G dialout pi
 
 if [ ! -d "env/" ]; then
 	echo '==='

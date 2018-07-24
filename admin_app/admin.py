@@ -167,6 +167,38 @@ class pieadmin():
 		
 		self.lastResponse = 'Updating software'
 
+	#########################################################################
+	# Revert To Stable
+	#########################################################################
+	def reverttostableThread_(self):
+		script_path = os.path.dirname(os.path.abspath( __file__ ))
+		cmd = [script_path + "/bin/revert_to_stable.sh"]
+		try:
+			logger.info(cmd)
+			out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+			out = out.decode()
+			out = out.split('\n')
+			for line in out:
+				print('line: ', line)
+				self.outBashQueue.put(line)
+		except (subprocess.CalledProcessError, OSError) as e:
+			#error = e.output.decode('utf-8')
+			logger.error('reverttostableThread_ exception: ' + str(e))
+			self.lastResponse = str(e)
+			#raise
+		
+	def reverttostable(self):
+
+		logger.info('reverttostable starting reverttostableThread_')
+
+		restartThread = threading.Thread(target=self.reverttostableThread_, args=())
+		restartThread.daemon = True				# Daemonize thread
+		restartThread.start()					# Start the execution
+
+		logger.info('RETURNED reverttostable')
+		
+		self.lastResponse = 'Reverting to stable'
+
 
 #########################################################################
 myAdmin = pieadmin()
