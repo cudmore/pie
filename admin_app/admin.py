@@ -187,7 +187,7 @@ class pieadmin():
 			self.lastResponse = str(e)
 			#raise
 		
-	def reverttostable(self):
+	def revertToStable(self):
 
 		logger.info('reverttostable starting reverttostableThread_')
 
@@ -234,6 +234,11 @@ def rebootmachine():
 @app.route('/api/updatesoftware')
 def updatesoftware():
 	myAdmin.updateSoftware()
+	return jsonify(myAdmin.getStatus())
+
+@app.route('/api/reverttostable')
+def reverttostable():
+	myAdmin.revertToStable()
 	return jsonify(myAdmin.getStatus())
 
 @app.route('/api/clearbashqueue')
