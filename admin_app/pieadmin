@@ -86,7 +86,7 @@ case "$1" in
 			#sudo systemctl stop treadmill.service 
 			exit 0
 		fi
-		#source env/bin/activate
+		source ../env/bin/activate
 		python admin.py
 		;;
 	*) usage
