@@ -144,6 +144,6 @@ then
 	echo -e "${GREEN}Success${NC}: The PiE server is running and will run at boot."
 	echo "Browse the PiE server at http://$ip:5010"
 else
-	echo -e "${RED}ERROR${NC}: The PiE server is not running."
+	echo -e "${RED}ERROR${NC}: The PiE server failed to install and is not running."
 fi
 echo ' '
