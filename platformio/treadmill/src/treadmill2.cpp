@@ -199,6 +199,9 @@ void frame_ISR() {
 		newFrameTime = millis();
 		//pulse a 3.5V pin for each frame
 		digitalWrite(passThroughFramePin, 1);
+		
+		//delayMicroseconds(100);
+		
 		digitalWrite(passThroughFramePin, 0);	
 	}
 }
@@ -235,13 +238,17 @@ void setup()
   
   //
   // pin to receive 5V frames from scope (framePin) and pass on to 3V Raspberry (passThroughFramePin)
-  pinMode(framePin, INPUT);
-  attachInterrupt(framePin, frame_ISR, RISING); //prairie frames are RISING
+  //pinMode(framePin, INPUT);
+  //attachInterrupt(framePin, frame_ISR, RISING); //prairie frames are RISING
   //  replace with this to reverse, scanimage will be FALLING
-  //pinMode(framePin, INPUT_PULLUP);
-  //attachInterrupt(framePin, frame_ISR, FALLING); //prairie frames are RISING
+  pinMode(framePin, INPUT_PULLUP);
+  attachInterrupt(framePin, frame_ISR, FALLING); //prairie frames are RISING
+  
   pinMode(passThroughFramePin, OUTPUT);
+  digitalWrite(passThroughFramePin, 0);
 
+  //
+  // emergency stop (not implemented)
   pinMode(emergencyStopPin, INPUT);
   attachInterrupt(emergencyStopPin, stop_ISR, RISING); //scanimage will be FALLING
   
@@ -445,7 +452,9 @@ void startTrial(unsigned long now) {
 
 		newevent(0, "startTrial", trial.trialNumber);
 		
-		Serial.println("startTrial " + String(now));
+		// removed 20180724
+		//Serial.println("startTrial " + String(now));
+		
 		//if (outputSerial) {
 		//	serialOut(0, "startTrial", trial.trialNumber);
 		//}
@@ -462,7 +471,9 @@ void stopTrial(unsigned long now) {
 
 		digitalWrite(trialRunningPin, LOW);
 
-		Serial.println("stopTrial " + String(now));
+		// removed 20180724
+		//Serial.println("stopTrial " + String(now));
+		
 		//digitalWrite(motorOnPin, LOW); //stop motor just in case
 	}
 }

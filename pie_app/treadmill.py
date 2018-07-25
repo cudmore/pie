@@ -156,17 +156,17 @@ class treadmill():
 			"""
 
 			serialCommand = 'settrial,' + key + ',' + str(value)
-			self.trial.serialInAppend(serialCommand)
+			self.trial.serialInAppend('command', serialCommand)
 		
 		"""
 		key = 'preDur'
 		value = 0
 		serialCommand = 'settrial,' + key + ',' + str(value)
-		self.trial.serialInAppend(serialCommand)
+		self.trial.serialInAppend('command', serialCommand)
 		key = 'postDur'
 		value = 0
 		serialCommand = 'settrial,' + key + ',' + str(value)
-		self.trial.serialInAppend(serialCommand)
+		self.trial.serialInAppend('command', serialCommand)
 		
 		#self.inSerialQueue.put('p')
 		"""
@@ -189,7 +189,7 @@ class treadmill():
 		key = 'arm'
 		value = onoff
 		serialCommand = 'settrial,' + key + ',' + str(value)
-		self.trial.serialInAppend(serialCommand)
+		self.trial.serialInAppend('command', serialCommand)
 		
 #########################################################################
 if __name__ == '__main__':

@@ -89,33 +89,44 @@ class mySerialThread(threading.Thread):
 		logger.debug('mySerialThread.run() starting')
 		while True:
 			try:
-				serialCommand = self.inSerialQueue.get(block=False, timeout=0)
+				# serialDict is {'type': command/dump, 'str': command/filePath}
+				serialDict = self.inSerialQueue.get(block=False, timeout=0)
 			except (queue.Empty) as e:
+				# there was nothing in the queue
 				pass
 			else:
-				logger.info('serialThread inSerialQueue: "' + str(serialCommand) + '"')
+				# there was something in the queue
+				#logger.info('serialThread inSerialQueue: "' + str(serialCommand) + '"')
 				
+				serialType = serialDict['type']
+				serialCommand = serialDict['str']
 				try:
-					if not serialCommand.endswith('\n'):
-						serialCommand += '\n'
 					if self.mySerial is not None:
-						self.mySerial.write(serialCommand.encode())
-						time.sleep(0.01)
-					
-						resp = self.mySerial.readline().decode().strip()
-						self.outSerialQueue.put(resp)
-						logger.info('serialThread outSerialQueue: "' + str(resp) + '"')
-					
-					# try check status
-					"""
-					resp = self.mySerial.readline().decode().strip()
-					print('resp:', resp)
-					while resp:
-						logger.info('serialThread outSerialQueue: "' + str(resp) + '"')
-						self.outSerialQueue.put(resp)
-						resp = self.mySerial.readline().decode().strip()
-					"""
-					
+						if serialType == 'dump':
+							# dump a teensy/arduino trial to a file
+							fullSavePath = serialCommand
+							self.mySerial.write('d\n'.encode()) # write 'd\n'
+
+							#time.sleep(0.01)
+
+							resp = self.mySerial.readline().decode().strip()
+							with open(fullSavePath, 'w') as file:
+								while resp:
+									file.write(resp + '\n')
+									resp = self.mySerial.readline().decode().strip()
+						elif serialType == 'command':
+							# send a command to teensy and get one line response
+							if not serialCommand.endswith('\n'):
+								serialCommand += '\n'
+							self.mySerial.write(serialCommand.encode())
+
+							#time.sleep(0.01)
+						
+							resp = self.mySerial.readline().decode().strip()
+							self.outSerialQueue.put(resp)
+							logger.info('serialThread outSerialQueue: "' + str(resp) + '"')
+						else:
+							logger.error('bad serial command type' + str(serialDict))
 				except (serial.SerialException) as e:
 					logger.error(str(e))
 				except:
@@ -123,7 +134,7 @@ class mySerialThread(threading.Thread):
 					raise
 
 			# make sure not to remove this
-			time.sleep(0.01)
+			time.sleep(0.005)
 
 #########################################################################
 class bTrial():
@@ -222,9 +233,17 @@ class bTrial():
 		
 		self.runtime['lastResponse'] = 'PiE server started'
 		
-	def serialInAppend(self, str):
+	def serialInAppend(self, type, str):
+		"""
+		type : (str) can be either 'command' or 'dump'
+				if type is 'command' then 'str' is command
+				if type is 'dump' then str is full path to file
+		"""
 		if self.mySerialThread.mySerial:
-			self.inSerialQueue.put(str)
+			serialDict = {}
+			serialDict['type'] = type
+			serialDict['str'] = str
+			self.inSerialQueue.put(serialDict)
 		else:
 			#logger.warning('serial port ' + self.mySerialThread.port + ' not defined: ' + str)
 			pass
@@ -819,7 +838,7 @@ class bTrial():
 		# this is not symetric, NOT sending serial on start
 		# but sending serial here in case user hits stop
 		# maybe make this use other teensy pin for 'emergency stop
-		self.serialInAppend('stop')
+		self.serialInAppend('command', 'stop')
 
 		# triggerOut
 		if self.triggerOutIndex is not None:
@@ -946,6 +965,13 @@ class bTrial():
 							self.runtime['eventStrings'][idx]
 				frameLine += eol
 				file.write(frameLine)
+
+		#
+		# grab from arduino/teensy and save
+		teensySavePath = os.path.join('/home/pi/video', self.runtime['startDateStr'])
+		teensyFile = self.getFilename(useStartTime=True) + '_a.txt' # a is for arduino
+		saveFilePath = os.path.join(savePath, teensyFile)
+		self.serialInAppend('dump', saveFilePath)
 
 	#########################################################################
 	# NOT WORKING !!!
