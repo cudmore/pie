@@ -299,7 +299,7 @@ class bCamera:
 		if now is None:
 			now = time.time()
 		if self.isState('armed'):
-			logger.debug('startArmVideo()')
+			#logger.debug('startArmVideo()')
 			self.state = 'armedrecording' # will trigger armVideoThread()
 			
 	def stopArmVideo(self):
@@ -369,7 +369,7 @@ class bCamera:
 					startRecordSeconds = time.time()
 					self.secondsElapsedStr = '0'
 			
-					logger.debug('Start video file: ' + afterfilename)
+					#logger.debug('Start video file: ' + afterfilename)
 					self.currentFile = afterfilename
 				
 					# Record ONE video file per start trigger (this is a limitation)
@@ -382,6 +382,9 @@ class bCamera:
 						if captureStill and time.time() > (self.lastStillTime + float(stillInterval)):
 							self.camera.capture(self.stillPath, use_video_port=True)
 							self.lastStillTime = time.time()
+						
+						# DO NOT REMOVE THIS !!!
+						time.sleep(0.1)
 						
 					self.secondsElapsedStr = 'n/a'
 
@@ -397,6 +400,9 @@ class bCamera:
 					if converttomp4:
 						self.convertVideo(beforefilepath, fps)
 						self.convertVideo(afterfilepath, fps)
+				
+				# DO NOT REMOVE THIS
+				time.sleep(0.1)
 
 	#########################################################################
 	# Add an annotation/watermark on top of video
@@ -447,7 +453,7 @@ class bCamera:
 					raise	
 				logger.info('finished convertVideoThread:' + tmpFilename + ' fps:' + str(file['fps']))
 				
-			time.sleep(0.5)
+			time.sleep(0.1)
 	
 	def convertVideo(self, videoFilePath, fps):
 		"""

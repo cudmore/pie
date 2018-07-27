@@ -134,7 +134,7 @@ class mySerialThread(threading.Thread):
 					raise
 
 			# make sure not to remove this
-			time.sleep(0.005)
+			time.sleep(0.1)
 
 #########################################################################
 class bTrial():
@@ -201,10 +201,11 @@ class bTrial():
 
 		#
 		# lights thread
-		self.lightsThread = threading.Thread(target = self.lightsThread)
+		self.lightsThread = None
+		self.lightsThread = threading.Thread(target = self.myLightsThread)
 		self.lightsThread.daemon = True
 		self.lightsThread.start()
-
+		
 		#
 		# temperature thread
 		if Adafruit_DHT is not None:
@@ -224,12 +225,15 @@ class bTrial():
 		self.inSerialQueue = queue.Queue() # queue is infinite length
 		self.outSerialQueue = queue.Queue()
 		self.errorSerialQueue = queue.Queue()
-		# create, deamonize and start the serial thread
 		port = self.config['hardware']['serial']['port']
 		baud = self.config['hardware']['serial']['baud']
+		self.mySerialThread = None
+		# start serial thread
+		"""
 		self.mySerialThread = mySerialThread(self.inSerialQueue, self.outSerialQueue, self.errorSerialQueue, port, baud)
 		self.mySerialThread.daemon = True
 		self.mySerialThread.start()
+		"""
 		
 		self.runtime['lastResponse'] = 'PiE server started'
 		
@@ -239,7 +243,7 @@ class bTrial():
 				if type is 'command' then 'str' is command
 				if type is 'dump' then str is full path to file
 		"""
-		if self.mySerialThread.mySerial:
+		if self.mySerialThread:
 			serialDict = {}
 			serialDict['type'] = type
 			serialDict['str'] = str
@@ -352,7 +356,7 @@ class bTrial():
 		status['systemInfo']['uptime'] = str(timedelta(seconds = time.time() - self.startTimeSeconds)).split('.')[0]
 
 		while not self.cameraErrorQueue.empty():
-			cameraItem = self.cameraErrorQueue.get()
+			cameraItem = self.cameraErrorQueue.get(block=False)
 			print('   cameraErrorQueue cameraItem:', cameraItem)
 			self.cameraResponseStr.append(cameraItem)
 		if self.serialResponseStr:	
@@ -363,11 +367,11 @@ class bTrial():
 		#
 		# append both outSerialQueue and errorSerialQueue to serialResponseStr
 		while not self.outSerialQueue.empty():
-			serialItem = self.outSerialQueue.get()
+			serialItem = self.outSerialQueue.get(block=False)
 			self.serialResponseStr.append(serialItem)
 
 		while not self.errorSerialQueue.empty():
-			serialItem = self.errorSerialQueue.get()
+			serialItem = self.errorSerialQueue.get(block=False)
 			#print('   errorSerialQueue serialItem:', serialItem)
 			self.serialResponseStr.append(serialItem)
 
@@ -521,7 +525,7 @@ class bTrial():
 		pullUpDownDict = { 'up': GPIO.PUD_UP, 'down': GPIO.PUD_DOWN}
 
 		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(False)
+		GPIO.setwarnings(True)
 
 		self.triggerOutIndex = None # assigned below when we find 'triggerOut'
 		self.whiteLEDIndex = None
@@ -541,7 +545,7 @@ class bTrial():
 			pull_up_down = pullUpDownDict[pull_up_downStr]
 
 			
-			bouncetime = eventIn['bouncetime']
+			bouncetime = eventIn['bouncetime'] #ms
 			enabled = eventIn['enabled'] # is it enabled to receive events
 
 			self.config['hardware']['eventIn'][idx]['idx'] = idx # for reverse lookup
@@ -558,8 +562,18 @@ class bTrial():
 					print('error in eventIn remove_event_detect, enabled: ' + str(e))
 
 				try:
-					GPIO.add_event_detect(pin, polarity, callback=cb, bouncetime=bouncetime) # ms
-					#GPIO.add_event_detect(pin, polarity, callback=self.eventIn_Callback, bouncetime=200) # ms
+					"""
+					adding seperate (more simple) self.frameIn_Callback()
+					"""
+					if name == 'frame':
+						print('*** === *** using frameIn_Callback')
+						GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
+					elif name == 'triggerIn':
+						print('*** === *** using triggerIn_Callback')
+						GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
+					else:
+						GPIO.add_event_detect(pin, polarity, callback=cb, bouncetime=bouncetime)
+					#GPIO.add_event_detect(pin, polarity, callback=self.eventIn_Callback, bouncetime=200)
 				except (RuntimeError) as e:
 					logger.warning('eventIn add_event_detect: ' + str(e))
 					pass
@@ -624,6 +638,33 @@ class bTrial():
 	##########################################
 	# Input pin callbacks
 	##########################################
+	def triggerIn_Callback(self, pin):
+		if self.camera is not None:
+			now = time.time()
+			if self.camera.isState('armed'):
+
+				# I can't fucking remember which one
+				#self.startTrial(startArmVideo=False)
+
+				self.camera.startArmVideo(now=now)
+				#self.lastResponse = self.camera.lastResponse
+			else:
+				print('!!! received triggerIn when camera is NOT armed')
+		else:
+			print('!!! received triggerIn but camera is None')
+
+	##########################################
+	def frameIn_Callback(self, pin):
+		if self.isRunning:
+			now = time.time()
+			self.newEvent('frame', self.numFrames, now=now)
+			if self.camera is not None:
+				self.camera.annotate(self.numFrames)
+			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
+		else:
+			print('!!! received frame when not running')
+
+	##########################################
 	#cb = lambda x, name=name: self.eventIn_Callback(x,name)
 	def eventIn_Callback(self, pin, name=None):
 		"""
@@ -684,7 +725,8 @@ class bTrial():
 						self.newEvent('frame', self.numFrames, now=now)
 						if self.camera is not None:
 							self.camera.annotate(self.numFrames)
-						logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
+						# this slows things down too much -- do not use
+						#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
 					else:
 						print('!!! received frame when not running')
 				else:
@@ -697,12 +739,13 @@ class bTrial():
 									self.camera.annotate('m')
 								else:
 									self.camera.annotate('')
-						logger.debug('eventIn_Callback() pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
+						#logger.debug('eventIn_Callback() pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
 					else:
 						print('!!! received', name, ' when not running')
 
 			else:
-				logger.warning('eventIn_Callback() pin is not enabled, pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
+				pass
+				#logger.warning('eventIn_Callback() pin is not enabled, pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
 		
 		#else:
 		#	print('!!! Trial not running eventIn_Callback()', now, 'pin:', pin, 'name:', name, self.isRunning)
@@ -772,17 +815,23 @@ class bTrial():
 		
 		self.runtime['scopeFilename'] = '' # set by self.setScopeFilename()
 		
-		logger.debug('startTrial startArmVideo=' + str(startArmVideo))
+		#logger.debug('startTrial startArmVideo=' + str(startArmVideo))
 		
 		self.newEvent('startTrial', self.runtime['trialNum'], now=now)
 		
 		if self.camera is not None:
 			if startArmVideo:
 				# *this function startTrial() is being called from within the startarmvideo loop
-				pass
+				# watermark video with trial start
+				if self.camera is not None:
+					self.camera.annotate('S')
+				#pass
 			else:
 				self.camera.record(True, startNewTrial=False)
 
+		"""
+		I need to fix this, it is sending out when we get externally triggered
+		"""
 		#
 		# triggerOut
 		if self.triggerOutIndex is not None:
@@ -793,7 +842,7 @@ class bTrial():
 				pin = triggerOutDict['pin']
 				defaultValue = triggerOutDict['defaultValue']
 				thisValue = not defaultValue
-				logger.info('triggerOut pin:' + str(pin) + ' value:' + str(thisValue))
+				#logger.info('triggerOut pin:' + str(pin) + ' value:' + str(thisValue))
 				GPIO.output(pin, thisValue)
 			else:
 				logger.info('triggerOut not enabled')
@@ -973,6 +1022,27 @@ class bTrial():
 		saveFilePath = os.path.join(savePath, teensyFile)
 		self.serialInAppend('dump', saveFilePath)
 
+		#
+		# remove this
+		self.analyzeFrames()
+	#########################################################################
+	# testing
+	#########################################################################
+	def analyzeFrames(self):
+		print('=== analyzeFrames()')
+		frameNum = 0
+		lastFrameTime = 0
+		for idx, eventTime in enumerate(self.runtime['eventTimes']):
+			eventType = self.runtime['eventTypes'][idx]
+			if eventType == 'frame':
+				frameNum += 1
+				if frameNum == 1:
+					lastFrameTime = eventTime
+				else:
+					lastInterval = eventTime - lastFrameTime
+					print(str(frameNum) + '   ' + str(lastInterval))
+					lastFrameTime = eventTime
+	
 	#########################################################################
 	# NOT WORKING !!!
 	#########################################################################
@@ -1020,8 +1090,8 @@ class bTrial():
 	#############################################################
 	# Background threads
 	#############################################################
-	def lightsThread(self):
-		logger.debug('lightsThread start')
+	def myLightsThread(self):
+		logger.debug('myLightsThread start')
 		while True:
 			if self.config['lights']['auto']:
 				now = datetime.now()
@@ -1045,7 +1115,7 @@ class bTrial():
 				#print(self.config['hardware']['eventOut'][0]['state'], self.config['hardware']['eventOut'][1]['state'])
 				
 			time.sleep(.5)
-		logger.debug('lightsThread stop')
+		logger.debug('myLightsThread stop')
 
 	def tempThread(self):
 		"""
