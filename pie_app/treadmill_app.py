@@ -5,17 +5,31 @@ import os, sys, time, subprocess
 
 from flask import Flask, render_template, send_file, jsonify, request, Response
 from flask_cors import CORS
+# socketio
+import threading
+from flask_socketio import SocketIO, emit
 
 import logging
 
 from treadmill import treadmill
 
+# was here before socketio
 treadmill = treadmill()
 
 #########################################################################
 app = Flask('treadmill_app')
 #app = Flask(__name__)
 CORS(app)
+
+# socketio
+socketio = SocketIO(app, async_mode='eventlet')
+"""
+thread = None
+#thread_lock = threading.Lock()
+"""
+
+#treadmill = treadmill(socketio)
+#treadmill = treadmill()
 
 pieLogger = logging.getLogger('pie')
 pieHandler = pieLogger.handlers[0]
@@ -27,9 +41,44 @@ werkzeugLogger = logging.getLogger('werkzeug')
 werkzeugLogger.setLevel(logging.ERROR)
 
 #########################################################################
+"""
+class myPushThread(threading.Thread):
+	# need 'isRunning'
+	def __init__(self, treadmill, socketio):
+		threading.Thread.__init__(self)
+		self.treadmill = treadmill
+		self.socketio = socketio
+		
+	def run(self):
+		while True:
+			status = self.treadmill.getStatus()
+			#print('\n\n\nmyPushThread run()', str(status))
+			self.socketio.emit('my_response',
+					{'data': 'Server generated event', 'status': status},
+					namespace='')
+			time.sleep(1.0)
+"""			
+
+"""
+class ssePushThread(threading.Thread):
+	# need 'isRunning'
+	def __init__(self, treadmill):
+		threading.Thread.__init__(self)
+		self.treadmill = treadmill
+		
+	def run(self):
+		while True:
+			status = self.treadmill.getStatus()
+			#print('\n\n\nmyPushThread run()', str(status))
+			yield 'NEW DATA'
+			time.sleep(1.0)
+"""
+
+#########################################################################
 @app.after_request
 def myAfterRequest(response):
-	if request.endpoint is None or request.endpoint in ["status", "log", "static", "lastimage"]:
+	#if request.endpoint is None or request.endpoint in ["status", "log", "static", "lastimage"]:
+	if request.endpoint is None or request.endpoint in ['status', 'static']:
 		# ignore
 		pass
 	else:
@@ -38,6 +87,83 @@ def myAfterRequest(response):
 		app.logger.info('myAfterRequest: ' + request.path)
 	return response
 
+#########################################################################
+# socketio
+#########################################################################
+'''
+def background_thread():
+	"""Example of how to send server generated events to clients."""
+	count = 0
+	while True:
+		socketio.sleep(0.5)
+		count += 1
+		#print('background_thread emit')
+		socketio.emit('my_response',
+					  {'data': 'Server generated event', 'count': count, 'status': treadmill.getStatus()},
+					  namespace='')
+'''
+
+@socketio.on('client_connected')
+def handle_client_connect_event(json):
+	print('handle_client_connect_event() data:', json['date'])
+	'''
+	socketio.emit('my_response',
+				{'data': 'Server generated event', 'status': treadmill.getStatus()},
+				namespace='')
+	'''
+	
+'''
+@socketio.on('client_connected')
+def handle_client_connect_event(json):
+	emit('my_response', {'data': 'Connected', 'count': 0})
+
+	print('handle_client_connect_event received json: {0}'.format(str(json)))
+	#
+	if thread is None:
+		print('handle_client_connect_event() is starting thread myPushThread')
+		thread = ssePushThread(treadmill)
+		thread.daemon = True
+		thread.start()
+	"""
+	global thread
+	if thread is None:
+		thread = socketio.start_background_task(target=background_thread)
+	"""
+	"""
+	with thread_lock:
+		if thread is None:
+			print('handle_client_connect_event() is starting thread myPushThread')
+			thread = myPushThread(treadmill, socketio)
+			thread.daemon = True
+			thread.start()
+	"""
+	"""
+	if thread is None:
+		print('handle_client_connect_event() is starting thread myPushThread')
+		thread = myPushThread(treadmill, socketio)
+		thread.daemon = True
+		thread.start()
+	"""
+'''
+
+# sse
+"""
+@app.route('/subscribeToStatus')
+def subscribeToStatus():
+	def eventStream():
+		while True:
+			time.sleep(0.5)
+			# Poll data from the database
+			# and see if there's a new message
+			#print('yield')
+			yield 'data: xxxYYY'
+			 #treadmill.getStatus()
+	
+	return Response(eventStream(), mimetype="text/event-stream")
+"""
+	
+#########################################################################
+# routes
 #########################################################################
 @app.route('/')
 def hello_world():
@@ -258,4 +384,5 @@ if __name__ == '__main__':
 	app.logger.debug(responseStr)
 	
 	# 0.0.0.0 will run on external ip	
-	app.run(host='0.0.0.0', port=5010, debug=debug, threaded=True)
+	#app.run(host='0.0.0.0', port=5010, debug=debug, threaded=True)
+	socketio.run(app, host='0.0.0.0', port=5010, debug=debug)

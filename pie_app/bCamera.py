@@ -388,6 +388,7 @@ class bCamera:
 						
 					self.secondsElapsedStr = 'n/a'
 
+					# stop recording to afterfilepath file and re-engage the circular video
 					self.camera.split_recording(circulario)
 			
 					self.currentFile = ''
@@ -453,7 +454,7 @@ class bCamera:
 					raise	
 				logger.info('finished convertVideoThread:' + tmpFilename + ' fps:' + str(file['fps']))
 				
-			time.sleep(0.1)
+			time.sleep(1)
 	
 	def convertVideo(self, videoFilePath, fps):
 		"""

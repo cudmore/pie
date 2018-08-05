@@ -11,19 +11,50 @@ import logging
 import RPi.GPIO as GPIO
 
 import bUtil
-import bTrial # leave this, we need to run some code outside of class bTrial
+import bTrial
 import bCamera
 
 logger = logging.getLogger('pie')
 
 #########################################################################
+class treadmillTrial(bTrial.bTrial):
+	def __init__(self, treadmill):
+		bTrial.bTrial.__init__(self)
+		self.treadmill = treadmill
+		
+	def startTrial(self, startArmVideo=False, now=None):
+		bTrial.bTrial.startTrial(self, startArmVideo, now)
+		
+		print('\nsend startTrial socketio')
+		'''
+		self.treadmill.socketio.emit('my_response',
+				{'data': 'Server generated event', 'status': self.treadmill.getStatus()},
+				namespace='')
+		'''
+		
+	def stopTrial(self):
+		bTrial.bTrial.stopTrial(self)
+		
+		print('\nsend stopTrial socketio')
+		'''
+		self.treadmill.socketio.emit('my_response',
+				{'data': 'Server generated event', 'status': self.treadmill.getStatus()},
+				namespace='')
+		'''
+		
+#########################################################################
 class treadmill():
 
+	#def __init__(self, socketio):		
 	def __init__(self):		
 		self.systemInfo = bUtil.getSystemInfo()
 		
-		#self.trial = treadmillTrial(self)
-		self.trial = bTrial.bTrial()
+		'''
+		self.socketio = socketio
+		'''
+		
+		self.trial = treadmillTrial(self)
+		#self.trial = bTrial.bTrial()
 
 						
 	#########################################################################

@@ -43,3 +43,9 @@ sudo apt-get install optipng
 
 Pins GPIO2 and GPIO3 have fixed pull-up resistors, but for other pins this can be configured in software.
 
+## Gunicorn
+
+source env/bin/activate
+cd ~/pie/pie_app
+/home/pi/pie/env/bin/gunicorn -w 1 --bind 192.168.1.15:5010 treadmill_app:app
+

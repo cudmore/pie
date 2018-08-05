@@ -4,3 +4,8 @@ picamera
 flask
 flask-cors
 pyserial
+
+#flask-socketio
+#eventlet
+
+pigpio

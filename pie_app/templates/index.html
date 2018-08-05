@@ -13,6 +13,8 @@
 		<script src="static/bootstrap/js/bootstrap.min.js"></script>
 		<script src="static/angular-ui-switch.min.js"></script>
   
+      	<script src="static/socketio.js"></script>
+
       	<script src="static/treadmill.js"></script>
 
 		<script src="static/plotly/plotly-1.38.3.min.js"></script>
@@ -213,7 +215,7 @@ table.table.table-condensed {
 		</span>
 		Elapsed (sec): {{ status.trial.runtime.secondsElapsedStr }} of {{ status.trial.config.trial.repeatDuration }}<BR>
 		File: {{ status.trial.runtime.currentFile }}<BR>
-		<span ng-if="isState('armedrecording')">
+		<span ng-if="isState('armedrecording') || isState('armed')">
 			Frame: {{ status.trial.runtime.numFrames }}
 		</span>
 		</td>
@@ -298,14 +300,16 @@ table.table.table-condensed {
 
 <div ng-if="! showLastImage">
 </div>
-<span ng-show="showLastImage">
+<span ng-if="showLastImage">
 	<div class="table-responsive">
 	<table class="table" style="width: auto;">
 	<tr>
 		<td>
+		<!-- ng-if removes the element -->
 		<span ng-show="true || showStill">	
 			<div class="myImgContainer">
-			<IMG SRC="{{lastImage}}" width=640 height=480>	
+			<!-- this will hit REST server each time page is refreshed -->
+			<IMG SRC="{{lastImage}}" width=640 height=480>
 			<div class="bottom-left">{{ status.trial.runtime.lastStillTime }}</div>
 			</div>
 		</span>	

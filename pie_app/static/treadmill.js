@@ -320,7 +320,7 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
 }); // arduinoFormController
 
 //////////////////////////////////////////////////////////////////////////////
-app.controller('treadmill', function($scope, $rootScope, $window, $http, $location, $interval, $sce, $timeout, $document) {
+app.controller('treadmill', function($scope, $rootScope, $window, $http, $location, $interval, $route, $sce, $timeout, $document) {
 	
 	//console.log('angular.version:', angular.version)
 	
@@ -436,7 +436,63 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	}
 	*/
 	
-	$interval($scope.getStatus, 400); // no () in function call !!!	
+	// reduce this to improve GPIO frame in????
+	//$interval($scope.getStatus, 400); // no () in function call !!!	
+	//$interval($scope.getStatus, 800); // no () in function call !!!	
+	$scope.getStatus()
+	
+///////////////////////////////////////////////////////////////////////////
+// SOCKETIO
+//var socket = io.connect($scope.myUrl);
+var socket = io.connect('http://192.168.1.15:5010');
+socket.on('connect', function() {
+    // we emit a connected message to let knwo the client that we are connected.
+    console.log('socket.on connect')
+    socket.emit('client_connected', {data: 'New client!'});
+    console.log('2 socket.on connect')
+});
 
+socket.on('my_response', function(msg) {
+	console.log('socket.on my_response msg:', msg)
+
+
+        	    //console.log('msg.status:', msg.status)
+        	    $scope.status = msg.status;
+				// for armed checkbox, it needs a model
+				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+				
+				//for streaming
+				var tmpWidth = parseInt($scope.status.trial.config.video.streamResolution.split(',')[0],10)
+				var tmpHeight = parseInt($scope.status.trial.config.video.streamResolution.split(',')[1],10)
+				$scope.streamWidth = tmpWidth + (tmpWidth * 0.04)
+				$scope.streamHeight = tmpHeight + (tmpWidth * 0.04)
+
+				// for recording
+				$scope.lastImage = $scope.myUrl + 'api/lastimage' + '?' + new Date().getTime()
+				//console.log('$scope.lastImage:', $scope.lastImage)
+				
+				//$rootScope.$emit("CallParentMethod", {});
+				//console.log('$scope.status:', $scope.status)
+				//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+				//if ( $scope.status.runtime.xxxChange) {
+				//}
+				//console.log('xxx $scope.configData:', $scope.configData)
+				$rootScope.$emit("CallParentMethod_SetConfigData", msg.status);
+
+				$route.reload();
+});
+
+///////////////////////////////////////////////////////////////////////////
+// SSE
+/*
+console.log('here')
+var source = new EventSource('/subscribeToStatus');
+source.onmessage = function(event) {
+	console.log('aaa')
+	console.log('listenForPushes:', event.data);
+}
+*/
+
+///////////////////////////////////////////////////////////////////////////
 
 }); // treadmill controller

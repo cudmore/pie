@@ -6,7 +6,11 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 import pprint
 import serial
+
+GPIO = None
 import RPi.GPIO as GPIO
+pigpio = None
+#import pigpio
 
 import logging
 
@@ -43,7 +47,7 @@ logger.addHandler(logFileHandler)
 
 logger.setLevel(logging.DEBUG)
 logger.debug('bTrial initialized pie.log')
-logger.debug('RPi.GPIO VERSION:' + str(GPIO.VERSION))
+#logger.debug('RPi.GPIO VERSION:' + str(GPIO.VERSION))
 
 #
 # load dht temperature/humidity sensor library
@@ -58,6 +62,104 @@ import bUtil
 from bCamera import bCamera
 from version import __version__
 
+#########################################################################
+class myFrameThread(threading.Thread):
+	# need 'isRunning'
+	def __init__(self, trial):
+		threading.Thread.__init__(self)
+		self.trial = trial
+
+
+	#def triggerIn_Callback(self, pin, level, tick):
+	def triggerIn_Callback(self, pin):
+		if self.trial.camera is not None:
+			now = time.time()
+			if self.trial.camera.isState('armed'):
+
+				# I can't fucking remember which one
+				#self.startTrial(startArmVideo=False)
+
+				self.trial.camera.startArmVideo(now=now)
+				#self.lastResponse = self.camera.lastResponse
+			else:
+				print('!!! myFrameThread received triggerIn when camera is NOT armed')
+		else:
+			print('!!! myFrameThread received triggerIn but camera is None')
+
+	#def frameIn_Callback(self, pin, level, tick):
+	def frameIn_Callback(self, pin):
+		if self.trial.isRunning:
+			perf_counter = time.perf_counter()
+			#perf_counter = time.monotonic()
+			now = time.time()
+			self.trial.runtime['numFrames'] += 1
+			
+			lastFrameInterval = 0
+			if self.trial.runtime['numFrames'] > 1:
+				#lastFrameInterval = pigpio.tickDiff(self.trial.runtime['lastFrameTime'], tick)
+				lastFrameInterval = perf_counter - self.trial.runtime['lastFrameTime']
+			#self.trial.runtime['lastFrameTime'] = tick
+			self.trial.runtime['lastFrameTime'] = perf_counter
+			
+			'''
+			self.trial.newEvent('frame', self.trial.numFrames, now=now, tick=tick, perf_counter=perf_counter, lastFrameInterval=lastFrameInterval)
+			'''
+			self.trial.newEvent('frame', self.trial.numFrames, now=now)
+			if self.trial.camera is not None:
+				self.trial.camera.annotate(self.trial.numFrames)
+			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
+		else:
+			print('!!! myFrameThread received frame when not running')
+
+	def run(self):
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(True)
+	
+		'''
+		pi = pigpio.pi()
+		'''
+	
+		# trigger in
+		pin = 24
+		pull_up_down = GPIO.PUD_DOWN
+		polarity = GPIO.RISING
+		bouncetime = 20
+	
+		GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
+		GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
+
+		'''
+		pi.set_mode(pin, pigpio.INPUT)
+		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+		pi.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
+		mode = pi.get_mode(pin) # 0:input, 1:output
+		print('pigpio triggerIn pin', pin, 'mode', mode)
+		'''
+	
+		#frame
+		pin = 23
+		pull_up_down = GPIO.PUD_DOWN
+		polarity = GPIO.RISING
+		bouncetime = 10
+	
+		GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
+		GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
+
+		'''
+		pi.set_mode(pin, pigpio.INPUT)
+		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+		pi.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
+		mode = pi.get_mode(pin) # 0:input, 1:output
+		print('pigpio frameIn pin', pin, 'mode', mode)
+		'''
+	
+		#print('done init myFrameThread')
+
+
+		while True:
+			#time.sleep(0.01)
+			time.sleep(0.005)
+			
 #########################################################################
 class mySerialThread(threading.Thread):
 	"""
@@ -171,17 +273,26 @@ class bTrial():
 		self.runtime['trialNum'] = 0
 		self.runtime['isRunning'] = False
 		self.runtime['startTimeSeconds'] = None
+		self.runtime['numFrames'] = 0
 		self.runtime['startDateStr'] = ''
 		self.runtime['startTimeStr'] = ''
 
 		self.runtime['currentEpoch'] = None
 		self.runtime['lastEpochSeconds'] = None # start time of epoch
 
+		# see newEvent()
 		self.runtime['eventTypes'] = []
 		self.runtime['eventValues'] = []
 		self.runtime['eventStrings'] = []
 		self.runtime['eventTimes'] = [] # relative to self.runtime['startTimeSeconds']
-
+		'''
+		self.runtime['eventTicks'] = []
+		self.runtime['perf_counter'] = []
+		self.runtime['lastFrameInterval'] = []
+		'''
+		
+		self.runtime['lastFrameTime'] = None
+		
 		self.runtime['currentFile'] = ''
 		self.runtime['lastStillTime'] = None
 
@@ -211,7 +322,10 @@ class bTrial():
 		if Adafruit_DHT is not None:
 			logger.debug('Initialized DHT temperature sensor')
 			sensorPin = self.config['hardware']['dhtsensor']['pin']
+			# pigpio
+			"""
 			GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
+			"""
 			myThread = threading.Thread(target = self.tempThread)
 			myThread.daemon = True
 			myThread.start()
@@ -234,6 +348,13 @@ class bTrial():
 		self.mySerialThread.daemon = True
 		self.mySerialThread.start()
 		"""
+		
+		"""
+		testing frame thread to improve detection and precision
+		"""
+		self.myFrameThread = myFrameThread(self)
+		self.myFrameThread.daemon = True
+		self.myFrameThread.start()
 		
 		self.runtime['lastResponse'] = 'PiE server started'
 		
@@ -288,8 +409,8 @@ class bTrial():
 			
 	@property
 	def numFrames(self):
-		return self.runtime['eventTypes'].count('frame')
-
+		return self.runtime['numFrames']
+		
 	@property
 	def currentEpoch(self):
 		return self.runtime['currentEpoch']
@@ -349,7 +470,7 @@ class bTrial():
 		else:
 			status['runtime']['lastStillTime'] = 'None'
 		
-		status['runtime']['numFrames'] = self.numFrames
+		status['runtime']['numFrames'] = self.runtime['numFrames'] #self.numFrames
 
 		status['systemInfo'] = self.systemInfo # remember to update occasionally
 		status['systemInfo']['version'] = __version__
@@ -379,7 +500,7 @@ class bTrial():
 			status['runtime']['serialQueue'] = self.serialResponseStr
 		else:
 			status['runtime']['serialQueue'] = ['None']
-
+		
 		return status
 	
 	#########################################################################
@@ -521,6 +642,43 @@ class bTrial():
 		Init gpio pins with data in self.config dict (loaded from json file)
 		"""
 
+		"""
+		pigpio
+		"""
+		
+		"""
+		#connect to pigpiod daemon
+		pi = pigpio.pi()
+
+		# trigger in
+		pin = 24
+		#pull_up_down = GPIO.PUD_DOWN
+		#polarity = GPIO.RISING
+		#bouncetime = 20
+
+		pi.set_mode(pin, pigpio.INPUT)
+		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+		pi.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
+		mode = pi.get_mode(pin) # 0:input, 1:output
+		print('pigpio triggerIn pin', pin, 'mode', mode)
+		
+		# frame in
+		pin = 23
+		#pull_up_down = GPIO.PUD_DOWN
+		#polarity = GPIO.RISING
+		#bouncetime = 10
+		
+		pi.set_mode(pin, pigpio.INPUT)
+		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+		pi.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
+		mode = pi.get_mode(pin) # 0:input, 1:output
+		print('pigpio frameIn pin', pin, 'mode', mode)
+		
+		print('done init pigpio')
+		"""
+		
+		return 0
+		
 		polarityDict_ = { 'rising': GPIO.RISING, 'falling': GPIO.FALLING, 'both': GPIO.BOTH}
 		pullUpDownDict = { 'up': GPIO.PUD_UP, 'down': GPIO.PUD_DOWN}
 
@@ -566,11 +724,17 @@ class bTrial():
 					adding seperate (more simple) self.frameIn_Callback()
 					"""
 					if name == 'frame':
+						'''
 						print('*** === *** using frameIn_Callback')
 						GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
+						'''
+						pass
 					elif name == 'triggerIn':
+						'''
 						print('*** === *** using triggerIn_Callback')
 						GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
+						'''
+						pass
 					else:
 						GPIO.add_event_detect(pin, polarity, callback=cb, bouncetime=bouncetime)
 					#GPIO.add_event_detect(pin, polarity, callback=self.eventIn_Callback, bouncetime=200)
@@ -634,7 +798,7 @@ class bTrial():
 				except KeyboardInterrupt:
 					pass
 			"""
-				
+					
 	##########################################
 	# Input pin callbacks
 	##########################################
@@ -652,18 +816,19 @@ class bTrial():
 				print('!!! received triggerIn when camera is NOT armed')
 		else:
 			print('!!! received triggerIn but camera is None')
-
+	
 	##########################################
 	def frameIn_Callback(self, pin):
 		if self.isRunning:
 			now = time.time()
+			self.runtime['numFrames'] += 1
 			self.newEvent('frame', self.numFrames, now=now)
 			if self.camera is not None:
 				self.camera.annotate(self.numFrames)
 			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
 		else:
 			print('!!! received frame when not running')
-
+	
 	##########################################
 	#cb = lambda x, name=name: self.eventIn_Callback(x,name)
 	def eventIn_Callback(self, pin, name=None):
@@ -750,7 +915,7 @@ class bTrial():
 		#else:
 		#	print('!!! Trial not running eventIn_Callback()', now, 'pin:', pin, 'name:', name, self.isRunning)
 		#	pass
-						
+				
 	##########################################
 	# Output pins on/off
 	##########################################
@@ -758,6 +923,7 @@ class bTrial():
 		""" Turn output pins on/off """
 		dictList = self.config['hardware']['eventOut'] # list of event out(s)
 		try:
+			# find dictList['name'] == name
 			thisItem = next(item for item in dictList if item["name"] == name)
 		except StopIteration:
 			thisItem = None
@@ -771,7 +937,10 @@ class bTrial():
 			#print('1', thisItem, wasThis, onoff)
 			#if wasThis != onoff:
 			#	print('eventOut() setting pin:', str(pin), 'to', str(onoff), thisItem)
+			
+			# pigpio
 			GPIO.output(pin, onoff)
+
 			# set the state of the out pin we just set
 			if wasThis != onoff:
 				self.config['hardware']['eventOut'][thisItem['idx']]['state'] = onoff
@@ -802,6 +971,8 @@ class bTrial():
 		self.runtime['startDateStr'] = time.strftime('%Y%m%d', time.localtime(now))
 		self.runtime['startTimeStr'] = time.strftime('%H:%M:%S', time.localtime(now))
 		
+		self.runtime['numFrames'] = 0
+
 		self.runtime['currentEpoch'] = 0
 		self.runtime['lastEpochSeconds'] = now
 		
@@ -809,6 +980,11 @@ class bTrial():
 		self.runtime['eventValues'] = []
 		self.runtime['eventStrings'] = []
 		self.runtime['eventTimes'] = [] # relative to self.runtime['startTimeSeconds']
+		"""
+		self.runtime['eventTicks'] = []
+		self.runtime['perf_counter'] = []
+		self.runtime['lastFrameInterval'] = []
+		"""
 		
 		self.runtime['currentFile'] = 'n/a' # video
 		self.runtime['lastStillTime'] = None
@@ -843,6 +1019,8 @@ class bTrial():
 				defaultValue = triggerOutDict['defaultValue']
 				thisValue = not defaultValue
 				#logger.info('triggerOut pin:' + str(pin) + ' value:' + str(thisValue))
+				
+				# pigpio
 				GPIO.output(pin, thisValue)
 			else:
 				logger.info('triggerOut not enabled')
@@ -897,8 +1075,10 @@ class bTrial():
 				pin = triggerOutDict['pin']
 				defaultValue = triggerOutDict['defaultValue']
 				logger.debug('stopTrial pin:' + str(pin) + ' value:' + str(defaultValue))
+				
+				# pigpio
 				GPIO.output(pin, defaultValue)
-		
+				
 		#
 		# report that we stopped a trial
 		nowStr = time.strftime('%H:%M:%S', time.localtime(now))
@@ -908,6 +1088,7 @@ class bTrial():
 			startArmStr = ''
 		self.lastResponse = 'Stopped ' + startArmStr + ' trial ' + str(self.currentTrial) + ' repeat ' + str(self.currentEpoch) + ' at ' + nowStr
 
+	#def newEvent(self, type, val, str='', now=None, tick=None, perf_counter=None, lastFrameInterval=None):
 	def newEvent(self, type, val, str='', now=None):
 		if now is None:
 			now = time.time()
@@ -916,7 +1097,10 @@ class bTrial():
 			self.runtime['eventValues'].append(val)
 			self.runtime['eventStrings'].append(str)
 			self.runtime['eventTimes'].append(now) # when saving, derive (*this - self.runtime['startTimeSeconds'])
-		
+			#self.runtime['eventTicks'].append(tick)
+			#self.runtime['perf_counter'].append(perf_counter)
+			#self.runtime['lastFrameInterval'].append(lastFrameInterval)
+
 	def newEpoch(self, now=None):
 		"""
 		epoch is repeat in user interface
@@ -996,7 +1180,16 @@ class bTrial():
 			headerLine += eol						
 			file.write(headerLine)
 			# column header for event data is (date, time, sconds, event, value, str
-			columnHeader = 'date' + delim + 'time' + delim + 'linuxSeconds' + delim + 'secondsSinceStart' + delim + 'event' + delim + 'value' + delim + 'str' + eol
+			''' pigpio
+							#'ticks' + delim + \
+							#'perf_counter' + delim + \
+							#'lastFrameInterval' + delim + \
+			'''
+			columnHeader = 'date' + delim + 'time' + delim + \
+							'linuxSeconds' + delim + 'secondsSinceStart' + delim + \
+							'event' + delim + \
+							'value' + delim + \
+							'str' + eol
 			file.write(columnHeader)
 			# one line per event
 			for idx, eventTime in enumerate(self.runtime['eventTimes']):
@@ -1004,7 +1197,13 @@ class bTrial():
 				dateStr = time.strftime('%Y%m%d', time.localtime(eventTime))
 				timeStr = time.strftime('%H:%M:%S', time.localtime(eventTime))
 				# need the plus at end of each line here
-				secondsSinceStart = round(eventTime - self.runtime['startTimeSeconds'],4)
+				#secondsSinceStart = round(eventTime - self.runtime['startTimeSeconds'],4)
+				secondsSinceStart = eventTime - self.runtime['startTimeSeconds']
+				''' pigpio
+							#str(self.runtime['eventTicks'][idx]) + delim + \
+							#str(self.runtime['perf_counter'][idx]) + delim + \
+							#str(self.runtime['lastFrameInterval'][idx]) + delim + \
+				'''
 				frameLine = dateStr + delim + \
 							timeStr + delim + \
 							str(eventTime) + delim + \
@@ -1015,6 +1214,8 @@ class bTrial():
 				frameLine += eol
 				file.write(frameLine)
 
+		logger.info('saved: ' + saveFilePath)
+		
 		#
 		# grab from arduino/teensy and save
 		teensySavePath = os.path.join('/home/pi/video', self.runtime['startDateStr'])
@@ -1024,11 +1225,12 @@ class bTrial():
 
 		#
 		# remove this
-		self.analyzeFrames()
+		#self.analyzeFrames_()
+		
 	#########################################################################
 	# testing
 	#########################################################################
-	def analyzeFrames(self):
+	def analyzeFrames_(self):
 		print('=== analyzeFrames()')
 		frameNum = 0
 		lastFrameTime = 0
@@ -1114,7 +1316,7 @@ class bTrial():
 
 				#print(self.config['hardware']['eventOut'][0]['state'], self.config['hardware']['eventOut'][1]['state'])
 				
-			time.sleep(.5)
+			time.sleep(1)
 		logger.debug('myLightsThread stop')
 
 	def tempThread(self):
@@ -1180,7 +1382,7 @@ class bTrial():
 					logger.error('exception reading temp/hum')
 					#raise
 			# 
-			time.sleep(0.5)
+			time.sleep(temperatureInterval/2)
 
 		logger.info('tempThread() stop')
 	
