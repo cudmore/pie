@@ -11,6 +11,50 @@
 
 var app = angular.module('demo', ['uiSwitch', 'ngRoute']);
 
+///
+///
+/*
+var socket = io.connect('http://192.168.1.15:5010');
+socket.on('connect', function() {
+    // we emit a connected message to let knwo the client that we are connected.
+    console.log('socket.on connect')
+    socket.emit('client_connected', {data: 'New client!'});
+    console.log('2 socket.on connect')
+});
+
+socket.on('my_response', function(msg) {
+	console.log('socket.on my_response msg:', msg)
+
+
+        	    //console.log('msg.status:', msg.status)
+        	    $scope.status = msg.status;
+				// for armed checkbox, it needs a model
+				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+				
+				//for streaming
+				var tmpWidth = parseInt($scope.status.trial.config.video.streamResolution.split(',')[0],10)
+				var tmpHeight = parseInt($scope.status.trial.config.video.streamResolution.split(',')[1],10)
+				$scope.streamWidth = tmpWidth + (tmpWidth * 0.04)
+				$scope.streamHeight = tmpHeight + (tmpWidth * 0.04)
+
+				// for recording
+				$scope.lastImage = $scope.myUrl + 'api/lastimage' + '?' + new Date().getTime()
+				//console.log('$scope.lastImage:', $scope.lastImage)
+				
+				//$rootScope.$emit("CallParentMethod", {});
+				//console.log('$scope.status:', $scope.status)
+				//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+				//if ( $scope.status.runtime.xxxChange) {
+				//}
+				//console.log('xxx $scope.configData:', $scope.configData)
+				$rootScope.$emit("CallParentMethod_SetConfigData", msg.status);
+
+				$route.reload();
+});
+*/
+///
+///
+
 //////////////////////////////////////////////////////////////////////////////
 app.factory('statusFactory', function($http, $location, $interval) {
 	var myUrl = $location.absUrl(); //with port :5000
@@ -364,6 +408,10 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 				//}
 				//console.log('xxx $scope.configData:', $scope.configData)
 				$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+				
+				// turn of interval updates that call REST
+				$scope.setInterval($scope.status.trial.runtime.cameraState)
+				
         	});
 	};
 
@@ -392,6 +440,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 				$http.get(url).
     		    	then(function(response) {
         				$scope.status = response.data;
+        				
+        				$scope.setInterval($scope.status.trial.runtime.cameraState)
         			});
 				break;
 			case 'toggleArm':
@@ -400,6 +450,11 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 					$http.get(url).
 							then(function(response) {
 								$scope.status = response.data;
+
+								// start javascript counter
+								//setTimeout(myTimeoutFunction, 5000);
+								//interval = setInterval(myIntervalFunction, 5000);
+								//$scope.setInterval($scope.status.trial.runtime.cameraState)
 							});
 				} else if ($scope.isState('idle')) { //safety check, index interface should handle
 					url = $scope.myUrl + 'api/action/startArm'
@@ -407,8 +462,13 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 							then(function(response) {
 								$scope.status = response.data;
 								
+								// start javascript counter
+								//setTimeout(myTimeoutFunction, 800);
+								//interval = setInterval(myIntervalFunction, 800);
+								//$scope.setInterval('startArm')
+								
 								//removed
-								//$rootScope.$emit("CallParentMethod", {});
+								//$scope.setInterval($scope.status.trial.runtime.cameraState)
 							});
 				}
 				break;
@@ -440,59 +500,111 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	//$interval($scope.getStatus, 400); // no () in function call !!!	
 	//$interval($scope.getStatus, 800); // no () in function call !!!	
 	$scope.getStatus()
-	
-///////////////////////////////////////////////////////////////////////////
-// SOCKETIO
-//var socket = io.connect($scope.myUrl);
-var socket = io.connect('http://192.168.1.15:5010');
-socket.on('connect', function() {
-    // we emit a connected message to let knwo the client that we are connected.
-    console.log('socket.on connect')
-    socket.emit('client_connected', {data: 'New client!'});
-    console.log('2 socket.on connect')
-});
 
-socket.on('my_response', function(msg) {
-	console.log('socket.on my_response msg:', msg)
+	///////////////////////////////////////////////////////////////////////////
+	// counter to display elapsed recording time rather than hitting REST with http.get
+	var counter = 0;
+	$scope.myIntervalFunction = function(){
+		clearInterval(interval);
+		//console.log('myIntervalFunction counter:', counter)
+		//interval = setInterval(myIntervalFunction, counter);
+		counter += 0.4
+		counter = Math.round(counter * 100) / 100
+		$scope.status.trial.runtime.secondsElapsedStr = counter
+	}
 
+	$scope.setInterval = function(state) {
+		//console.log('setInterval()', state)
+		$interval.cancel(interval);
+		if (state == 'armedrecording') {
+			counter = 0
+			interval = $interval($scope.myIntervalFunction, 400);
+		} else {
+			interval = $interval($scope.getStatus, 800);
+		}
+	}
 
-        	    //console.log('msg.status:', msg.status)
-        	    $scope.status = msg.status;
-				// for armed checkbox, it needs a model
-				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+	var interval = $interval($scope.getStatus, 800);
+
+	///////////////////////////////////////////////////////////////////////////
+	// SOCKETIO
+	//var socket = io.connect($scope.myUrl);
+
+	///
+	///
+    angular.element(document).ready(function () {
+		var socket = io.connect('http://192.168.1.15:5010');
+		socket.on('connect', function() {
+			// we emit a connected message to let knwo the client that we are connected.
+			console.log('socket.on connect aaa')
+			socket.emit('client_connected', {data: 'New client!'});
+			console.log('socket.on connect bbb')
+		});
+
+		socket.on('my_response', function(msg) {
+			console.log('socket.on my_response msg:') //, msg)
+
+			/*
+						//console.log('msg.status:', msg.status)
+						$scope.status = msg.status;
+						// for armed checkbox, it needs a model
+						$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
 				
-				//for streaming
-				var tmpWidth = parseInt($scope.status.trial.config.video.streamResolution.split(',')[0],10)
-				var tmpHeight = parseInt($scope.status.trial.config.video.streamResolution.split(',')[1],10)
-				$scope.streamWidth = tmpWidth + (tmpWidth * 0.04)
-				$scope.streamHeight = tmpHeight + (tmpWidth * 0.04)
+						//for streaming
+						var tmpWidth = parseInt($scope.status.trial.config.video.streamResolution.split(',')[0],10)
+						var tmpHeight = parseInt($scope.status.trial.config.video.streamResolution.split(',')[1],10)
+						$scope.streamWidth = tmpWidth + (tmpWidth * 0.04)
+						$scope.streamHeight = tmpHeight + (tmpWidth * 0.04)
 
-				// for recording
-				$scope.lastImage = $scope.myUrl + 'api/lastimage' + '?' + new Date().getTime()
-				//console.log('$scope.lastImage:', $scope.lastImage)
+						// for recording
+						$scope.lastImage = $scope.myUrl + 'api/lastimage' + '?' + new Date().getTime()
+						//console.log('$scope.lastImage:', $scope.lastImage)
 				
-				//$rootScope.$emit("CallParentMethod", {});
-				//console.log('$scope.status:', $scope.status)
-				//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
-				//if ( $scope.status.runtime.xxxChange) {
-				//}
-				//console.log('xxx $scope.configData:', $scope.configData)
-				$rootScope.$emit("CallParentMethod_SetConfigData", msg.status);
+						//$rootScope.$emit("CallParentMethod", {});
+						//console.log('$scope.status:', $scope.status)
+						//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+						//if ( $scope.status.runtime.xxxChange) {
+						//}
+						//console.log('xxx $scope.configData:', $scope.configData)
+						$rootScope.$emit("CallParentMethod_SetConfigData", msg.status);
 
-				$route.reload();
-});
+						$route.reload();
+				*/
+		});
 
-///////////////////////////////////////////////////////////////////////////
-// SSE
-/*
-console.log('here')
-var source = new EventSource('/subscribeToStatus');
-source.onmessage = function(event) {
-	console.log('aaa')
-	console.log('listenForPushes:', event.data);
-}
-*/
+		socket.on('socket_startTrial', function(msg) {
+			console.log('START socket_startTrial() msg:', msg)
+			$scope.status = msg.status
+			$scope.isArmed = true //$scope.isState('armed') || $scope.isState('armedrecording')
+			//$scope.setInterval($scope.status.trial.runtime.cameraState)
+			$scope.setInterval('armedrecording')
+			console.log($scope.status.trial.runtime.cameraState)
+		});
+		socket.on('socket_stopTrial', function(msg) {
+			console.log('STOP socket_stopTrial() msg:', msg)
+			$scope.status = msg.status
+			$scope.isArmed = false //$scope.isState('armed') || $scope.isState('armedrecording')
+			//$scope.setInterval($scope.status.trial.runtime.cameraState)
+			$scope.setInterval('armed')
+			console.log($scope.status.trial.runtime.cameraState)
+		});
+    });
 
-///////////////////////////////////////////////////////////////////////////
+
+	///
+	///
+
+	///////////////////////////////////////////////////////////////////////////
+	// SSE
+	/*
+	console.log('here')
+	var source = new EventSource('/subscribeToStatus');
+	source.onmessage = function(event) {
+		console.log('aaa')
+		console.log('listenForPushes:', event.data);
+	}
+	*/
+
+	///////////////////////////////////////////////////////////////////////////
 
 }); // treadmill controller

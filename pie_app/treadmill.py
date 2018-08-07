@@ -25,33 +25,29 @@ class treadmillTrial(bTrial.bTrial):
 	def startTrial(self, startArmVideo=False, now=None):
 		bTrial.bTrial.startTrial(self, startArmVideo, now)
 		
-		print('\nsend startTrial socketio')
-		'''
-		self.treadmill.socketio.emit('my_response',
-				{'data': 'Server generated event', 'status': self.treadmill.getStatus()},
+		#print('\nsend startTrial socketio')
+		myDict = {'data': 'Server generated event', 'status': self.treadmill.getStatus()}		
+		self.treadmill.socketio.emit('socket_startTrial',
+				myDict,
 				namespace='')
-		'''
-		
+						
 	def stopTrial(self):
 		bTrial.bTrial.stopTrial(self)
 		
-		print('\nsend stopTrial socketio')
-		'''
-		self.treadmill.socketio.emit('my_response',
-				{'data': 'Server generated event', 'status': self.treadmill.getStatus()},
+		#print('\nsend stopTrial socketio')
+		myDict = {'data': 'Server generated event', 'status': self.treadmill.getStatus()}
+		self.treadmill.socketio.emit('socket_stopTrial',
+				myDict,
 				namespace='')
-		'''
-		
+
 #########################################################################
 class treadmill():
 
-	#def __init__(self, socketio):		
-	def __init__(self):		
+	#def __init__(self):		
+	def __init__(self, socketio):		
 		self.systemInfo = bUtil.getSystemInfo()
 		
-		'''
 		self.socketio = socketio
-		'''
 		
 		self.trial = treadmillTrial(self)
 		#self.trial = bTrial.bTrial()

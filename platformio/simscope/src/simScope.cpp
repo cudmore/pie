@@ -55,6 +55,11 @@ void stopTrial(unsigned long now) {
  	trialIsRunning = false;
  	
  	unsigned long dur = now - startTrialMillis;
+
+	digitalWrite(triggerOutPin, 1);
+	delay(5);
+	digitalWrite(triggerOutPin, 0);
+
  	Serial.println("stop trial " + String(trialNumber) + " dur=" + dur + " startTrialMillis=" + String(startTrialMillis));
 }
 /////////////////////////////////////////////////////////////
@@ -128,7 +133,11 @@ void loop()
 		if (serialIn == 115) {
 			// 's'
 			// same behavior as triggerInPin
-			startTrial(gNow);
+			if (trialIsRunning) {
+				stopTrial(gNow);
+			} else {
+				startTrial(gNow);
+			}
 		}
 	}
 }

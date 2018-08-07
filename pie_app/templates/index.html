@@ -13,7 +13,8 @@
 		<script src="static/bootstrap/js/bootstrap.min.js"></script>
 		<script src="static/angular-ui-switch.min.js"></script>
   
-      	<script src="static/socketio.js"></script>
+      	<!-- <script src="static/socketio.js"></script> -->
+      	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
 
       	<script src="static/treadmill.js"></script>
 
@@ -215,9 +216,11 @@ table.table.table-condensed {
 		</span>
 		Elapsed (sec): {{ status.trial.runtime.secondsElapsedStr }} of {{ status.trial.config.trial.repeatDuration }}<BR>
 		File: {{ status.trial.runtime.currentFile }}<BR>
+		<!--
 		<span ng-if="isState('armedrecording') || isState('armed')">
 			Frame: {{ status.trial.runtime.numFrames }}
 		</span>
+		-->
 		</td>
 		
 	</tr>

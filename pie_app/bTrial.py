@@ -9,8 +9,9 @@ import serial
 
 GPIO = None
 import RPi.GPIO as GPIO
+
 pigpio = None
-#import pigpio
+import pigpio
 
 import logging
 
@@ -68,26 +69,26 @@ class myFrameThread(threading.Thread):
 	def __init__(self, trial):
 		threading.Thread.__init__(self)
 		self.trial = trial
-
+		self.pigpiod = None
 
 	#def triggerIn_Callback(self, pin, level, tick):
-	def triggerIn_Callback(self, pin):
+	def triggerIn_Callback(self, pin, level=None, tick=None):
 		if self.trial.camera is not None:
 			now = time.time()
 			if self.trial.camera.isState('armed'):
-
-				# I can't fucking remember which one
-				#self.startTrial(startArmVideo=False)
-
+				# received start trigger while armed
 				self.trial.camera.startArmVideo(now=now)
 				#self.lastResponse = self.camera.lastResponse
+			elif self.trial.camera.isState('armedrecording'):
+				# received start trigger while running
+				self.trial.camera.stopArmVideo()
 			else:
 				print('!!! myFrameThread received triggerIn when camera is NOT armed')
 		else:
 			print('!!! myFrameThread received triggerIn but camera is None')
 
 	#def frameIn_Callback(self, pin, level, tick):
-	def frameIn_Callback(self, pin):
+	def frameIn_Callback(self, pin, level=None, tick=None):
 		if self.trial.isRunning:
 			perf_counter = time.perf_counter()
 			#perf_counter = time.monotonic()
@@ -109,15 +110,21 @@ class myFrameThread(threading.Thread):
 				self.trial.camera.annotate(self.trial.numFrames)
 			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
 		else:
-			print('!!! myFrameThread received frame when not running')
+			#print('!!! myFrameThread received frame when not running')
+			pass
+			
+	def init(self):
+		self.pigpiod = pigpio.pi()
+		if not self.pigpiod.connected:
+			self.pigpiod = None
 
-	def run(self):
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(True)
-	
-		'''
-		pi = pigpio.pi()
-		'''
+		if self.pigpiod:
+			logger.info('Initialized pigpio')
+			pass
+		else:
+			logger.info('Initialized GPIO')
+			GPIO.setmode(GPIO.BCM)
+			GPIO.setwarnings(True)	
 	
 		# trigger in
 		pin = 24
@@ -125,16 +132,16 @@ class myFrameThread(threading.Thread):
 		polarity = GPIO.RISING
 		bouncetime = 20
 	
-		GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-		GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
+		if self.pigpiod:
+			self.pigpiod.set_mode(pin, pigpio.INPUT)
+			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
+			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
+			print('pigpio triggerIn pin', pin, 'mode', mode)
+		else:
+			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
+			GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
 
-		'''
-		pi.set_mode(pin, pigpio.INPUT)
-		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-		pi.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
-		mode = pi.get_mode(pin) # 0:input, 1:output
-		print('pigpio triggerIn pin', pin, 'mode', mode)
-		'''
 	
 		#frame
 		pin = 23
@@ -142,20 +149,22 @@ class myFrameThread(threading.Thread):
 		polarity = GPIO.RISING
 		bouncetime = 10
 	
-		GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-		GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
-
-		'''
-		pi.set_mode(pin, pigpio.INPUT)
-		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-		pi.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
-		mode = pi.get_mode(pin) # 0:input, 1:output
-		print('pigpio frameIn pin', pin, 'mode', mode)
-		'''
+		if self.pigpiod:
+			self.pigpiod.set_mode(pin, pigpio.INPUT)
+			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
+			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
+			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
+			print('pigpio frameIn pin', pin, 'mode', mode)
+		else:
+			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
+			GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
 	
 		#print('done init myFrameThread')
+	
+	def run(self):
 
-
+		self.init()
+		
 		while True:
 			#time.sleep(0.01)
 			time.sleep(0.005)

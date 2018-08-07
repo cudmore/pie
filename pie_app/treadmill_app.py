@@ -1,6 +1,11 @@
 # 20170817
 # Robert Cudmore
 
+'''
+import eventlet
+eventlet.monkey_patch()
+'''
+
 import os, sys, time, subprocess
 
 from flask import Flask, render_template, send_file, jsonify, request, Response
@@ -14,21 +19,23 @@ import logging
 from treadmill import treadmill
 
 # was here before socketio
-treadmill = treadmill()
+#treadmill = treadmill()
 
 #########################################################################
 app = Flask('treadmill_app')
+#app.config['SECRET_KEY'] = 'secret!'
 #app = Flask(__name__)
 CORS(app)
 
-# socketio
-socketio = SocketIO(app, async_mode='eventlet')
+# socketio, i need to use 'threading'
+async_mode = 'threading' #choose: None, 'eventlet', 'threading'
+socketio = SocketIO(app, async_mode=async_mode)
 """
 thread = None
 #thread_lock = threading.Lock()
 """
 
-#treadmill = treadmill(socketio)
+treadmill = treadmill(socketio)
 #treadmill = treadmill()
 
 pieLogger = logging.getLogger('pie')
@@ -103,14 +110,14 @@ def background_thread():
 					  namespace='')
 '''
 
-@socketio.on('client_connected')
+@socketio.on('client_connected', namespace='')
 def handle_client_connect_event(json):
-	print('handle_client_connect_event() data:', json['date'])
-	'''
+	print('client_connected -->> handle_client_connect_event()') # data:', json['date'])
+
 	socketio.emit('my_response',
 				{'data': 'Server generated event', 'status': treadmill.getStatus()},
 				namespace='')
-	'''
+
 	
 '''
 @socketio.on('client_connected')
@@ -167,6 +174,7 @@ def subscribeToStatus():
 #########################################################################
 @app.route('/')
 def hello_world():
+	#return render_template('index.html', async_mode=socketio.async_mode)
 	return send_file('templates/index.html')
 
 @app.route('/templates/partials/<path:htmlfile>')

@@ -1,11 +1,10 @@
 RPi.GPIO
 picamera
+pyserial
 
 flask
 flask-cors
-pyserial
+flask-socketio
 
-#flask-socketio
-#eventlet
-
+eventlet
 pigpio
