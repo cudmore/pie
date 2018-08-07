@@ -215,7 +215,9 @@ table.table.table-condensed {
 		{{ status.trial.config.trial.numberOfRepeats }}<BR>
 		</span>
 		Elapsed (sec): {{ status.trial.runtime.secondsElapsedStr }} of {{ status.trial.config.trial.repeatDuration }}<BR>
-		File: {{ status.trial.runtime.currentFile }}<BR>
+		<span ng-if="isState('recording')">
+			File: {{ status.trial.runtime.currentFile }}<BR>
+		</span>
 		<!--
 		<span ng-if="isState('armedrecording') || isState('armed')">
 			Frame: {{ status.trial.runtime.numFrames }}

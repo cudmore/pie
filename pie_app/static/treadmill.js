@@ -536,9 +536,9 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 		var socket = io.connect('http://192.168.1.15:5010');
 		socket.on('connect', function() {
 			// we emit a connected message to let knwo the client that we are connected.
-			console.log('socket.on connect aaa')
+			//console.log('socket.on connect aaa')
 			socket.emit('client_connected', {data: 'New client!'});
-			console.log('socket.on connect bbb')
+			//console.log('socket.on connect bbb')
 		});
 
 		socket.on('my_response', function(msg) {
