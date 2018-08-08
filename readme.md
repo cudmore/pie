@@ -1,6 +1,6 @@
 # Raspberry Pi Controlled Experiment (PiE)
 
-## THIS IS A WORK IN PROGRESS, PLEASE DO NOT USE
+## This is a work in progress and is updated daily. If you are interested in using this code, please email robert.cudmore@gmail.com
 
 A web server to control an experiment to record video and optionally control a motorized treadmill.
 
@@ -212,9 +212,9 @@ This table shows all the pin connections for option #3. To wire a Raspberry Pi t
 
 ## Manually editing user config
 
-The PiE server comes with three default sets of options: Homecage, Scope, and Treadmill. There is an additional configuration called `User` which can be edited manually to configure the PiE server.
+The PiE server comes with three default sets of options: Homecage, Scope, and Treadmill. There is an additional `User` configuration that can be edited manually to configure the PiE server.
 
-To edit the `User` file, open [pie/pie_app/config/config_user.json](app/config/config_user.json). The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
+To edit the `User` file, open [pie_app/config/config_user.json](pie_app/config/config_user.json). The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
 
 To check your work, use
 
@@ -223,7 +223,7 @@ cd ~/pie/pie_app/config
 cat config_user.json | python -m json.tool
 ```
 
-If your edits are syntatically correct, this command will output the contents of the file. If you have introduced errors, they will be reported. For example, if your forget a comma  after `"enabled": true` like this
+If your edits are syntatically correct, this command will output the contents of the file. If you have created an error, they will be reported on the command line. For example, if your forget a comma  after `"enabled": true` like this
 
 ```
         "triggerIn": {
@@ -240,7 +240,38 @@ You will get an error
 Expecting , delimiter: line 27 column 13 (char 648)
 ```
 
-## Running the PiE server manually
+## Troubleshooting
+
+### Running the PiE server at boot
+
+```
+# To make the background server run at boot
+./pie enable
+
+# To make the background server NOT run at boot
+./pie disable
+```
+
+### Running the PiE server on the command line
+
+The PiE server is run as a background system service following installation with `./install-pie` and can be controlled with `./pie start` and `./pie stop`. Specifically, the PiE server is using `systemctl` which is a subset of [systemd][systemd]. If the PiE server is not running correctly, it can be run directly on the command line using `./pie run`.
+
+```
+# Make sure the background PiE server is stopped
+cd ~/pie
+./pie stop
+
+# Run the PiE server and output logs to the command line window
+# Once running, use ctrl+c to stop the server
+./pie run
+
+# To start the background server again
+./pie start
+```
+
+### Running the PiE server manually
+
+Normally, the PiE server is run in the background after installation with '~/pie/install-pie'. If there are errors or the PiE server is not running, the pie server can be run manually as follows.
 
 ```
 # stop background pie server
@@ -259,7 +290,9 @@ python treadmill_app.py
 # point a browser to http://[xxx
 ```
 
-## Full reinstall
+### Full reinstall of the PiE server
+
+Issue these commands to remove and reinstall the PiE server. As always, be carful of using 'sudo'.
 
 ```
 cd
@@ -269,51 +302,30 @@ cd pie
 ./install-pie
 ```
 
-## Troubleshooting
-
-The PiE server is run as a background system service with `./pie start`, `./pie stop`, `./pie status`. Specifically, we are using `systemctl` which is a subset of [systemd][systemd]. If your running into trouble with the PiE server, you want to run the server direclty on the command line to see the output. Use `./pie run` to do this.
-
-```
-# Make sure the background PiE server is stopped
-cd ~/pie
-./pie stop
-
-# Run the PiE server and output logs to the command line window
-# This is useful for debugging
-# Once running, use ctrl+c to stop the server
-./pie run
-
-# To start the background server again
-./pie start
-
-# To make the background server run at boot
-./pie enable
-
-# To make the background server NOT run at boot
-./pie disable
-
-```
-	
 ### Checking the camera
 
 Capture a still image with the Pi camera with `raspistill -o test.jpg`
 
-	raspistill -o test.jpg
+```
+raspistill -o test.jpg
+```
 
 If you get any errors then there is a problem with the Pi Camera.
 
 Make sure the Pi Camera is activated
 
-	# type this
-	sudo raspi-config
-	
-	# select '5 Interface Options'
-	# select 'P1 Camera'
-	# Answer 'Yes' to question 'Would you like the camera interface to be enabled?'
+```
+# type this at a command prompt
+sudo raspi-config
+
+# select '5 Interface Options'
+# select 'P1 Camera'
+# Answer 'Yes' to question 'Would you like the camera interface to be enabled?'
+```
 
 ### Converting video
 
-The PiE server uses [libav/avconv][libav] to convert video from .h264 to .mp4. If labav/avconv does not install during `~/pie/install-pie`, this conversion will not work.
+The PiE server uses [libav (avconv)][libav] to convert video from .h264 to .mp4. If labav (avconv) does not install during `~/pie/install-pie`, this conversion will not work.
 
 ### OSError: [Errno 98] Address already in use
 
@@ -321,7 +333,7 @@ This happens when you try and start the server but it is already running. Usuall
 
 ### Working versions
 
-Here is a snapshot of versions for a working PiE server as of July 8, 2018. As libraries are updated, things can potentially break.
+Here is a snapshot of versions for a working PiE server as of August 8, 2018. As python packages are updated, things can potentially break.
 
 ```
 cd ~/pie
@@ -331,15 +343,23 @@ pip freeze
 
 ```
 # returns
-Adafruit-DHT==1.3.2
 click==6.7
+dnspython==1.15.0
+eventlet==0.24.1
 Flask==1.0.2
 Flask-Cors==3.0.6
+Flask-SocketIO==3.0.1
+greenlet==0.4.14
 itsdangerous==0.24
 Jinja2==2.10
 MarkupSafe==1.0
+monotonic==1.5
 picamera==1.13
+pigpio==1.40.post1
+pkg-resources==0.0.0
 pyserial==3.4
+python-engineio==2.2.0
+python-socketio==2.0.0
 RPi.GPIO==0.6.3
 six==1.11.0
 Werkzeug==0.14.1
