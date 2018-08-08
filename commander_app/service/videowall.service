@@ -1,0 +1,13 @@
+[Unit]
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=videowall_path=/home/pi/pie/commander_app
+ExecStart=/bin/bash /home/pi/pie/commander_app/service/videowall_service.sh
+Restart=always
+User=pi
+
+[Install]
+WantedBy=default.target
+

@@ -1,0 +1,13 @@
+[Unit]
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Environment=treadmill_path=/home/pi/pie/pie_app
+ExecStart=/bin/bash /home/pi/pie/pie_app/service/treadmill_service.sh
+Restart=always
+User=pi
+
+[Install]
+WantedBy=default.target
+
