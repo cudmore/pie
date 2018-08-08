@@ -240,6 +240,25 @@ You will get an error
 Expecting , delimiter: line 27 column 13 (char 648)
 ```
 
+## Running the PiE server manually
+
+```
+# stop background pie server
+cd ~/pie
+./pie stop
+
+# activate pie server virtual environment (this is created in ~/pie/install-pie)
+# Once activated, the command prompt should start with (env)
+cd ~/pie
+source env/bin/activate
+
+# run the pie server manually
+cd ~/pie/pie_app
+python treadmill_app.py
+
+# point a browser to http://[xxx
+```
+
 ## Full reinstall
 
 ```

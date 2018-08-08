@@ -1,42 +1,31 @@
-# 20170817
 # Robert Cudmore
-
-'''
-import eventlet
-eventlet.monkey_patch()
-'''
+# 20170817
 
 import os, sys, time, subprocess
 
 from flask import Flask, render_template, send_file, jsonify, request, Response
 from flask_cors import CORS
-# socketio
-import threading
 from flask_socketio import SocketIO, emit
 
 import logging
 
 from treadmill import treadmill
 
-# was here before socketio
-#treadmill = treadmill()
-
 #########################################################################
 app = Flask('treadmill_app')
-#app.config['SECRET_KEY'] = 'secret!'
 #app = Flask(__name__)
 CORS(app)
 
-# socketio, i need to use 'threading'
-async_mode = 'threading' #choose: None, 'eventlet', 'threading'
+# socketio is for server side push during armed recording
+# if we do not use this, REST calls to interface will cause errors in GPIO timing
+# socketio needs to use 'async_mode = 'threading'
+# otherwise server side emit does not arrive at web client ????
+async_mode = 'threading' #choose from: None, 'eventlet', 'threading'
 socketio = SocketIO(app, async_mode=async_mode)
-"""
-thread = None
-#thread_lock = threading.Lock()
-"""
 
+# instantiate a treadmill object
+# treadmill needs socketio to emit to client on external GPIO triggerIn
 treadmill = treadmill(socketio)
-#treadmill = treadmill()
 
 pieLogger = logging.getLogger('pie')
 pieHandler = pieLogger.handlers[0]
@@ -48,44 +37,15 @@ werkzeugLogger = logging.getLogger('werkzeug')
 werkzeugLogger.setLevel(logging.ERROR)
 
 #########################################################################
-"""
-class myPushThread(threading.Thread):
-	# need 'isRunning'
-	def __init__(self, treadmill, socketio):
-		threading.Thread.__init__(self)
-		self.treadmill = treadmill
-		self.socketio = socketio
-		
-	def run(self):
-		while True:
-			status = self.treadmill.getStatus()
-			#print('\n\n\nmyPushThread run()', str(status))
-			self.socketio.emit('my_response',
-					{'data': 'Server generated event', 'status': status},
-					namespace='')
-			time.sleep(1.0)
-"""			
-
-"""
-class ssePushThread(threading.Thread):
-	# need 'isRunning'
-	def __init__(self, treadmill):
-		threading.Thread.__init__(self)
-		self.treadmill = treadmill
-		
-	def run(self):
-		while True:
-			status = self.treadmill.getStatus()
-			#print('\n\n\nmyPushThread run()', str(status))
-			yield 'NEW DATA'
-			time.sleep(1.0)
-"""
-
-#########################################################################
 @app.after_request
 def myAfterRequest(response):
-	#if request.endpoint is None or request.endpoint in ["status", "log", "static", "lastimage"]:
-	if request.endpoint is None or request.endpoint in ['status', 'static']:
+	"""
+	ignore some specific endpoints to reduce log clutter
+	we could put 'lastimage' in this list but are intentionally leaving it out
+	to remind user that opening the 'lastimage' tab actually hits the server
+	and can cause problems with gpio timing
+	"""
+	if request.endpoint is None or request.endpoint in ['status', 'static', 'log']:
 		# ignore
 		pass
 	else:
@@ -97,80 +57,19 @@ def myAfterRequest(response):
 #########################################################################
 # socketio
 #########################################################################
-'''
-def background_thread():
-	"""Example of how to send server generated events to clients."""
-	count = 0
-	while True:
-		socketio.sleep(0.5)
-		count += 1
-		#print('background_thread emit')
-		socketio.emit('my_response',
-					  {'data': 'Server generated event', 'count': count, 'status': treadmill.getStatus()},
-					  namespace='')
-'''
-
 @socketio.on('client_connected', namespace='')
 def handle_client_connect_event(json):
-	print('client_connected -->> handle_client_connect_event()') # data:', json['date'])
+	app.logger.info('client_connected on ' + json['clientUrl'])
 
+	'''
+	# this is an example of an emit()
 	socketio.emit('my_response',
 				{'data': 'Server generated event', 'status': treadmill.getStatus()},
 				namespace='')
-
-	
-'''
-@socketio.on('client_connected')
-def handle_client_connect_event(json):
-	emit('my_response', {'data': 'Connected', 'count': 0})
-
-	print('handle_client_connect_event received json: {0}'.format(str(json)))
-	#
-	if thread is None:
-		print('handle_client_connect_event() is starting thread myPushThread')
-		thread = ssePushThread(treadmill)
-		thread.daemon = True
-		thread.start()
-	"""
-	global thread
-	if thread is None:
-		thread = socketio.start_background_task(target=background_thread)
-	"""
-	"""
-	with thread_lock:
-		if thread is None:
-			print('handle_client_connect_event() is starting thread myPushThread')
-			thread = myPushThread(treadmill, socketio)
-			thread.daemon = True
-			thread.start()
-	"""
-	"""
-	if thread is None:
-		print('handle_client_connect_event() is starting thread myPushThread')
-		thread = myPushThread(treadmill, socketio)
-		thread.daemon = True
-		thread.start()
-	"""
-'''
-
-# sse
-"""
-@app.route('/subscribeToStatus')
-def subscribeToStatus():
-	def eventStream():
-		while True:
-			time.sleep(0.5)
-			# Poll data from the database
-			# and see if there's a new message
-			#print('yield')
-			yield 'data: xxxYYY'
-			 #treadmill.getStatus()
-	
-	return Response(eventStream(), mimetype="text/event-stream")
-"""
+	'''
 	
 #########################################################################
-# routes
+# REST routes
 #########################################################################
 @app.route('/')
 def hello_world():
@@ -188,6 +87,7 @@ def systeminfo():
 
 @app.route('/log')
 def log():
+	# stream pie.log text file
 	with open('pie.log', 'r') as f:
 		return Response(f.read(), mimetype='text/plain')
 
@@ -208,7 +108,6 @@ def environmentlog():
 def status():
 	return jsonify(treadmill.getStatus())
 
-
 @app.route('/api/refreshsysteminfo')
 def refreshsysteminfo():
 	treadmill.trial.refreshSystemInfo()
@@ -223,6 +122,8 @@ def lastimage():
 		return ''
 
 #########################################################################
+# set the animalID and conditionID
+#########################################################################
 @app.route('/api/set/animalid/<string:animalID>')
 def setAnimalID(animalID):
 	treadmill.trial.setAnimalID(animalID)
@@ -233,11 +134,17 @@ def setConditionID(conditionID):
 	treadmill.trial.setConditionID(conditionID)
 	return jsonify(treadmill.getStatus())
 	
+#########################################################################
+# set the scope file name
+# this is used by prairie scope at end of scan
+#########################################################################
 @app.route('/api/set/scopefilename/<string:scopeFilename>')
 def setScopeFilename(scopeFilename):
 	treadmill.trial.setScopeFilename(scopeFilename)
 	return jsonify(treadmill.getStatus())
 	
+#########################################################################
+# respond to actions like start and stop
 #########################################################################
 @app.route('/api/action/<string:thisAction>')
 def action(thisAction):
@@ -267,6 +174,8 @@ def action(thisAction):
 	return jsonify(treadmill.getStatus())
 
 #########################################################################
+# handle submission of forms
+#########################################################################
 @app.route('/api/submit/<string:submitThis>', methods=['GET', 'POST'])
 def submit(submitThis):
 	post = request.get_json()
@@ -288,12 +197,17 @@ def submit(submitThis):
 	return jsonify(treadmill.getStatus())
 
 #########################################################################
+#  Load default config files from /config
+#########################################################################
 @app.route('/api/submit/loadconfig/<string:loadThis>')
 def loadconfig(loadThis):
 	treadmill.loadConfig(loadThis)
 	return jsonify(treadmill.getStatus())
 
 #########################################################################
+#  not used -->> remove
+#########################################################################
+"""
 @app.route('/api/eventout/<name>/<int:onoff>')
 def eventOut(name, onoff):
 	''' turn named output pin on/off '''
@@ -306,15 +220,14 @@ def simulate_starttrigger():
 	tmpPin = None
 	treadmill.trial.triggerIn_Callback(tmpPin)
 	return jsonify(treadmill.getStatus())
+"""
 
+#########################################################################
+#  display list of files in video/
 #########################################################################
 @app.route('/videolist')
 @app.route('/videolist/<path:req_path>')
 def videolist(req_path=''):
-	"""
-	Serve a list of video files
-	"""
-	
 	# we need to append '/' so os.path.join works???
 	savePath = treadmill.trial.config['trial']['savePath'] + '/'
 	
@@ -374,11 +287,16 @@ def videolist(req_path=''):
 	return render_template('videolist.html', files=files, abs_path=abs_path, systemInfo=treadmill.systemInfo)
 
 #########################################################################
+#  utility
+#########################################################################
 def whatismyip():
 	ips = subprocess.check_output(['hostname', '--all-ip-addresses'])
 	ips = ips.decode('utf-8').strip()
 	return ips
 
+#########################################################################
+#  main
+#########################################################################
 if __name__ == '__main__':	
 	myip = whatismyip()
 	

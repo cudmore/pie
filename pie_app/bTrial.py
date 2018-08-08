@@ -12,7 +12,6 @@ import logging
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
 
-#
 # set up logging
 logFormat = "[%(asctime)s] {%(filename)s %(funcName)s:%(lineno)d} %(levelname)s - %(message)s"
 dictConfig({
@@ -42,9 +41,7 @@ logger.addHandler(logFileHandler)
 
 logger.setLevel(logging.DEBUG)
 logger.debug('bTrial initialized pie.log')
-#logger.debug('RPi.GPIO VERSION:' + str(GPIO.VERSION))
 
-#
 # load dht temperature/humidity sensor library
 try:
 	import Adafruit_DHT 
@@ -56,85 +53,9 @@ except:
 import bUtil
 from bCamera import bCamera
 from bPins import PinThread
+from bSerial import mySerialThread
 from version import __version__
 
-#########################################################################
-class mySerialThread(threading.Thread):
-	"""
-	background thread which monitors inSerialQueue and sends commands out serial.
-	"""
-	def __init__(self, inSerialQueue, outSerialQueue, errorSerialQueue, port, baud):
-		threading.Thread.__init__(self)
-		self.inSerialQueue = inSerialQueue
-		self.outSerialQueue = outSerialQueue
-		self.errorSerialQueue = errorSerialQueue
-		self.port = port #'/dev/ttyACM0'
-		self.baud = baud #115200
-		logger.debug('mySerialThread initializing, port:' + str(port) + ' baud:' + str(baud))
-		
-		self.mySerial = None
-		try:
-			# there is no corresponding self.mySerial.close() ???
-			self.mySerial = serial.Serial(port, baud, timeout=0.25)
-		except (serial.SerialException) as e:
-			logger.error(str(e))
-			errorSerialQueue.put(str(e))
-		except:
-			logger.error('other exception in mySerialThread init')
-			raise
-		#else:
-		#	errorSerialQueue.put('None')
-
-	def run(self):
-		logger.debug('mySerialThread.run() starting')
-		while True:
-			try:
-				# serialDict is {'type': command/dump, 'str': command/filePath}
-				serialDict = self.inSerialQueue.get(block=False, timeout=0)
-			except (queue.Empty) as e:
-				# there was nothing in the queue
-				pass
-			else:
-				# there was something in the queue
-				#logger.info('serialThread inSerialQueue: "' + str(serialCommand) + '"')
-				
-				serialType = serialDict['type']
-				serialCommand = serialDict['str']
-				try:
-					if self.mySerial is not None:
-						if serialType == 'dump':
-							# dump a teensy/arduino trial to a file
-							fullSavePath = serialCommand
-							self.mySerial.write('d\n'.encode()) # write 'd\n'
-
-							#time.sleep(0.01)
-
-							resp = self.mySerial.readline().decode().strip()
-							with open(fullSavePath, 'w') as file:
-								while resp:
-									file.write(resp + '\n')
-									resp = self.mySerial.readline().decode().strip()
-						elif serialType == 'command':
-							# send a command to teensy and get one line response
-							if not serialCommand.endswith('\n'):
-								serialCommand += '\n'
-							self.mySerial.write(serialCommand.encode())
-
-							#time.sleep(0.01)
-						
-							resp = self.mySerial.readline().decode().strip()
-							self.outSerialQueue.put(resp)
-							logger.info('serialThread outSerialQueue: "' + str(resp) + '"')
-						else:
-							logger.error('bad serial command type' + str(serialDict))
-				except (serial.SerialException) as e:
-					logger.error(str(e))
-				except:
-					logger.error('other exception in mySerialThread run')
-					raise
-
-			# make sure not to remove this
-			time.sleep(0.1)
 
 #########################################################################
 class bTrial():
@@ -183,13 +104,13 @@ class bTrial():
 		self.runtime['eventValues'] = []
 		self.runtime['eventStrings'] = []
 		self.runtime['eventTimes'] = [] # relative to self.runtime['startTimeSeconds']
-		'''
 		self.runtime['eventTicks'] = []
+		'''
 		self.runtime['perf_counter'] = []
 		self.runtime['lastFrameInterval'] = []
 		'''
 		
-		self.runtime['lastFrameTime'] = None
+		#self.runtime['lastFrameTime'] = None
 		
 		self.runtime['currentFile'] = ''
 		self.runtime['lastStillTime'] = None
@@ -223,6 +144,7 @@ class bTrial():
 			logger.debug('Initialized DHT temperature sensor')
 			sensorPin = self.config['hardware']['dhtsensor']['pin']
 			# pigpio
+			# todo: fix this
 			"""
 			GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
 			"""
@@ -254,8 +176,9 @@ class bTrial():
 		"""
 		self.myPinThread = PinThread(self)
 		self.myPinThread.init(self.config)
-		self.myPinThread.daemon = True
-		self.myPinThread.start()
+		# PinThread does nothing in its run() function
+		#self.myPinThread.daemon = True
+		#self.myPinThread.start()
 
 		self.runtime['lastResponse'] = 'PiE server started'
 		
@@ -481,19 +404,22 @@ class bTrial():
 				
 			# only log when we make a change
 			if newWhite != wasWhite:
-				print('white status change')
+				#print('white status change')
 				self.newEvent('whiteLED', newWhite, now=now)
 			if newIR != wasIR:
-				print('ir status change')
+				#print('ir status change')
 				self.newEvent('irLED', newIR, now=now)
+
+			# if we made any changes
+			if newWhite != wasWhite or newIR != wasIR:
+				# respond with what we just did
+				newWhiteStr = 'On' if newWhite else 'Off'
+				newIRStr = 'On' if newIR else 'Off'
+				newAutoStr = 'On' if newAuto else 'Off'
+				self.lastResponse = 'Updated lights, white:' + newWhiteStr + ' ir:' + newIRStr + ' auto:' + newAutoStr 
 
 		self.config['lights']['auto'] = newAuto
 
-		# respond with what we just did
-		newWhiteStr = 'On' if newWhite else 'Off'
-		newIRStr = 'On' if newIR else 'Off'
-		newAutoStr = 'On' if newAuto else 'Off'
-		self.lastResponse = 'Updated lights, white:' + newWhiteStr + ' ir:' + newIRStr + ' auto:' + newAutoStr 
 		
 	def updateAnimal(self, configDict):
 		self.config['trial']['animalID'] = configDict['trial']['animalID']
@@ -571,285 +497,8 @@ class bTrial():
 		"""
 		Init gpio pins with data in self.config dict (loaded from json file)
 		"""
-
-		"""
-		pigpio
-		"""
-		
-		"""
-		#connect to pigpiod daemon
-		pi = pigpio.pi()
-
-		# trigger in
-		pin = 24
-		#pull_up_down = GPIO.PUD_DOWN
-		#polarity = GPIO.RISING
-		#bouncetime = 20
-
-		pi.set_mode(pin, pigpio.INPUT)
-		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-		pi.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
-		mode = pi.get_mode(pin) # 0:input, 1:output
-		print('pigpio triggerIn pin', pin, 'mode', mode)
-		
-		# frame in
-		pin = 23
-		#pull_up_down = GPIO.PUD_DOWN
-		#polarity = GPIO.RISING
-		#bouncetime = 10
-		
-		pi.set_mode(pin, pigpio.INPUT)
-		pi.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-		pi.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
-		mode = pi.get_mode(pin) # 0:input, 1:output
-		print('pigpio frameIn pin', pin, 'mode', mode)
-		
-		print('done init pigpio')
-		"""
-		
 		self.myPinThread.init(self.config)
-		
-		return 0
-		
-		"""
-		polarityDict_ = { 'rising': GPIO.RISING, 'falling': GPIO.FALLING, 'both': GPIO.BOTH}
-		pullUpDownDict = { 'up': GPIO.PUD_UP, 'down': GPIO.PUD_DOWN}
-
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(True)
-
-		self.triggerOutIndex = None # assigned below when we find 'triggerOut'
-		self.whiteLEDIndex = None
-		self.irLEDIndex = None
-		
-		#
-		# events in (e.g. frame)
-		for idx,eventIn in enumerate(self.config['hardware']['eventIn']):
-			# as long as each event has different pin, polarity can be different
-			name = eventIn['name']
-			pin = eventIn['pin']
-
-			polarityStr = eventIn['polarity'] #rising, falling, both
-			polarity = polarityDict_[polarityStr]
-
-			pull_up_downStr = eventIn['pull_up_down'] # up or down
-			pull_up_down = pullUpDownDict[pull_up_downStr]
-
-			
-			bouncetime = eventIn['bouncetime'] #ms
-			enabled = eventIn['enabled'] # is it enabled to receive events
-
-			self.config['hardware']['eventIn'][idx]['idx'] = idx # for reverse lookup
-
-			if enabled:
-				GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-
-				# pin is always passed as first argument, this is why we have undefined 'x' here
-				cb = lambda x, name=name: self.eventIn_Callback(x,name)
-
-				try:
-					GPIO.remove_event_detect(pin)
-				except (RuntimeError) as e:
-					print('error in eventIn remove_event_detect, enabled: ' + str(e))
-
-				try:
-					'''
-					adding seperate (more simple) self.frameIn_Callback()
-					'''
-					if name == 'frame':
-						'''
-						print('*** === *** using frameIn_Callback')
-						GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
-						'''
-						pass
-					elif name == 'triggerIn':
-						'''
-						print('*** === *** using triggerIn_Callback')
-						GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
-						'''
-						pass
-					else:
-						GPIO.add_event_detect(pin, polarity, callback=cb, bouncetime=bouncetime)
-					#GPIO.add_event_detect(pin, polarity, callback=self.eventIn_Callback, bouncetime=200)
-				except (RuntimeError) as e:
-					logger.warning('eventIn add_event_detect: ' + str(e))
-					pass
 					
-				logger.info('ENABLED eventIn name:' + name + ' pin:' + str(pin) + ' polarity:' + polarityStr + ' pull_up_down:' + pull_up_downStr + ' bouncetime:' + str(bouncetime))
-				#logger.info('ENABLED eventIn: ' +  str(eventIn))
-			else:
-				try:
-					#print('pin:', pin, 'is not enabled, calling remove_event_detect(pin)')
-					GPIO.remove_event_detect(pin)
-					logger.info('DISABLED eventIn name:' + name + ' pin:' + str(pin))
-				except (RuntimeError) as e:
-					print('error in eventIn remove_event_detect, not enabled: ' + str(e))
-			
-		#
-		# events out (e.g. led, motor, or lick port)
-		for idx,eventOut in enumerate(self.config['hardware']['eventOut']):
-			enabled = eventOut['enabled'] # is it enabled to receive events
-			name = eventOut['name']
-			pin = eventOut['pin']
-			defaultValue = eventOut['defaultValue']
-
-			# set the status in the config struct
-			self.config['hardware']['eventOut'][idx]['state'] = defaultValue # so javascript can read state
-			self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
-
-			if enabled:
-				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, defaultValue)
-				logger.info('ENABLED eventOut name:' + name + ' pin:' + str(pin) + ' defaultValue:' + str(defaultValue))
-			else:
-				pass
-				
-			# assign index for reverse lookup
-			if name == 'triggerOut':
-				self.triggerOutIndex = idx
-			if name == 'whiteLED':
-				self.whiteLEDIndex = idx
-			if name == 'irLED':
-				self.irLEDIndex = idx
-		
-			'''
-			# testing pulse-width-modulation (PWM) on piins (18, 19)
-			if name == 'whiteLED':
-				tmpPin = pin #19
-				tmpFreq = 50 # Hz
-				tmpDutyCycle = 0
-				self.pwm0 = GPIO.PWM(tmpPin, tmpFreq)
-				self.pwm0.start(tmpDutyCycle) # # where dc is the duty cycle (0.0 <= dc <= 100.0)
-				try:
-					while True:
-						for dc in range(0, 101, 5):
-							self.pwm0.ChangeDutyCycle(dc)
-							time.sleep(0.1)
-						for dc in range(100, -1, -5):
-							self.pwm0.ChangeDutyCycle(dc)
-							time.sleep(0.1)
-				except KeyboardInterrupt:
-					pass
-			'''
-		"""
-					
-	##########################################
-	# Input pin callbacks
-	##########################################
-	def triggerIn_Callback(self, pin):
-		if self.camera is not None:
-			now = time.time()
-			if self.camera.isState('armed'):
-
-				# I can't fucking remember which one
-				#self.startTrial(startArmVideo=False)
-
-				self.camera.startArmVideo(now=now)
-				#self.lastResponse = self.camera.lastResponse
-			else:
-				print('!!! received triggerIn when camera is NOT armed')
-		else:
-			print('!!! received triggerIn but camera is None')
-	
-	##########################################
-	def frameIn_Callback(self, pin):
-		if self.isRunning:
-			now = time.time()
-			self.runtime['numFrames'] += 1
-			self.newEvent('frame', self.numFrames, now=now)
-			if self.camera is not None:
-				self.camera.annotate(self.numFrames)
-			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
-		else:
-			print('!!! received frame when not running')
-	
-	##########################################
-	#cb = lambda x, name=name: self.eventIn_Callback(x,name)
-	def eventIn_Callback(self, pin, name=None):
-		"""
-		Can call manually with just name
-		REMEMBER: DO NOT RUN VLASK SERVER IN DEBUG MODE (WE GET HIT TWICE)
-		"""
-		
-		now = time.time()
-		
-		#if self.isRunning:
-		if True:
-			enabled = False
-			dictList = self.config['hardware']['eventIn']
-			if pin is None and name is not None:
-				# called by user, look up event in list by ['name']
-				thisItem = next(item for item in dictList if item["name"] == name)
-				if thisItem is None:
-					print('ERROR: did not find pin by name:', name)
-					pass
-				else:
-					enabled = thisItem['enabled']
-					pin = thisItem['pin']
-			elif pin is not None:
-				# we received a callback with pin specified
-				# look up by pin number
-				thisItem = next(item for item in dictList if item["pin"] == pin)
-				if thisItem is None:
-					#error
-					print('ERROR: did not find pin by pin number:', pin)
-				else:
-					enabled = thisItem['enabled']
-					name = thisItem['name']
-
-			# value of pinIsUp will not work if receiving a fast pulse and detecting 'both'
-			pinIsUp = GPIO.input(pin) == 1
-			#print('=== RECEIVED eventIn_Callback', now, 'pin:', pin, 'name:', name, 'enabled:', enabled, 'pinIsUp:', pinIsUp)
-			
-			if enabled:
-				#print('eventIn_Callback() enabled:' + str(enabled) + ' pin:' + str(pin) + ' name:' + name)
-			
-				if name == 'triggerIn':
-					#logger.debug('\ntriggerIn_Callback pin:' + str(pin))
-					if self.camera is not None:
-						if self.camera.isState('armed'):
-				
-							# I can't fucking remember which one
-							#self.startTrial(startArmVideo=False)
-				
-							self.camera.startArmVideo(now=now)
-							#self.lastResponse = self.camera.lastResponse
-						else:
-							print('!!! received triggerIn when camera is NOT armed')
-					else:
-						print('!!! received triggerIn but camera is None')
-				elif name == 'frame':
-					if self.isRunning:
-						#self.numFrames += 1 # can't do this, no setter
-						self.newEvent('frame', self.numFrames, now=now)
-						if self.camera is not None:
-							self.camera.annotate(self.numFrames)
-						# this slows things down too much -- do not use
-						#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
-					else:
-						print('!!! received frame when not running')
-				else:
-					if self.isRunning:
-						# just log the name and state
-						self.newEvent(name, pinIsUp, now=now)
-						if name == 'arduinoMotor':
-							if self.camera is not None:
-								if pinIsUp:
-									self.camera.annotate('m')
-								else:
-									self.camera.annotate('')
-						#logger.debug('eventIn_Callback() pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
-					else:
-						print('!!! received', name, ' when not running')
-
-			else:
-				pass
-				#logger.warning('eventIn_Callback() pin is not enabled, pin: ' + str(pin) + ' name: ' + name + ' value: ' + str(pinIsUp))
-		
-		#else:
-		#	print('!!! Trial not running eventIn_Callback()', now, 'pin:', pin, 'name:', name, self.isRunning)
-		#	pass
-				
 	#########################################################################
 	# start/stop a trial
 	#########################################################################
@@ -879,23 +528,18 @@ class bTrial():
 		self.runtime['currentEpoch'] = 0
 		self.runtime['lastEpochSeconds'] = now
 		
+		# keep track of events, these are appended to in newEvent() and saved in saveTrial()
 		self.runtime['eventTypes'] = []
 		self.runtime['eventValues'] = []
 		self.runtime['eventStrings'] = []
 		self.runtime['eventTimes'] = [] # relative to self.runtime['startTimeSeconds']
-		"""
 		self.runtime['eventTicks'] = []
-		self.runtime['perf_counter'] = []
-		self.runtime['lastFrameInterval'] = []
-		"""
 		
 		self.runtime['currentFile'] = 'n/a' # video
 		self.runtime['lastStillTime'] = None
 		
 		self.runtime['scopeFilename'] = '' # set by self.setScopeFilename()
-		
-		#logger.debug('startTrial startArmVideo=' + str(startArmVideo))
-		
+				
 		self.newEvent('startTrial', self.runtime['trialNum'], now=now)
 		
 		if self.camera is not None:
@@ -998,7 +642,7 @@ class bTrial():
 		self.lastResponse = 'Stopped ' + startArmStr + ' trial ' + str(self.currentTrial) + ' repeat ' + str(self.currentEpoch) + ' at ' + nowStr
 
 	#def newEvent(self, type, val, str='', now=None, tick=None, perf_counter=None, lastFrameInterval=None):
-	def newEvent(self, type, val, str='', now=None):
+	def newEvent(self, type, val, str='', now=None, tick=None):
 		if now is None:
 			now = time.time()
 		if self.isRunning:
@@ -1006,7 +650,7 @@ class bTrial():
 			self.runtime['eventValues'].append(val)
 			self.runtime['eventStrings'].append(str)
 			self.runtime['eventTimes'].append(now) # when saving, derive (*this - self.runtime['startTimeSeconds'])
-			#self.runtime['eventTicks'].append(tick)
+			self.runtime['eventTicks'].append(tick)
 			#self.runtime['perf_counter'].append(perf_counter)
 			#self.runtime['lastFrameInterval'].append(lastFrameInterval)
 
@@ -1098,7 +742,8 @@ class bTrial():
 							'linuxSeconds' + delim + 'secondsSinceStart' + delim + \
 							'event' + delim + \
 							'value' + delim + \
-							'str' + eol
+							'str' + delim + \
+							'tick' + eol
 			file.write(columnHeader)
 			# one line per event
 			for idx, eventTime in enumerate(self.runtime['eventTimes']):
@@ -1108,10 +753,8 @@ class bTrial():
 				# need the plus at end of each line here
 				#secondsSinceStart = round(eventTime - self.runtime['startTimeSeconds'],4)
 				secondsSinceStart = eventTime - self.runtime['startTimeSeconds']
-				''' pigpio
-							#str(self.runtime['eventTicks'][idx]) + delim + \
-							#str(self.runtime['perf_counter'][idx]) + delim + \
-							#str(self.runtime['lastFrameInterval'][idx]) + delim + \
+				'''
+				eventTicks is only used for pigpio frame
 				'''
 				frameLine = dateStr + delim + \
 							timeStr + delim + \
@@ -1119,7 +762,8 @@ class bTrial():
 							str(secondsSinceStart) + delim + \
 							self.runtime['eventTypes'][idx] + delim + \
 							str(self.runtime['eventValues'][idx]) + delim + \
-							self.runtime['eventStrings'][idx]
+							self.runtime['eventStrings'][idx] + delim + \
+							str(self.runtime['eventTicks'][idx])
 				frameLine += eol
 				file.write(frameLine)
 
@@ -1132,28 +776,6 @@ class bTrial():
 		saveFilePath = os.path.join(savePath, teensyFile)
 		self.serialInAppend('dump', saveFilePath)
 
-		#
-		# remove this
-		#self.analyzeFrames_()
-		
-	#########################################################################
-	# testing
-	#########################################################################
-	def analyzeFrames_(self):
-		print('=== analyzeFrames()')
-		frameNum = 0
-		lastFrameTime = 0
-		for idx, eventTime in enumerate(self.runtime['eventTimes']):
-			eventType = self.runtime['eventTypes'][idx]
-			if eventType == 'frame':
-				frameNum += 1
-				if frameNum == 1:
-					lastFrameTime = eventTime
-				else:
-					lastInterval = eventTime - lastFrameTime
-					print(str(frameNum) + '   ' + str(lastInterval))
-					lastFrameTime = eventTime
-	
 	#########################################################################
 	# NOT WORKING !!!
 	#########################################################################

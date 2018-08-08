@@ -110,15 +110,15 @@ echo '=== install-pie: Done installing libav-tools (avconv)'
 echo '==='
 
 echo ' '
-echo '=== install-pie: Copying pie_app/install/treadmill.service  ->  /etc/systemd/system/treadmill.service'
-sudo cp pie_app/install/treadmill.service /etc/systemd/system/treadmill.service
+echo '=== install-pie: Copying pie_app/service/treadmill.service  ->  /etc/systemd/system/treadmill.service'
+sudo cp pie_app/service/treadmill.service /etc/systemd/system/treadmill.service
 sudo chmod 664 /etc/systemd/system/treadmill.service
 sudo systemctl daemon-reload
 sudo systemctl enable treadmill.service
 sudo systemctl start treadmill.service
 
-echo '=== install-pie: Copying admin_app/install/pieadmin.service  ->  /etc/systemd/system/pieadmin.service'
-sudo cp admin_app/install/pieadmin.service /etc/systemd/system/pieadmin.service
+echo '=== install-pie: Copying admin_app/service/pieadmin.service  ->  /etc/systemd/system/pieadmin.service'
+sudo cp admin_app/service/pieadmin.service /etc/systemd/system/pieadmin.service
 sudo chmod 664 /etc/systemd/system/pieadmin.service
 
 echo '=== install-pie: reloading daemons'

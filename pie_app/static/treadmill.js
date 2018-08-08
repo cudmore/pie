@@ -533,11 +533,12 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	///
 	///
     angular.element(document).ready(function () {
-		var socket = io.connect('http://192.168.1.15:5010');
+		//var socket = io.connect('http://192.168.1.15:5010');
+		var socket = io.connect($scope.myUrl);
 		socket.on('connect', function() {
 			// we emit a connected message to let knwo the client that we are connected.
 			//console.log('socket.on connect aaa')
-			socket.emit('client_connected', {data: 'New client!'});
+			socket.emit('client_connected', {data: 'New client!', clientUrl: $scope.myUrl});
 			//console.log('socket.on connect bbb')
 		});
 

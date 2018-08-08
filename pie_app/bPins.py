@@ -27,6 +27,9 @@ class PinThread(threading.Thread):
 		"""
 		self.pinNumberDict_ = {}
 		
+	#########################################################################
+	# Input pin callbacks
+	#########################################################################
 	def gpio_InputPinCallback(self, pin):
 		""" Input pin callback for GPIO """
 		now = time.time()
@@ -35,7 +38,7 @@ class PinThread(threading.Thread):
 	def pigpio_InputCallback(self, pin, level, tick):
 		""" Input pin callback for pigpio """
 		now = time.time()
-		tick = tick * 1000 # us to ms
+		tick = tick / 1000 # us to ms
 		self.inputCallback(pin, now, tick=tick)
 	
 	def inputCallback(self, pin, now, tick=None):
@@ -50,28 +53,27 @@ class PinThread(threading.Thread):
 					if self.trial.camera.isState('armed'):
 						# received start trigger while armed
 						self.trial.camera.startArmVideo(now=now)
-						self.trial.newEvent('triggerIn', True, now=now)
+						self.trial.newEvent('triggerIn', True, now=now, tick=tick)
 					elif self.trial.camera.isState('armedrecording'):
 						# received start trigger while running
 						self.trial.camera.stopArmVideo()
-						self.trial.newEvent('triggerIn', False, now=now)
+						self.trial.newEvent('triggerIn', False, now=now, tick=tick)
 					else:
 						logger.warning('PinThread received triggerIn when camera is NOT armed')
 				else:
 					print('!!! PinThread received triggerIn but camera is None')
 			elif name == 'frame':
 				if self.trial.isRunning:
-					now = time.time()
 					self.trial.runtime['numFrames'] += 1
 			
+					'''
 					lastFrameInterval = 0
 					if self.trial.runtime['numFrames'] > 1:
-						#lastFrameInterval = pigpio.tickDiff(self.trial.runtime['lastFrameTime'], tick)
 						lastFrameInterval = now - self.trial.runtime['lastFrameTime']
 					self.trial.runtime['lastFrameTime'] = now
-			
+					'''
 					# log the frame
-					self.trial.newEvent('frame', self.trial.numFrames, now=now)
+					self.trial.newEvent('frame', self.trial.numFrames, now=now, tick=tick)
 					# watermark video
 					if self.trial.camera is not None:
 						self.trial.camera.annotate(self.trial.numFrames)
@@ -80,21 +82,8 @@ class PinThread(threading.Thread):
 					pass
 			else:
 				# just log all other events
-				self.trial.newEvent(name, True, now=now)
+				self.trial.newEvent(name, True, now=now, tick=tick)
 				
-	# todo: not used?
-	def pinFromName(self, name):
-		""" Given a pin name, return its pin number """
-		ret = None
-		for i, (k,v) in enumerate(self.pinNumberDict_.items()):
-			#print('pinDict:', v)
-			if v['name'] == name:
-				ret = k
-				break
-		if ret is None:
-			print('error: pinFromName() did not find pin named "', name, '"')
-		return ret
-			
 	##########################################
 	# Output pins on/off
 	##########################################
@@ -110,12 +99,15 @@ class PinThread(threading.Thread):
 
 			if self.pigpiod:
 				# todo: fix this
-				pass
+				self.pigpiod.write(pin, onoff)
 			else:
 				GPIO.output(pin, onoff)
 			# set the state of the out pin we just set
 			#self.pinNumberDict_[pin]['state'] = onoff
 
+	#########################################################################
+	# Configure a pin as 'input' or 'output' using config json
+	#########################################################################
 	def configPin(self, inout, configDict):
 
 		# dictionaries to map config json to GPIO and pigpio packages
@@ -186,7 +178,8 @@ class PinThread(threading.Thread):
 			if enabled:
 				if self.pigpiod:
 					# todo: fix this
-					pass
+					self.pigpiod.set_mode(pin, pigpio.OUTPUT)
+					self.pigpiod.write(pin, defaultValue)
 				else:
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, defaultValue)
@@ -224,6 +217,9 @@ class PinThread(threading.Thread):
 					pass
 			"""
 			
+	#########################################################################
+	# Initialize from config json
+	#########################################################################
 	def init(self, config):
 
 		self.pigpiod = pigpio.pi()
@@ -238,51 +234,7 @@ class PinThread(threading.Thread):
 			GPIO.setmode(GPIO.BCM)
 			GPIO.setwarnings(True)	
 	
-		'''
-		#
-		# trigger in
-		pin = 24
-		pull_up_down = GPIO.PUD_DOWN
-		polarity = GPIO.RISING
-		bouncetime = 20
-	
-		if self.pigpiod:
-			self.pigpiod.set_mode(pin, pigpio.INPUT)
-			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
-			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
-			print('pigpio triggerIn pin', pin, 'mode', mode)
-		else:
-			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-			GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
-		'''
-		
-		'''
-		#
-		#frame
-		pin = 23
-		pull_up_down = GPIO.PUD_DOWN
-		polarity = GPIO.RISING
-		bouncetime = 10
-	
-		if self.pigpiod:
-			self.pigpiod.set_mode(pin, pigpio.INPUT)
-			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
-			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
-			print('pigpio frameIn pin', pin, 'mode', mode)
-		else:
-			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-			GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
-		'''
-		
-		'''
-		self.triggerOutIndex = None # assigned below when we find 'triggerOut'
-		self.whiteLEDIndex = None
-		self.irLEDIndex = None
-		'''
-		
-		self.pinNumberDict_ = {} # assigned in self.configPin
+		self.pinNumberDict_ = {} # assigned in self.configPin()
 
 		# input (e.g. triggerIn, frame)
 		for idx,eventIn in enumerate(config['hardware']['eventIn']):
@@ -296,10 +248,25 @@ class PinThread(threading.Thread):
 			#self.config['hardware']['eventOut'][idx]['state'] = defaultValue # so javascript can read state
 			#self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
 			
+	#########################################################################
+	# utility
+	#########################################################################
+	def pinFromName(self, name):
+		""" Given a pin name, return its pin number """
+		ret = None
+		for i, (k,v) in enumerate(self.pinNumberDict_.items()):
+			#print('pinDict:', v)
+			if v['name'] == name:
+				ret = k
+				break
+		if ret is None:
+			print('error: pinFromName() did not find pin named "', name, '"')
+		return ret
+			
+	#########################################################################
+	# run
+	#########################################################################
 	def run(self):
-
-		#self.init()
-		
 		while True:
 			#time.sleep(0.01)
 			time.sleep(1)
