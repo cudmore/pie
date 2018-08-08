@@ -297,7 +297,7 @@ def loadconfig(loadThis):
 @app.route('/api/eventout/<name>/<int:onoff>')
 def eventOut(name, onoff):
 	''' turn named output pin on/off '''
-	treadmill.trial.eventOut(name, True if onoff else False)
+	treadmill.trial.myPinThread.eventOut(name, True if onoff else False)
 	return jsonify(treadmill.getStatus())
 
 @app.route('/api/simulate/starttrigger')

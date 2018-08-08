@@ -7,12 +7,6 @@ from datetime import datetime, timedelta
 import pprint
 import serial
 
-GPIO = None
-import RPi.GPIO as GPIO
-
-pigpio = None
-import pigpio
-
 import logging
 
 from logging import FileHandler #RotatingFileHandler
@@ -61,114 +55,9 @@ except:
 
 import bUtil
 from bCamera import bCamera
+from bPins import PinThread
 from version import __version__
 
-#########################################################################
-class myFrameThread(threading.Thread):
-	# need 'isRunning'
-	def __init__(self, trial):
-		threading.Thread.__init__(self)
-		self.trial = trial
-		self.pigpiod = None
-
-	#def triggerIn_Callback(self, pin, level, tick):
-	def triggerIn_Callback(self, pin, level=None, tick=None):
-		if self.trial.camera is not None:
-			now = time.time()
-			if self.trial.camera.isState('armed'):
-				# received start trigger while armed
-				self.trial.camera.startArmVideo(now=now)
-				#self.lastResponse = self.camera.lastResponse
-			elif self.trial.camera.isState('armedrecording'):
-				# received start trigger while running
-				self.trial.camera.stopArmVideo()
-			else:
-				print('!!! myFrameThread received triggerIn when camera is NOT armed')
-		else:
-			print('!!! myFrameThread received triggerIn but camera is None')
-
-	#def frameIn_Callback(self, pin, level, tick):
-	def frameIn_Callback(self, pin, level=None, tick=None):
-		if self.trial.isRunning:
-			perf_counter = time.perf_counter()
-			#perf_counter = time.monotonic()
-			now = time.time()
-			self.trial.runtime['numFrames'] += 1
-			
-			lastFrameInterval = 0
-			if self.trial.runtime['numFrames'] > 1:
-				#lastFrameInterval = pigpio.tickDiff(self.trial.runtime['lastFrameTime'], tick)
-				lastFrameInterval = perf_counter - self.trial.runtime['lastFrameTime']
-			#self.trial.runtime['lastFrameTime'] = tick
-			self.trial.runtime['lastFrameTime'] = perf_counter
-			
-			'''
-			self.trial.newEvent('frame', self.trial.numFrames, now=now, tick=tick, perf_counter=perf_counter, lastFrameInterval=lastFrameInterval)
-			'''
-			self.trial.newEvent('frame', self.trial.numFrames, now=now)
-			if self.trial.camera is not None:
-				self.trial.camera.annotate(self.trial.numFrames)
-			#logger.debug('eventIn_Callback() frame ' + str(self.numFrames))
-		else:
-			#print('!!! myFrameThread received frame when not running')
-			pass
-			
-	def init(self):
-		self.pigpiod = pigpio.pi()
-		if not self.pigpiod.connected:
-			self.pigpiod = None
-
-		if self.pigpiod:
-			logger.info('Initialized pigpio')
-			pass
-		else:
-			logger.info('Initialized GPIO')
-			GPIO.setmode(GPIO.BCM)
-			GPIO.setwarnings(True)	
-	
-		# trigger in
-		pin = 24
-		pull_up_down = GPIO.PUD_DOWN
-		polarity = GPIO.RISING
-		bouncetime = 20
-	
-		if self.pigpiod:
-			self.pigpiod.set_mode(pin, pigpio.INPUT)
-			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.triggerIn_Callback)
-			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
-			print('pigpio triggerIn pin', pin, 'mode', mode)
-		else:
-			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-			GPIO.add_event_detect(pin, polarity, callback=self.triggerIn_Callback, bouncetime=bouncetime)
-
-	
-		#frame
-		pin = 23
-		pull_up_down = GPIO.PUD_DOWN
-		polarity = GPIO.RISING
-		bouncetime = 10
-	
-		if self.pigpiod:
-			self.pigpiod.set_mode(pin, pigpio.INPUT)
-			self.pigpiod.set_pull_up_down(pin, pigpio.PUD_DOWN) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
-			self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
-			mode = self.pigpiod.get_mode(pin) # 0:input, 1:output
-			print('pigpio frameIn pin', pin, 'mode', mode)
-		else:
-			GPIO.setup(pin, GPIO.IN, pull_up_down=pull_up_down)
-			GPIO.add_event_detect(pin, polarity, callback=self.frameIn_Callback, bouncetime=bouncetime)
-	
-		#print('done init myFrameThread')
-	
-	def run(self):
-
-		self.init()
-		
-		while True:
-			#time.sleep(0.01)
-			time.sleep(0.005)
-			
 #########################################################################
 class mySerialThread(threading.Thread):
 	"""
@@ -311,13 +200,15 @@ class bTrial():
 		
 		# index into list self.config['hardware']['eventOut']
 		# will be assigned in initGPIO_()
-		self.triggerOutIndex = None
-		self.whiteLEDIndex = None
-		self.irLEDIndex = None
+		'''
+		self.triggerOutIndex = 0
+		self.whiteLEDIndex = 1
+		self.irLEDIndex = 2
+		'''
 		
 		#
 		# GPIO
-		self.initGPIO_()
+		#self.initGPIO_()
 
 		#
 		# lights thread
@@ -361,10 +252,11 @@ class bTrial():
 		"""
 		testing frame thread to improve detection and precision
 		"""
-		self.myFrameThread = myFrameThread(self)
-		self.myFrameThread.daemon = True
-		self.myFrameThread.start()
-		
+		self.myPinThread = PinThread(self)
+		self.myPinThread.init(self.config)
+		self.myPinThread.daemon = True
+		self.myPinThread.start()
+
 		self.runtime['lastResponse'] = 'PiE server started'
 		
 	def serialInAppend(self, type, str):
@@ -534,7 +426,6 @@ class bTrial():
 		self.config['lights'] = configDict['lights']
 		self.config['video'] = configDict['video']
 		
-		# was this
 		self.config['hardware']['allowArming'] = configDict['hardware']['allowArming']
 		self.config['hardware']['serial']['useSerial'] = configDict['hardware']['serial']['useSerial']
 
@@ -550,25 +441,55 @@ class bTrial():
 
 		self.lastResponse = 'Updated pins'
 		
-	def updateLED(self, configDict):
+	def updateLED(self, configDict, allowAuto=True):
+		
+		now = time.time()
+		
+		# todo: fix this logic
+		# get the indices into config dictionary
+		whiteLEDIndex = None
+		for idx, eventOut in enumerate(configDict['hardware']['eventOut']):
+			if eventOut['name'] == 'whiteLED':
+				whiteLEDIndex = idx
+				break
+				
+		irLEDIndex = None
+		for idx, eventOut in enumerate(configDict['hardware']['eventOut']):
+			if eventOut['name'] == 'irLED':
+				irLEDIndex = idx
+				break
+				
 		# grab what we just received
-		newWhite = configDict['hardware']['eventOut'][self.whiteLEDIndex]['state']
-		newIR = configDict['hardware']['eventOut'][self.irLEDIndex]['state']
+		newWhite = configDict['hardware']['eventOut'][whiteLEDIndex]['state']
+		newIR = configDict['hardware']['eventOut'][irLEDIndex]['state']
 		newAuto = configDict['lights']['auto']
 
-		if self.config['lights']['auto']:
+		wasWhite = self.config['hardware']['eventOut'][whiteLEDIndex]['state']
+		wasIR = self.config['hardware']['eventOut'][irLEDIndex]['state']
+		wasAuto = self.config['lights']['auto']
+
+		if not allowAuto and self.config['lights']['auto']:
 			self.lastResponse = 'Can not set lights when in auto mode'
 			pass
 		else:
-			self.config['hardware']['eventOut'][self.whiteLEDIndex]['state'] = newWhite
-			self.config['hardware']['eventOut'][self.irLEDIndex]['state'] = newIR
-				
+			self.config['hardware']['eventOut'][whiteLEDIndex]['state'] = newWhite
+			self.config['hardware']['eventOut'][irLEDIndex]['state'] = newIR
+
 			# set actual pins
-			self.eventOut('whiteLED', newWhite)
-			self.eventOut('irLED', newIR)
+			self.myPinThread.eventOut('whiteLED', newWhite)
+			self.myPinThread.eventOut('irLED', newIR)
+				
+			# only log when we make a change
+			if newWhite != wasWhite:
+				print('white status change')
+				self.newEvent('whiteLED', newWhite, now=now)
+			if newIR != wasIR:
+				print('ir status change')
+				self.newEvent('irLED', newIR, now=now)
 
 		self.config['lights']['auto'] = newAuto
 
+		# respond with what we just did
 		newWhiteStr = 'On' if newWhite else 'Off'
 		newIRStr = 'On' if newIR else 'Off'
 		newAutoStr = 'On' if newAuto else 'Off'
@@ -686,8 +607,11 @@ class bTrial():
 		print('done init pigpio')
 		"""
 		
+		self.myPinThread.init(self.config)
+		
 		return 0
 		
+		"""
 		polarityDict_ = { 'rising': GPIO.RISING, 'falling': GPIO.FALLING, 'both': GPIO.BOTH}
 		pullUpDownDict = { 'up': GPIO.PUD_UP, 'down': GPIO.PUD_DOWN}
 
@@ -729,9 +653,9 @@ class bTrial():
 					print('error in eventIn remove_event_detect, enabled: ' + str(e))
 
 				try:
-					"""
+					'''
 					adding seperate (more simple) self.frameIn_Callback()
-					"""
+					'''
 					if name == 'frame':
 						'''
 						print('*** === *** using frameIn_Callback')
@@ -787,8 +711,8 @@ class bTrial():
 				self.whiteLEDIndex = idx
 			if name == 'irLED':
 				self.irLEDIndex = idx
-
-			"""
+		
+			'''
 			# testing pulse-width-modulation (PWM) on piins (18, 19)
 			if name == 'whiteLED':
 				tmpPin = pin #19
@@ -806,7 +730,8 @@ class bTrial():
 							time.sleep(0.1)
 				except KeyboardInterrupt:
 					pass
-			"""
+			'''
+		"""
 					
 	##########################################
 	# Input pin callbacks
@@ -925,37 +850,6 @@ class bTrial():
 		#	print('!!! Trial not running eventIn_Callback()', now, 'pin:', pin, 'name:', name, self.isRunning)
 		#	pass
 				
-	##########################################
-	# Output pins on/off
-	##########################################
-	def eventOut(self, name, onoff):
-		""" Turn output pins on/off """
-		dictList = self.config['hardware']['eventOut'] # list of event out(s)
-		try:
-			# find dictList['name'] == name
-			thisItem = next(item for item in dictList if item["name"] == name)
-		except StopIteration:
-			thisItem = None
-		if thisItem is None:
-			err = 'eventOut() got bad name: ' + name
-			logger.error(err)
-			self.lastResponse = err
-		else:
-			wasThis = self.config['hardware']['eventOut'][thisItem['idx']]['state']
-			pin = thisItem['pin']
-			#print('1', thisItem, wasThis, onoff)
-			#if wasThis != onoff:
-			#	print('eventOut() setting pin:', str(pin), 'to', str(onoff), thisItem)
-			
-			# pigpio
-			GPIO.output(pin, onoff)
-
-			# set the state of the out pin we just set
-			if wasThis != onoff:
-				self.config['hardware']['eventOut'][thisItem['idx']]['state'] = onoff
-				self.newEvent(name, onoff, now=time.time())
-				logger.debug('eventOut ' + name + ' '+ str(onoff))
-
 	#########################################################################
 	# start/stop a trial
 	#########################################################################
@@ -1019,6 +913,8 @@ class bTrial():
 		"""
 		#
 		# triggerOut
+		self.myPinThread.eventOut('triggerOut', True)
+		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
 			enabled = triggerOutDict['enabled']
@@ -1033,7 +929,8 @@ class bTrial():
 				GPIO.output(pin, thisValue)
 			else:
 				logger.info('triggerOut not enabled')
-	
+		'''
+		
 		#
 		# report that we started a trial
 		nowStr = time.strftime('%H:%M:%S', time.localtime(now))
@@ -1077,6 +974,8 @@ class bTrial():
 		self.serialInAppend('command', 'stop')
 
 		# triggerOut
+		self.myPinThread.eventOut('triggerOut', False)
+		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
 			enabled = triggerOutDict['enabled']
@@ -1087,6 +986,7 @@ class bTrial():
 				
 				# pigpio
 				GPIO.output(pin, defaultValue)
+		'''
 				
 		#
 		# report that we stopped a trial
@@ -1306,25 +1206,39 @@ class bTrial():
 		while True:
 			if self.config['lights']['auto']:
 				now = datetime.now()
-				#print(now.hour, self.config['lights']['sunrise'], self.config['lights']['sunset'])
+
+				# todo: get rid of this garbage
+				whiteLEDIndex = None
+				for idx, eventOut in enumerate(self.config['hardware']['eventOut']):
+					if eventOut['name'] == 'whiteLED':
+						whiteLEDIndex = idx
+						break
+				
+				irLEDIndex = None
+				for idx, eventOut in enumerate(self.config['hardware']['eventOut']):
+					if eventOut['name'] == 'irLED':
+						irLEDIndex = idx
+						break
+				
+				# grab what we just received
+				tmpConfig = self.config
+
 				isDaytime = now.hour >= float(self.config['lights']['sunrise']) and now.hour < float(self.config['lights']['sunset'])
 				if isDaytime:
-					#print('isDaytime')
-					self.eventOut('whiteLED', True)
-					#self.config['hardware']['eventOut'][self.whiteLEDIndex]['state'] = True
-					
-					self.eventOut('irLED', False)
-					#self.config['hardware']['eventOut'][self.irLEDIndex]['state'] = False
+					# was this
+					#self.myPinThread.eventOut('whiteLED', True)
+					#self.myPinThread.eventOut('irLED', False)
+					# now this
+					tmpConfig['hardware']['eventOut'][whiteLEDIndex]['state'] = True
+					tmpConfig['hardware']['eventOut'][irLEDIndex]['state'] = False
+					self.updateLED(tmpConfig, allowAuto=True)
 				else:
-					#print('not isDaytime')
-					self.eventOut('whiteLED', False)
-					#self.config['hardware']['eventOut'][self.whiteLEDIndex]['state'] = False
-
-					self.eventOut('irLED', True)
-					#self.config['hardware']['eventOut'][self.irLEDIndex]['state'] = True
-
-				#print(self.config['hardware']['eventOut'][0]['state'], self.config['hardware']['eventOut'][1]['state'])
-				
+					# was this
+					#self.myPinThread.eventOut('whiteLED', False)
+					#self.myPinThread.eventOut('irLED', True)				
+					tmpConfig['hardware']['eventOut'][whiteLEDIndex]['state'] = False
+					tmpConfig['hardware']['eventOut'][irLEDIndex]['state'] = True
+					self.updateLED(tmpConfig, allowAuto=True)
 			time.sleep(1)
 		logger.debug('myLightsThread stop')
 

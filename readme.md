@@ -240,6 +240,16 @@ You will get an error
 Expecting , delimiter: line 27 column 13 (char 648)
 ```
 
+## Full reinstall
+
+```
+cd
+sudo rm -Rf pie
+git clone https://github.com/cudmore/pie.git
+cd pie
+./install-pie
+```
+
 ## Troubleshooting
 
 The PiE server is run as a background system service with `./pie start`, `./pie stop`, `./pie status`. Specifically, we are using `systemctl` which is a subset of [systemd][systemd]. If your running into trouble with the PiE server, you want to run the server direclty on the command line to see the output. Use `./pie run` to do this.

@@ -148,7 +148,7 @@ table.table.table-condensed {
 			name = "animalID"
 			type="text"
 			ng-model="configData.trial.config.trial.animalID"
-			ng-change="animalParamChange(animalFormw)"
+			ng-change="animalParamChange(animalForm.$valid)"
 			ng-disabled="! allowParamEdit()" 
 			>
 		</label>
