@@ -1,3 +1,5 @@
+See a [rendered version](https://nbviewer.jupyter.org/github/cudmore/pie/blob/master/analysis/trial_analysis.ipynb) with plots.
+
 ## Analysis
 
 Jupyter notebook to analyze trial .txt files.
