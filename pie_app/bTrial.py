@@ -139,23 +139,6 @@ class bTrial():
 		self.lightsThread.start()
 		
 		#
-		# temperature thread
-		if Adafruit_DHT is not None:
-			logger.debug('Initialized DHT temperature sensor')
-			sensorPin = self.config['hardware']['dhtsensor']['pin']
-			# pigpio
-			# todo: fix this
-			"""
-			GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
-			"""
-			myThread = threading.Thread(target = self.tempThread)
-			myThread.daemon = True
-			myThread.start()
-		else:
-			#logger.debug('Did not load DHT temperature sensor')
-			pass
-
-		#
 		# serial thread
 		self.serialResponseStr = []
 		self.inSerialQueue = queue.Queue() # queue is infinite length
@@ -180,6 +163,25 @@ class bTrial():
 		#self.myPinThread.daemon = True
 		#self.myPinThread.start()
 
+		#
+		# temperature thread
+		if Adafruit_DHT is not None:
+			logger.debug('Initialized DHT temperature sensor')
+			sensorPin = self.config['hardware']['dhtsensor']['pin']
+			# pigpio
+			# todo: fix this
+			if self.trial.myPinThread.pigpio:
+				pass
+			else:
+				GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
+			myThread = threading.Thread(target = self.tempThread)
+			myThread.daemon = True
+			myThread.start()
+		else:
+			#logger.debug('Did not load DHT temperature sensor')
+			pass
+
+		# done initializing
 		self.runtime['lastResponse'] = 'PiE server started'
 		
 	def serialInAppend(self, type, str):
