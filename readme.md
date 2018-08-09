@@ -240,6 +240,35 @@ You will get an error
 Expecting , delimiter: line 27 column 13 (char 648)
 ```
 
+## GPIO timing
+
+The Raspberry Pi is running a complex operating system which provides many features including usb ports, an ethernet interface, and hdmi output. Thus, there will be delays in receiving and generating digital input and output (DIO). 
+
+The PiE server uses the Raspberry GPIO python package by default and will us the pigpio daemon if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
+
+See [analysis/trial_analysis.ipynb](analysis/trial_analysis.ipynb) for a comparising of frame arrival times using GPIO versus pigpio.
+
+### Download and install pigpio
+
+```
+cd
+rm pigpio.zip
+sudo rm -rf PIGPIO
+wget abyz.me.uk/rpi/pigpio/pigpio.zip
+unzip pigpio.zip
+cd PIGPIO
+make
+sudo make install
+```
+
+### To start the pigpio daemon
+
+    sudo pigpiod
+
+### To stop the pigpio daemon
+
+    sudo killall pigpiod
+
 ## Troubleshooting
 
 ### Running the PiE server at boot
@@ -278,7 +307,8 @@ Normally, the PiE server is run in the background after installation with '~/pie
 cd ~/pie
 ./pie stop
 
-# activate pie server virtual environment (this is created in ~/pie/install-pie)
+# activate pie server virtual environment
+# this is created during install with ~/pie/install-pie
 # Once activated, the command prompt should start with (env)
 cd ~/pie
 source env/bin/activate
@@ -287,12 +317,11 @@ source env/bin/activate
 cd ~/pie/pie_app
 python treadmill_app.py
 
-# point a browser to http://[xxx
 ```
 
 ### Full reinstall of the PiE server
 
-Issue these commands to remove and reinstall the PiE server. As always, be carful of using 'sudo'.
+Issue these commands to remove and reinstall the PiE server. As always, be careful of using 'sudo'.
 
 ```
 cd
@@ -419,3 +448,6 @@ Linux workpi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux
 [am2302]: https://www.adafruit.com/product/393
 [json]: https://www.json.org/
 [systemd]: https://en.wikipedia.org/wiki/Systemd
+[gpio]: https://sourceforge.net/p/raspberry-gpio-python/wiki/Home/
+[pigpiod]: http://abyz.me.uk/rpi/pigpio/pigpiod.html
+[pigpio]: http://abyz.me.uk/rpi/pigpio/python.html
