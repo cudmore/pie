@@ -1,7 +1,7 @@
 .AppleDouble
 .DS_Store
 *.pyc
-.ipynb_checkpoints
+#.ipynb_checkpoints
 
 __pycache__
 
