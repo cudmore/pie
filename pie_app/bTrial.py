@@ -7,6 +7,9 @@ from datetime import datetime, timedelta
 import pprint
 import serial
 
+# for dht sensor
+import RPi.GPIO as GPIO
+
 import logging
 
 from logging import FileHandler #RotatingFileHandler
