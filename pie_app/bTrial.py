@@ -170,7 +170,7 @@ class bTrial():
 			sensorPin = self.config['hardware']['dhtsensor']['pin']
 			# pigpio
 			# todo: fix this
-			if self.myPinThread.pigpio:
+			if self.myPinThread.pigpiod:
 				pass
 			else:
 				GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
