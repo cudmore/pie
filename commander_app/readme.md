@@ -30,6 +30,20 @@ The commander server is designed to run in the background and can be controlled 
 
 If you run into trouble with the commander, run it on the command line to see the output with `./commander run`.
 		
+## Troubleshooting
+
+`install-commander` installs a python virtual env in ~/pie/commander/commander_env. The commander server needs to be run in this environment.
+
+```
+# activate virtual environment in commander_env
+cd ~/pie/commander
+source commander_env/bin/activate
+
+# command prompt should now start with '(commander_env)'.
+
+# run the commander server manually
+python commander.py
+```
 
 ## Example
 

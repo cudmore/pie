@@ -310,14 +310,14 @@ cd ~/pie
 # (optional) if neccessary, install virtualenv
 sudo apt-get -qy install python-virtualenv
 
-# (optional) if you do not have 'env/bin/activate' then manually make the virtual environment
-mkdir env
-virtualenv -p python3 --no-site-packages env
+# (optional) if you do not have 'pie_env/bin/activate' then manually make the virtual environment
+mkdir pie_env
+virtualenv -p python3 --no-site-packages pie_env
 
-# activate pie server virtual environment in env/
-# Once activated, the command prompt should start with (env)
+# activate pie server virtual environment in pie_env/
+# Once activated, the command prompt should start with (pie_env)
 cd ~/pie
-source env/bin/activate
+source pie_env/bin/activate
 
 # finally, manually run the pie server
 cd ~/pie/pie_app
@@ -372,7 +372,7 @@ Here is a snapshot of versions for a working PiE server as of August 8, 2018. As
 
 ```
 cd ~/pie
-source env/bin/activate
+source pie_env/bin/activate
 pip freeze
 ```
 
