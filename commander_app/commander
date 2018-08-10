@@ -38,10 +38,10 @@ case "$1" in
 		sudo systemctl disable videowall.service
 		echo "commander server will not start at boot"
 		;;
-	debug) source env/bin/activate
+	debug) source commander_env/bin/activate
 		python commander.py debug
 		;;
-	run) source env/bin/activate
+	run) source commander_env/bin/activate
 		python commander.py
 		;;
 	*) usage

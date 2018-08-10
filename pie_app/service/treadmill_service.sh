@@ -11,12 +11,12 @@ echo "Starting homecage server in $homecage_path"
 
 cd $treadmill_path
 
-# activate python env if it exists
-if [ ! -f ../env/bin/activate ]; then
-	echo "Did not find python environment env/bin/activate"
+# activate python pie_env if it exists
+if [ ! -f ../pie_env/bin/activate ]; then
+	echo "Did not find python environment pie_env/bin/activate"
 else
-	echo "Activating Python environment with 'source env/bin/activate'"
-	source ../env/bin/activate
+	echo "Activating Python environment with 'source pie_env/bin/activate'"
+	source ../pie_env/bin/activate
 fi
 
 # python -V

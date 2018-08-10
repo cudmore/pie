@@ -298,22 +298,28 @@ cd ~/pie
 ./pie start
 ```
 
-### Running the PiE server manually
+### Manually running the PiE server
 
-Normally, the PiE server is run in the background after installation with '~/pie/install-pie'. If there are errors or the PiE server is not running, the pie server can be run manually as follows.
+Normally, the PiE server will run in the background after installation with '~/pie/install-pie'. If there are errors during the install or the PiE server is not running, the pie server can be run manually as follows.
 
 ```
 # stop background pie server
 cd ~/pie
 ./pie stop
 
-# activate pie server virtual environment
-# this is created during install with ~/pie/install-pie
+# (optional) if neccessary, install virtualenv
+sudo apt-get -qy install python-virtualenv
+
+# (optional) if you do not have 'env/bin/activate' then manually make the virtual environment
+mkdir env
+virtualenv -p python3 --no-site-packages env
+
+# activate pie server virtual environment in env/
 # Once activated, the command prompt should start with (env)
 cd ~/pie
 source env/bin/activate
 
-# run the pie server manually
+# finally, manually run the pie server
 cd ~/pie/pie_app
 python treadmill_app.py
 

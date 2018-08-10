@@ -416,7 +416,7 @@ class bCamera:
 			try:
 				self.camera.annotate_background = picamera.Color('black')
 				self.camera.annotate_text = str(text)
-			except picamera.exc.PiCameraClosed as e:
+			except (picamera.exc.PiCameraRuntimeError, picamera.exc.PiCameraClosed) as e:
 				logger.error('watermark ' + str(e))
 
 	#########################################################################

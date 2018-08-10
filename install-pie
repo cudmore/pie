@@ -4,7 +4,7 @@
 # Date: 20180603
 #
 # Purpose: Bash script to install PiE server
-#	1) create a python3 virtual environment in env/
+#	1) create a python3 virtual environment in pie_env/
 #	2) install pie_app/requirements.txt
 #	3) install a systemctl service treadmill.service
 #
@@ -68,36 +68,44 @@ if ! type "virtualenv" > /dev/null; then
 	sudo apt-get -qy install python-virtualenv
 fi
 
-if [ ! -d "env/" ]; then
+if [ ! -d "pie_env/" ]; then
 	echo '==='
-	echo "=== install-pie: Making Python 3 virtual environment in $PWD/env"
+	echo "=== install-pie: Making Python 3 virtual environment in $PWD/pie_env"
 	echo '==='
 	if ! type "virtualenv" > /dev/null; then
 		echo -e 'install-pie: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
 		exit 0
 	else
-		mkdir env
-		virtualenv -p python3 --no-site-packages env
+		mkdir pie_env
+		virtualenv -p python3 --no-site-packages pie_env
 	fi
 else
 	echo '==='
-	echo "=== install-pie: Python 3 virtual environment already exists in $PWD/env"
+	echo "=== install-pie: Python 3 virtual environment already exists in $PWD/pie_env"
 	echo '==='
 fi
 
-echo '==='
-echo "=== install-pie: Activating Python 3 virtual environment in $PWD/env"
-echo '==='
-source env/bin/activate
 
-echo ' '
+
+if [ -f "pie_env/bin/activate" ]; then
+	echo '==='
+	echo "=== install-pie: Activating Python 3 virtual environment with 'source pie_env/bin/activate'"
+	echo '==='
+	source pie_env/bin/activate
+else
+	echo -e "${RED}ERROR${NC}: Python 3 virtual environment did not install in $PWD/pie_env"
+	echo "Make sure virtualenv is installed and try installing again"
+	exit 1
+fi
+
+
 echo '==='
-echo '=== install-pie: Installing pie_app/requirements.txt'
+echo "=== install-pie: Installing required python libraries with 'pip install -r pie_app/requirements.txt'"
 echo '==='
 pip install -r pie_app/requirements.txt
 
 echo '==='
-echo "=== install-pie: Deactivating Python 3 virtual environment in $PWD/env"
+echo "=== install-pie: Deactivating Python 3 virtual environment with 'deactivate'"
 echo '==='
 deactivate
 
@@ -121,22 +129,20 @@ echo '=== install-pie: Copying admin_app/service/pieadmin.service  ->  /etc/syst
 sudo cp admin_app/service/pieadmin.service /etc/systemd/system/pieadmin.service
 sudo chmod 664 /etc/systemd/system/pieadmin.service
 
-echo '=== install-pie: reloading daemons'
+echo '=== install-pie: reloading system daemons'
 sudo systemctl daemon-reload
 
-echo '=== install-pie: enable and start pieadmin.service'
+echo '=== install-pie: enable and start pieadmin.service (with enable will run at boot)'
 sudo systemctl enable pieadmin.service
 sudo systemctl start pieadmin.service
 
-echo '=== install-pie: enable and start treadmill.service'
+echo '=== install-pie: enable and start treadmill.service (with enable will run at boot)'
 sudo systemctl enable treadmill.service
 sudo systemctl start treadmill.service
 
 #
 # DONE
 #
-
-echo ' '
 
 systemctl is-active --quiet pieadmin.service
 if [ $? -eq 0 ]

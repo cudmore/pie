@@ -26,6 +26,10 @@ fi
 
 ip=`hostname -I | xargs`
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 sudo systemctl stop videowall.service
 
 if ! type "pip" > /dev/null; then
@@ -42,26 +46,38 @@ if ! type "virtualenv" > /dev/null; then
 	sudo /usr/bin/easy_install virtualenv
 fi
 
-if [ ! -d "env/" ]; then
+if [ ! -d "commander_env/" ]; then
 	echo '==='
-	echo "=== Making Python 3 virtual environment in $PWD/env"
+	echo "=== Making Python 3 virtual environment in $PWD/commander_env"
 	echo '==='
 	mkdir env
-	virtualenv -p python3 --no-site-packages env
+	virtualenv -p python3 --no-site-packages commander_env
 else
 	echo '==='
-	echo "=== Python 3 virtual environment already exists in $PWD/env"
+	echo "=== Python 3 virtual environment already exists in $PWD/commander_env"
 	echo '==='
 fi
 
-source env/bin/activate
+if [ -f "commander_env/bin/activate" ]; then
+	echo '==='
+	echo "=== Activating virtual environment with 'source commander_env/bin/activate'"
+	echo '==='
+	source commander_env/bin/activate
+else
+	echo -e "${RED}ERROR${NC}: Python 3 virtual environment did not install in $PWD/commander_env"
+	echo "Make sure virtualenv is installed and try installing again"
+	exit 1
+fi
 
 echo ' '
 echo '==='
-echo '=== Installing commander Python requirements with pip'
+echo "=== Installing commander Python requirements with 'pip install -r requirements.txt'"
 echo '==='
 pip install -r requirements.txt
 
+echo '==='
+echo "=== Deactivating virtual environment with 'deactivate'"
+echo '==='
 deactivate
 
 # copy 
@@ -69,9 +85,14 @@ echo ' '
 echo '==='
 echo '=== Configuring systemctl in /etc/systemd/system/videowall.service'
 echo '==='
+echo '=== Copying service/videowall.service  ->  /etc/systemd/system/videowall.service'
 sudo cp service/videowall.service /etc/systemd/system/videowall.service
 sudo chmod 664 /etc/systemd/system/videowall.service
+
+echo '=== Reloading system daemons'
 sudo systemctl daemon-reload
+
+echo '=== Enabling and starting videowall.service  (with enable will run at boot)'
 sudo systemctl enable videowall.service
 sudo systemctl start videowall.service
 
@@ -105,8 +126,15 @@ then
 fi
 
 echo ' '
-echo 'Done installing commander server.'
-echo 'The commander server will run at boot.'
-echo "Browse the commander server at http://$ip:8000"
+
+systemctl is-active --quiet videowall.service
+if [ $? -eq 0 ]
+then
+	echo -e "${GREEN}Success${NC}: The commander server is running and will run at boot."
+	echo "Browse the commander server at http://$ip:8000"
+else
+	echo -e "${RED}ERROR${NC}: The commander server failed to install and is not running."
+fi
+echo ' '
 
 

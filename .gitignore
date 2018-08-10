@@ -5,9 +5,9 @@
 
 __pycache__
 
-env/
+pie_env/
 platformio/env/
-commander_app/env/
+commander_app/commander_env/
 
 # ignore all platformio compiled code
 .pioenvs
