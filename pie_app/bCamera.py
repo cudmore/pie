@@ -66,15 +66,15 @@ class bCamera:
 		try:
 			self.camera = picamera.PiCamera()
 		except (picamera.exc.PiCameraMMALError) as e:
-			logger.error('picamera PiCameraMMALError: ' + str(e))
+			logger.error('bCamera PiCameraMMALError: ' + str(e))
 			if cameraErrorQueue is not None:
 				cameraErrorQueue.put(str(e))
-			self.lastResponse = str(e)
+			self.lastResponse = str('bCamera PiCameraMMALError:' + str(e))
 			self.state = 'idle'
 			raise
 		except (picamera.exc.PiCameraError) as e:
-			logger.error('picamera PiCameraError: ' + str(e))
-			self.lastResponse = str(e)
+			logger.error('bCamera PiCameraError: ' + str(e))
+			self.lastResponse = str('bCamera PiCameraError:' + str(e))
 			self.state = 'idle'
 			raise
 

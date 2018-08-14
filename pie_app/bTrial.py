@@ -169,20 +169,19 @@ class bTrial():
 		#
 		# temperature thread
 		if Adafruit_DHT is not None:
-			logger.debug('Initialized DHT temperature sensor')
 			sensorPin = self.config['hardware']['dhtsensor']['pin']
 			# pigpio
 			# todo: fix this
 			if self.myPinThread.pigpiod:
-				pass
+				logger.debug('did not start temperature thread with pigpiod')
 			else:
+				logger.debug('starting temperature thread')
 				GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
-			myThread = threading.Thread(target = self.tempThread)
-			myThread.daemon = True
-			myThread.start()
+				myThread = threading.Thread(target = self.tempThread)
+				myThread.daemon = True
+				myThread.start()
 		else:
-			#logger.debug('Did not load DHT temperature sensor')
-			pass
+			logger.debug('Did not load DHT temperature sensor')
 
 		# done initializing
 		self.runtime['lastResponse'] = 'PiE server started'
@@ -307,7 +306,7 @@ class bTrial():
 
 		while not self.cameraErrorQueue.empty():
 			cameraItem = self.cameraErrorQueue.get(block=False)
-			print('   cameraErrorQueue cameraItem:', cameraItem)
+			print('   ****** cameraErrorQueue cameraItem:', cameraItem)
 			self.cameraResponseStr.append(cameraItem)
 		if self.serialResponseStr:	
 			status['runtime']['cameraQueue'] = self.cameraResponseStr

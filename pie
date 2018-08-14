@@ -13,14 +13,14 @@ fi
 function usage(){
     echo "./pie - Illegal parameters"
     echo "Usage:"
-    echo "   ./pie start		- start background PiE server"
-    echo "   ./pie stop			- stop background PiE server"
-    echo "   ./pie status		- check the status of background PiE server"
+    echo "   ./pie start           - start background PiE server"
+    echo "   ./pie stop            - stop background PiE server"
+    echo "   ./pie status          - check the status of background PiE server"
     echo "   -----------------"
-    echo "   ./pie enable		- enable background PiE server at boot"
-    echo "   ./pie disable		- disable background PiE server at boot"
+    echo "   ./pie enable          - enable background PiE server at boot"
+    echo "   ./pie disable         - disable background PiE server at boot"
     echo "   -----------------"
-    echo "   ./pie run			- run PiE server on command line"
+    echo "   ./pie run             - run PiE server on command line"
 }
 
 myip=`hostname -I | xargs`

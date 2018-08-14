@@ -383,6 +383,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	$scope.showLastImage = false
 	//$scope.allowArming = false
 	
+	$scope.isArmed = false
+	
     //read the state from homecage backend, do this at an interval
     $scope.getStatus = function () {
 		$http.get($scope.myUrl + 'status').
@@ -441,6 +443,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
     		    	then(function(response) {
         				$scope.status = response.data;
         				
+        				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+        				
         				$scope.setInterval($scope.status.trial.runtime.cameraState)
         			});
 				break;
@@ -450,6 +454,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 					$http.get(url).
 							then(function(response) {
 								$scope.status = response.data;
+
+								$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
 
 								// start javascript counter
 								//setTimeout(myTimeoutFunction, 5000);
@@ -461,6 +467,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 					$http.get(url).
 							then(function(response) {
 								$scope.status = response.data;
+								
+								$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
 								
 								// start javascript counter
 								//setTimeout(myTimeoutFunction, 800);
