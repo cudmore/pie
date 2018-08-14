@@ -97,6 +97,30 @@ void updateTrial(unsigned long now) {
  } // trialIsRunning
 }
 /////////////////////////////////////////////////////////////
+void serialInput(int inChar) {
+	if (inChar == 115) {
+		// 's'
+		// same behavior as triggerInPin
+		if (trialIsRunning) {
+			stopTrial(gNow);
+		} else {
+			startTrial(gNow);
+		}
+	}
+	if (inChar == 100) {
+		// 'd'
+		Serial.println("start debug trigger out with 100 fast pulses");
+		int i;
+		for (i=0; i<20; i+=1) {
+			digitalWrite(triggerOutPin, 1); // start
+			delay(5);
+			digitalWrite(triggerOutPin, 0); // stop
+			delay(5);
+		}
+		Serial.println("done debug trigger out with 100 fast pulses");
+	}
+}
+/////////////////////////////////////////////////////////////
 void setup()
 {
 	if (useMicroseconds) {
@@ -130,14 +154,6 @@ void loop()
 
 	if (Serial.available() > 0) {
 		serialIn = Serial.read();
-		if (serialIn == 115) {
-			// 's'
-			// same behavior as triggerInPin
-			if (trialIsRunning) {
-				stopTrial(gNow);
-			} else {
-				startTrial(gNow);
-			}
-		}
+		serialInput(serialIn);
 	}
 }
