@@ -14,29 +14,31 @@ Once `install-commander` is finished and assuming there are no errors, the comma
 
 ## Starting and stopping commander server
 
-The commander server is designed to run in the background and can be controlled using the `~/pie/commander/commander` command.
+The commander server is designed to run in the background and can be controlled using the `~/pie/commander_app/commander` command.
 
-	cd ~/pie/commander
+	cd ~/pie/commander_app
 
-	./commander start		- start the background commander server
-	./commander stop		- stop the backgorund commander server
-	./commander restart		- restart the background commander server
-	./commander status		- get the status of the background commander server
-	./commander enable		- start the background commander server at boot
-	./commander disable		- do not start the background commander server at boot
-	./commander disable		- do not start the background commander server at boot
+	./commander start       - start the background commander server
+	./commander stop        - stop the backgorund commander server
+	./commander restart     - restart the background commander server
+	./commander status      - get the status of the background commander server
+	./commander enable      - start the background commander server at boot
+	./commander disable     - do not start the background commander server at boot
+	./commander disable     - do not start the background commander server at boot
 	====================
-	./commander run			- run commander on command line
+	./commander run         - run commander on command line
 
 If you run into trouble with the commander, run it on the command line to see the output with `./commander run`.
 		
 ## Troubleshooting
 
-`install-commander` installs a python virtual env in ~/pie/commander/commander_env. The commander server needs to be run in this environment.
+### Show status on command line
+
+`install-commander` installs a python virtual env in ~/pie/commander_app/commander_env. The commander server needs to be run in this environment.
 
 ```
 # activate virtual environment in commander_env
-cd ~/pie/commander
+cd ~/pie/commander_app
 source commander_env/bin/activate
 
 # command prompt should now start with '(commander_env)'.
@@ -44,6 +46,10 @@ source commander_env/bin/activate
 # run the commander server manually
 python commander.py
 ```
+
+### Editing IP addresses in the web interface
+
+In the config section, turn on 'edit ip' checkbox. Enter a valid IP and hit enter. If the IP is for a running PiE server (no port number needed), the red (bad connection) will be replaced with the current status of the specified PiE server.
 
 ## Example
 

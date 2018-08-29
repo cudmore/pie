@@ -232,7 +232,7 @@ class PinThread(threading.Thread):
 		else:
 			logger.info('Initialized GPIO')
 			GPIO.setmode(GPIO.BCM)
-			GPIO.setwarnings(True)	
+			GPIO.setwarnings(False)	
 	
 		self.pinNumberDict_ = {} # assigned in self.configPin()
 

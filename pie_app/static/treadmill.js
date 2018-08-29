@@ -93,6 +93,7 @@ app.controller('configFormController', function($scope, $rootScope, $http, $inte
         if ($scope.configData.trial.runtime.cameraState == 'armed' || $scope.configData.trial.runtime.cameraState == 'armedrecording') {
         	//20180718, get this working
         	//console.log('CallParentMethod_SetConfigData() is calling $route.reload()')
+        	console.log('$rootScope.$on("CallParentMethod_SetConfigData" is calling $route.reload')
         	$route.reload();
         }
         
@@ -364,6 +365,42 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
 }); // arduinoFormController
 
 //////////////////////////////////////////////////////////////////////////////
+app.controller('exitController', function($scope, $window) {
+    $scope.onExit = function() {
+		console.log('user is closing tab')
+		sleep(5000)
+		//if ($scope.isstate('streaming')) {
+		
+				console.log('user is closing tab and stream is running -->> stop it')
+				url = $scope.myUrl + 'api/action/' + 'stopStream'
+				console.log(url)
+				sleep(5000)
+				$http.get(url).
+    		    	then(function(response) {
+        				// window/tab has been closed, do nothing
+        				//$scope.status = response.data;
+        			});
+      	//}
+      	return ('bye bye');
+    };
+
+   $window.onbeforeunload =  $scope.onExit;
+
+   var leavingPageText = "xxx You'll lose your changes if you leave xxx";
+    window.onbeforeunload = function(){
+        console.log('in window.onbeforeunload')
+        return leavingPageText;
+    }
+
+    $scope.$on('$locationChangeStart', function(event, next, current) {
+        if(!confirm(leavingPageText + "\n\nxxx Are you sure you want to leave this page? xxx")) {
+            event.preventDefault();
+        }
+    });
+
+  });
+
+//////////////////////////////////////////////////////////////////////////////
 app.controller('treadmill', function($scope, $rootScope, $window, $http, $location, $interval, $route, $sce, $timeout, $document) {
 	
 	//console.log('angular.version:', angular.version)
@@ -380,10 +417,10 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	$scope.showMotor = false;
 	$scope.showDebug = true;
 	$scope.showConfigTable = false;
-	$scope.showLastImage = false
-	//$scope.allowArming = false
+	$scope.showLastImage = false;
+	//$scope.allowArming = false;
 	
-	$scope.isArmed = false
+	//$scope.isArmed = false;
 	
     //read the state from homecage backend, do this at an interval
     $scope.getStatus = function () {
@@ -391,8 +428,11 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
         	then(function(response) {
         	    $scope.status = response.data;
 				// for armed checkbox, it needs a model
-				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+				//$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
 				
+				//console.log('after status $scope.isArmed:', $scope.isArmed)
+				//console.log('$scope.status.trial.runtime.cameraState:', $scope.status.trial.runtime.cameraState)
+
 				//for streaming
 				var tmpWidth = parseInt($scope.status.trial.config.video.streamResolution.split(',')[0],10)
 				var tmpHeight = parseInt($scope.status.trial.config.video.streamResolution.split(',')[1],10)
@@ -443,32 +483,50 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
     		    	then(function(response) {
         				$scope.status = response.data;
         				
-        				$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
-        				
+        				//$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+						//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+ 						//$route.reload();
+						//console.log('$scope.isArmed:', $scope.isArmed)
+       				
         				$scope.setInterval($scope.status.trial.runtime.cameraState)
         			});
 				break;
 			case 'toggleArm':
 				if ($scope.isState('armed')) {
+					console.log('button callback toggleArm armed')
 					url = $scope.myUrl + 'api/action/stopArm'
 					$http.get(url).
 							then(function(response) {
 								$scope.status = response.data;
 
-								$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+								//$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+								
+								//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+								//$route.reload();
 
+								//console.log('after stopArm $scope.isArmed:', $scope.isArmed)
+								//console.log('$scope.status.trial.runtime.cameraState:', $scope.status.trial.runtime.cameraState)
+								
 								// start javascript counter
 								//setTimeout(myTimeoutFunction, 5000);
 								//interval = setInterval(myIntervalFunction, 5000);
 								//$scope.setInterval($scope.status.trial.runtime.cameraState)
 							});
 				} else if ($scope.isState('idle')) { //safety check, index interface should handle
+					console.log('button callback toggleArm idle')
 					url = $scope.myUrl + 'api/action/startArm'
 					$http.get(url).
 							then(function(response) {
+								console.log('response.data.trial.runtime.cameraState:', response.data.trial.runtime.cameraState)
 								$scope.status = response.data;
 								
-								$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+								//$scope.isArmed = $scope.isState('armed') || $scope.isState('armedrecording')
+								
+								//$rootScope.$emit("CallParentMethod_SetConfigData", response.data);
+								//$route.reload();
+								
+								//console.log('after startArm $scope.isArmed:', $scope.isArmed)
+								//console.log('$scope.status.trial.runtime.cameraState:', $scope.status.trial.runtime.cameraState)
 								
 								// start javascript counter
 								//setTimeout(myTimeoutFunction, 800);
@@ -511,6 +569,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 
 	///////////////////////////////////////////////////////////////////////////
 	// counter to display elapsed recording time rather than hitting REST with http.get
+	var defaultInterval = 800; // 800
 	var counter = 0;
 	$scope.myIntervalFunction = function(){
 		clearInterval(interval);
@@ -528,11 +587,11 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 			counter = 0
 			interval = $interval($scope.myIntervalFunction, 400);
 		} else {
-			interval = $interval($scope.getStatus, 800);
+			interval = $interval($scope.getStatus, defaultInterval);
 		}
 	}
 
-	var interval = $interval($scope.getStatus, 800);
+	var interval = $interval($scope.getStatus, defaultInterval);
 
 	///////////////////////////////////////////////////////////////////////////
 	// SOCKETIO
@@ -541,6 +600,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	///
 	///
     angular.element(document).ready(function () {
+
 		//var socket = io.connect('http://192.168.1.15:5010');
 		var socket = io.connect($scope.myUrl);
 		socket.on('connect', function() {
@@ -584,6 +644,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 		socket.on('socket_startTrial', function(msg) {
 			console.log('START socket_startTrial() msg:', msg)
 			$scope.status = msg.status
+// todo: this is going to cause problems !!!!
 			$scope.isArmed = true //$scope.isState('armed') || $scope.isState('armedrecording')
 			//$scope.setInterval($scope.status.trial.runtime.cameraState)
 			$scope.setInterval('armedrecording')
@@ -592,6 +653,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 		socket.on('socket_stopTrial', function(msg) {
 			console.log('STOP socket_stopTrial() msg:', msg)
 			$scope.status = msg.status
+// todo: this is going to cause problems !!!!
 			$scope.isArmed = false //$scope.isState('armed') || $scope.isState('armedrecording')
 			//$scope.setInterval($scope.status.trial.runtime.cameraState)
 			$scope.setInterval('armed')
@@ -600,20 +662,23 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
     });
 
 
-	///
-	///
 
-	///////////////////////////////////////////////////////////////////////////
-	// SSE
-	/*
-	console.log('here')
-	var source = new EventSource('/subscribeToStatus');
-	source.onmessage = function(event) {
-		console.log('aaa')
-		console.log('listenForPushes:', event.data);
+	///////////////////////////////////////////////////////////////////////
+	// does nothing for ~/pie/pie run
+	$scope.restartpieserver = function() {
+		url = $scope.myUrl + 'api/restartpieserver'
+		console.log('restartpieserver() url: ' + url)
+		$http.get(url).
+			then(function(response) {
+				// do nothing
+				//$scope.status = response.data;
+			});
 	}
-	*/
+	///////////////////////////////////////////////////////////////////////
+    // if streaming then stop streaming on window/tab close
+	function sleep(ms) {
+	  return new Promise(resolve => setTimeout(resolve, ms));
+	}
 
-	///////////////////////////////////////////////////////////////////////////
 
 }); // treadmill controller

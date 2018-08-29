@@ -29,6 +29,18 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+# use this when we stop/restart the server
+function streamStop() {
+	# check that uv4l is available
+	type uv4l >/dev/null 2>&1 || { >&2 echo "uv4l not installed"; }
+
+	uv4lPID=`pgrep -f uv4l`
+	if [ -n "$uv4lPID" ]; then
+		echo "stopping video stream with 'kill -- PID'"
+		sudo kill -- -$uv4lPID
+	fi
+}
+
 case "$1" in
 	start) 
 		systemctl is-active --quiet treadmill.service
@@ -48,6 +60,7 @@ case "$1" in
 		;;
 	
 	stop)
+		streamStop
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
 		then
@@ -58,7 +71,9 @@ case "$1" in
 		fi
 		;;
 	
-	restart) sudo systemctl restart treadmill.service 
+	restart)
+		streamStop
+		sudo systemctl restart treadmill.service 
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
 		then

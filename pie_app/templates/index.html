@@ -11,6 +11,11 @@
 		<script src="static/angular/angular-route.js">
 
 		<script src="static/bootstrap/js/bootstrap.min.js"></script>
+
+<!-- trying to get modal dialogs working -->
+<!-- <script src="http://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-0.7.0.js"></script> -->
+<!-- <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet"> -->
+
 		<script src="static/angular-ui-switch.min.js"></script>
   
       	<script src="static/socketio.js"></script>
@@ -253,13 +258,16 @@ table.table.table-condensed {
 	<tr ng-if="status.trial.config.hardware.allowArming">
 		<td>
 		<label>
+		<!-- this cannot bind to a $scope variable primitive! it needs to bind to an object -->
+		<!-- see : https://stackoverflow.com/questions/18642371/checkbox-not-binding-to-scope-in-angularjs -->
 		<input type="checkbox" 
-			ng-model="isArmed" 
+			ng-model="status.trial.runtime.cameraIsArmed" 
 			ng-change="buttonCallback('toggleArm')" 
 			ng-disabled="isState('recording') || isState('streaming') || isState('armedrecording')" 
 			/>		
 		Arm</label>
 		</td>
+
 
 		<td>
 		<span ng-if="! isState('armedrecording')">
@@ -284,23 +292,18 @@ table.table.table-condensed {
 	
 	<tr>
 		<td colspan="3">
-		Last Action: {{ status.trial.runtime.lastResponse }}
+		Status: {{ status.trial.runtime.lastResponse }}
 		</td>
 	</tr>
 			
 	</table>
 
-<!-- camera error -->
-<table>
-<tr>
-<th>status.trial.runtime.cameraQueue</th>
-</tr>
-<tr ng-repeat="x in status.trial.runtime.cameraQueue">	
-	<td>
-		{{ x }}
-	</td>
-</tr>
-</table>
+<!--
+<p>
+status.trial.runtime.cameraState = {{ status.trial.runtime.cameraState }}<BR>
+isArmed = {{ isArmed }} 
+</p>
+-->
 
 	<!-- lastimage -->
 	<button type="button"
@@ -380,6 +383,18 @@ Stream<BR>
 
 	<!-- status.trial.runtime -->
 	<table class="myTable-small" style="border: 1px solid #ddd;">
+	<tr>
+	<td>
+			<button type="button"
+			class="btn btn-danger btn-sm"
+			ng-click="restartpieserver()"
+			>
+			<i class="fa fa-refresh" aria-hidden="true"></i>
+			Restart Background Pie Server
+		</button>
+	</td>
+	</tr>
+	
 	<tr>
 	<th>status.trial.runtime</th>
 	<th></th>

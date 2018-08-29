@@ -206,7 +206,6 @@ class bTrial():
 	#########################################################################
 	@property
 	def lastResponse(self):
-		# this is a ternary operator and look complex
 		return '' if self.runtime is None else self.runtime['lastResponse']
 	
 	@lastResponse.setter
@@ -293,6 +292,14 @@ class bTrial():
 		status['runtime']['secondsElapsedStr'] = self.camera.secondsElapsedStr
 		status['runtime']['cameraState'] = self.camera.state
 		
+		# added this because 'armed' checkbox cannot bind to a primitive (e.g. $scope.isArmed)
+		# it needs to bind to an object property
+		# this seems to be a bug in angularjs and took 3+ days to figure out
+		if self.camera.state in ['armed', 'armedrecording']:
+			status['runtime']['cameraIsArmed'] = True
+		else:
+			status['runtime']['cameraIsArmed'] = False
+			
 		if self.camera.lastStillTime > 0:
 			status['runtime']['lastStillTime'] = time.strftime('%Y%m%d %H:%M:%S', time.localtime(self.camera.lastStillTime)) 
 		else:
@@ -306,9 +313,19 @@ class bTrial():
 
 		while not self.cameraErrorQueue.empty():
 			cameraItem = self.cameraErrorQueue.get(block=False)
-			print('   ****** cameraErrorQueue cameraItem:', cameraItem)
+			#print('   ****** trial.getStatus() cameraErrorQueue cameraItem:', cameraItem)
 			self.cameraResponseStr.append(cameraItem)
-		if self.serialResponseStr:	
+			
+			# any camera error puts server state into idle
+			'''
+			print('   ***** trial.getStatus() setting camera state to idle')
+			self.camera.state = 'idle'
+			status['runtime']['cameraState'] = 'idle'
+			status['runtime']['cameraIsArmed'] = False
+			print("status['runtime']['cameraState']=", status['runtime']['cameraState'])
+			'''
+			
+		if self.cameraResponseStr:	
 			status['runtime']['cameraQueue'] = self.cameraResponseStr
 		else:
 			status['runtime']['cameraQueue'] = ['None']
@@ -328,7 +345,7 @@ class bTrial():
 			status['runtime']['serialQueue'] = self.serialResponseStr
 		else:
 			status['runtime']['serialQueue'] = ['None']
-		
+				
 		return status
 	
 	#########################################################################
@@ -472,7 +489,6 @@ class bTrial():
 
 	def saveConfig(self):
 		""" Save self.config to a file """
-		logger.debug('saveConfig')
 
 		mypath = os.path.abspath(os.path.dirname(__file__)) # full path to *this file
 		configpath = os.path.join(mypath, 'config') # *this/config
@@ -481,6 +497,8 @@ class bTrial():
 		with open(configpath, 'w') as outfile:
 			json.dump(self.config, outfile, indent=4)
 		self.lastResponse = 'Saved configuration config_default.json'
+
+		logger.debug('saveConfig saved: ' + configpath)
 	
 	def getConfig(self, key1, key2):
 		""" Get a single config parameter """
@@ -514,8 +532,21 @@ class bTrial():
 			now = time.time()
 			
 		if self.isRunning:
-			logger.warning('startTrial but trial is running')
-			return 0
+			logger.warning('start trial aborted, already running')
+			return False
+
+		if self.camera is not None:
+			if startArmVideo:
+				# *this function startTrial() is being called from within the startarmvideo loop
+				pass
+			else:
+				# 20180815, before we start the thread, make sure we can get the camera
+				if self.camera.initCamera_() is None:
+					# error
+					#print('   ### ### bCamera.arm was not able to access camera')
+					return False
+				else:
+					self.camera.releaseCamera()
 
 		self.runtime['trialNum'] = self.runtime['trialNum'] + 1
 		

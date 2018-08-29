@@ -59,6 +59,9 @@ class treadmill():
 	def getStatus(self):
 		status = OrderedDict()
 		status['trial'] = self.trial.getStatus()
+		
+		#print("status['trial']['runtime']['cameraState']=", status['trial']['runtime']['cameraState'])
+		
 		return status
 		
 	#########################################################################

@@ -244,7 +244,7 @@ Expecting , delimiter: line 27 column 13 (char 648)
 
 The Raspberry Pi is running a complex operating system which provides many features including usb ports, an ethernet interface, and hdmi output. Thus, there will be delays in receiving and generating digital input and output (DIO). 
 
-The PiE server uses the Raspberry GPIO python package by default and will us the pigpio daemon if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
+The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
 
 See [analysis/trial_analysis.ipynb](analysis/trial_analysis.ipynb) for a comparising of frame arrival times using GPIO versus pigpio.
 
@@ -325,6 +325,32 @@ python treadmill_app.py
 
 ```
 
+### Uninstalling the PiE server
+
+Use the uninstall script `./uninstall-pie` and remove the ~/pie folder with `sudo -Rf ~/pie`. The uninstall script does the following
+
+```
+# stop
+echo "=== stopping PiE server and Admin server"
+sudo systemctl stop treadmill.service
+sudo systemctl stop pieadmin.service
+
+# disable
+echo "=== disabling services"
+sudo systemctl disable treadmill.service
+sudo systemctl disable pieadmin.service
+
+# remove
+echo "=== removing files in /etc/systemd/system/"
+sudo rm /etc/systemd/system/treadmill.service
+sudo rm /etc/systemd/system/pieadmin.service
+
+echo "==="
+echo "PiE server and admin server have been uninstalled"
+echo "You can now remove the PiE server folder with 'sudo rm -Rf ~/pie'"
+echo "You can fetch a new copy with 'cd; git clone https://github.com/cudmore/pie.git"
+```
+
 ### Full reinstall of the PiE server
 
 Issue these commands to remove and reinstall the PiE server. As always, be careful of using 'sudo'.
@@ -337,7 +363,7 @@ cd pie
 ./install-pie
 ```
 
-### Checking the camera
+### Troubleshooting the camera
 
 Capture a still image with the Pi camera with `raspistill -o test.jpg`
 
@@ -347,7 +373,7 @@ raspistill -o test.jpg
 
 If you get any errors then there is a problem with the Pi Camera.
 
-Make sure the Pi Camera is activated
+Make sure the Pi Camera is activated.
 
 ```
 # type this at a command prompt
@@ -358,15 +384,44 @@ sudo raspi-config
 # Answer 'Yes' to question 'Would you like the camera interface to be enabled?'
 ```
 
+### Checking if uv4l (Streaming) is running
+
+In rare instances the [uv4l][uv4l] streaming server does not stop properly. Streaming with uv4l runs at the system level and not in Python. As such, uv4l needs to be controlled via the command line.
+
+```
+#list all uv4l processes
+ps -aux | grep uv4l
+
+# will yield something like
+root     23117  9.8  1.3 140796 12312 ?        Ssl  20:34   0:02 uv4l --driver raspicam --auto-video_nr --encoding h264 --width 640 --height 480 --enable-server on
+pi       23262  0.0  0.1   6644  1316 pts/1    S+   20:34   0:00 grep --color=auto uv4l
+
+# kill uv4l with its process id (PID)
+# '--' is needed to kill parent and child processes
+sudo kill -- 23117
+
+#check the uv4l process is no longer running
+ps -aux | grep uv4l
+
+# should yield
+pi         674  0.0  0.1   6644  1320 pts/0    S+   21:06   0:00 grep --color=auto uv4l
+```
+
+#### uv4l will not go away
+
+Worst case senario is `ps -aux | grep uvl4` yields something like this
+
+```
+root     23117 17.2  0.0      0     0 ?        Zsl  20:34   0:37 [uv4l] <defunct>
+```
+
+If you see the `<defunct>` then restart the Pi with `sudo reboot` and it should be fixed.
+
 ### Converting video
 
 The PiE server uses [libav (avconv)][libav] to convert video from .h264 to .mp4. If labav (avconv) does not install during `~/pie/install-pie`, this conversion will not work.
 
-### OSError: [Errno 98] Address already in use
-
-This happens when you try and start the server but it is already running. Usually when it is running in the background and you run it again with `./pie run`. Just stop the server with `./pie stop` and then try again with `./pie run`.
-
-### Working versions
+## Working versions
 
 Here is a snapshot of versions for a working PiE server as of August 8, 2018. As python packages are updated, things can potentially break.
 
@@ -432,6 +487,25 @@ uname -a
 Linux workpi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux
 ```
 
+## Common errors
+
+### bCamera PiCameraMMALError: Failed to enable connection: Out of resources
+
+If you receive this error in the web interface or logs, it means the camera is in use by some other process. The Raspberry camera can only do one thing at a time, it can stream or record but not both at the same time. In addition, the camera can not record (or stream) in two different programs simultaneously.
+
+Make sure other programs are not using the camera and try again. Rebooting with 'sudo reboot' usually does the trick unless these programs, like the PiE server, are set up to run at boot.
+
+
+### OSError: [Errno 98] Address already in use
+
+This happens when you try and start the server but it is already running. Usually when it is running in the background and you run it again with `./pie run`. Just stop the server with `./pie stop` and then try again with `./pie run`.
+
+## To Do
+
+ - make sure streaming stops when browser is closed
+ - expand sunrise/sunset to fractional hour
+ - add warning when video/ drive space remaining is less than 1 GB
+  
 [install-stretch]: http://blog.cudmore.io/post/2017/11/22/raspian-stretch/
 [steppermotor]: https://www.sparkfun.com/products/9238
 [easydriver]: https://www.sparkfun.com/products/12779

@@ -205,6 +205,30 @@ def loadconfig(loadThis):
 	return jsonify(treadmill.getStatus())
 
 #########################################################################
+#  restart server
+#########################################################################
+@app.route('/api/restartpieserver')
+def restartpieserver():
+	print('restartpieserver()')
+	
+	# stop streaming 
+	
+	#
+	script_path = os.path.dirname(os.path.abspath( __file__ ))
+	cmd = [script_path + "/bin/restart_server.sh"]
+
+	app.logger.info(cmd)
+	try:
+		out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+		#self.lastResponse = 'Streaming is on'
+	except subprocess.CalledProcessError as e:
+		error = e.output.decode('utf-8')
+		app.logger.error('restartpieserver error: ' + error)
+		#self.lastResponse = error
+		raise
+	return jsonify(treadmill.getStatus())
+
+#########################################################################
 #  not used -->> remove
 #########################################################################
 """

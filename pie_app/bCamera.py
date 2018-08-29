@@ -69,14 +69,16 @@ class bCamera:
 			logger.error('bCamera PiCameraMMALError: ' + str(e))
 			if cameraErrorQueue is not None:
 				cameraErrorQueue.put(str(e))
-			self.lastResponse = str('bCamera PiCameraMMALError:' + str(e))
+			self.lastResponse = str('bCamera PiCameraMMALError: ' + str(e))
 			self.state = 'idle'
-			raise
+			#raise
+			return None
 		except (picamera.exc.PiCameraError) as e:
 			logger.error('bCamera PiCameraError: ' + str(e))
-			self.lastResponse = str('bCamera PiCameraError:' + str(e))
+			self.lastResponse = str('bCamera PiCameraError: ' + str(e))
 			self.state = 'idle'
-			raise
+			#raise
+			return None
 
 		ret['led'] = self.trial.getConfig('video', 'led')
 		#print("ret['led']:", ret['led'])
@@ -103,6 +105,9 @@ class bCamera:
 
 		return ret
 		
+	def releaseCamera(self):
+		self.camera.close()
+	
 	#########################################################################
 	# Record a number of video files
 	#########################################################################
@@ -112,6 +117,15 @@ class bCamera:
 		if okGo:
 			self.state = 'recording' if onoff else 'idle'
 			if onoff:
+
+				# 20180815, before we start the thread, make sure we can get the camera
+				if self.initCamera_() is None:
+					# error
+					#print('   ### ### bCamera.arm was not able to access camera')
+					return None
+				else:
+					self.releaseCamera()
+
 				# start a background thread
 				thread = threading.Thread(target=self.recordVideoThread, args=(startNewTrial,self.cameraErrorQueue,))
 				thread.daemon = True							# Daemonize thread
@@ -134,6 +148,8 @@ class bCamera:
 		#
 		# grab configuration from trial
 		thisCamera = self.initCamera_(cameraErrorQueue=cameraErrorQueue)
+		if thisCamera is None:
+			return None
 		repeatDuration = thisCamera['repeatDuration']
 		repeatInfinity = thisCamera['repeatInfinity']
 		numberOfRepeats = thisCamera['numberOfRepeats']
@@ -177,7 +193,7 @@ class bCamera:
 			try:
 				self.camera.start_recording(videoFilePath)
 			except (IOError) as e:
-				logger.error('start recording:' + str(e))
+				logger.error('recordVideoThread start_recording: ' + str(e))
 				self.camera.close()
 				self.lastResponse = str(e)
 				self.state = 'idle'
@@ -228,6 +244,15 @@ class bCamera:
 		if okGo:
 			self.state = 'streaming' if onoff else 'idle'
 			if onoff:
+				
+				# 20180815, before we start the thread, make sure we can get the camera
+				if self.initCamera_() is None:
+					# error
+					#print('   ### ### bCamera.arm was not able to access camera')
+					return None
+				else:
+					self.releaseCamera()
+				
 				streamResolution = self.trial.getConfig('video', 'streamResolution')
 				streamWidth = streamResolution.split(',')[0] #str is ok here
 				streamHeight = streamResolution.split(',')[1]
@@ -241,7 +266,7 @@ class bCamera:
 					self.lastResponse = 'Streaming is on'
 				except subprocess.CalledProcessError as e:
 					error = e.output.decode('utf-8')
-					logger.error('stream on exception: ' + error)
+					logger.error('stream on error: ' + error)
 					self.lastResponse = error
 					#self.stream(False)
 					self.state = 'idle'
@@ -254,8 +279,9 @@ class bCamera:
 					self.lastResponse = 'Streaming is off'
 				except subprocess.CalledProcessError as e:
 					error = e.output.decode('utf-8')
-					logger.error('stream off exception: ' + error)
+					logger.error('stream off error: ' + error)
 					self.lastResponse = error
+					self.state = 'idle'
 					raise
 			
 	#########################################################################
@@ -267,11 +293,20 @@ class bCamera:
 		logger.debug('arm onoff:' + str(onoff) + ' okGo:' + str(okGo))
 		if okGo:
 			self.state = 'armed' if onoff else 'idle'
+			#print('bCamera.arm set self.state=', self.state)
 			if onoff:
 				# spawn background task with video loop
 				#try:
 				if 1:
 
+					# 20180815, before we start the thread, make sure we can get the camera
+					if self.initCamera_() is None:
+						# error
+						#print('   ### ### bCamera.arm was not able to access camera')
+						return None
+					else:
+						self.releaseCamera()
+						
 					# save into date folder
 					savePath = self.trial.getConfig('trial', 'savePath')
 					startTime = datetime.now()
@@ -292,7 +327,7 @@ class bCamera:
 						self.camera.stop_recording()	
 						self.camera.close()
 					except picamera.exc.PiCameraNotRecording:
-						logger.error('PiCameraNotRecording')
+						logger.error('arm off error: PiCameraNotRecording')
 					self.lastResponse = 'Arming is off'
 						
 	def startArmVideo(self, now=None):
@@ -320,6 +355,8 @@ class bCamera:
 			
 			#
 			thisCamera = self.initCamera_(cameraErrorQueue=cameraErrorQueue)
+			if thisCamera is None:
+				return None
 			repeatDuration = thisCamera['repeatDuration']
 			repeatInfinity = thisCamera['repeatInfinity']
 			numberOfRepeats = thisCamera['numberOfRepeats']
@@ -417,7 +454,7 @@ class bCamera:
 				self.camera.annotate_background = picamera.Color('black')
 				self.camera.annotate_text = str(text)
 			except (picamera.exc.PiCameraRuntimeError, picamera.exc.PiCameraClosed) as e:
-				logger.error('watermark ' + str(e))
+				logger.error('annotate error: ' + str(e))
 
 	#########################################################################
 	# Thread to convert video from .h264 to .mp4
@@ -448,7 +485,7 @@ class bCamera:
 					out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 					#self.lastResponse = 'Converted video to mp4'
 				except (subprocess.CalledProcessError, OSError) as e:
-					logger.error('convertVideoThread ./bin/convert_video exception: ' + str(e))
+					logger.error('convertVideoThread ./bin/convert_video error: ' + str(e))
 					pass
 				except:
 					raise	

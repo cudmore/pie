@@ -44,7 +44,7 @@ function streamStop(){
 		sudo kill -- -$uv4lPID
 		#sudo service uv4l_raspicam stop
 		#sudo pkill uv4l
-		echo "done"
+		echo "killed stream with 'kill --'"
 	else
 		echo "video stream is not running, use 'stream start' to start."
 		exit 1

@@ -2,15 +2,15 @@
 
 function usage(){
     echo "commander - Usage"
-    echo "   commander start"
-    echo "   commander stop"
-    echo "   commander restart"
-    echo "   commander status"
-    echo "   commander enable	- start at boot"
-    echo "   commander disable	- do not start at boot"
-    echo "   -----------------"
-    echo "   commander run     - run commander on command line"
-    echo "   commander debug     - run commander on command line (debug mode)"
+	echo "commander start       - start the background commander server"
+	echo "commander stop        - stop the backgorund commander server"
+	echo "commander restart     - restart the background commander server"
+	echo "commander status      - get the status of the background commander server"
+	echo "commander enable      - start the background commander server at boot"
+	echo "commander disable     - do not start the background commander server at boot"
+	echo "commander disable     - do not start the background commander server at boot"
+	echo "===================="
+	echo "commander run         - run commander on command line"
 }
 
 myip=`hostname -I | xargs`
