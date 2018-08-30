@@ -63,7 +63,7 @@ Install the [DHT temperature/humidity sensor Python library][dht] (optional)
 
 	cd ~/pie
 	./install-dht
-	
+
 ## Running the PiE server (details)
 
 The [pie/install-pie](install-pie) script installs a system service allowing the PiE server to run in the background. This background PiE server can be controlled as follows:

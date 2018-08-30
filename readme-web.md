@@ -77,7 +77,7 @@ All parameters in the 'Pins' section will be save with 'Config - Save Defaults'.
 
 To change 'Pin' numbers, the config json files need to be manually edited.
 
-**DHT Temperautre/Humidity**. If enabled is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If continuous is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page (called environment) using the thermometer icon.
+**DHT Temperautre/Humidity**. This assumes you have installed the Adafruit DHT temperature sensor driver with `./install-dht`. If 'enabled' is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If 'continuous' is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page (called environment) using the thermometer icon. The temperature and humidity log file is in `pie/pie_app/logs/environment.log`. If you change these options and they do not take effect, try restarting the PiE server in the 'Debug' section.
 
 ## Motor
 
@@ -89,5 +89,5 @@ The Motor section allows parameters to be uploaded to a Teensy microcontroller. 
 
 ## Debug
 
-This section reports all parameters/variables received from the PiE server. Use 'Restart Background Pie Server' to restart the PiE server.
+This section reports all parameters/variables received from the PiE server. Use 'Restart Background Pie Server' to restart the PiE server. Note, this restarts the server, it does not reboot the machine.
 

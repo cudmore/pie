@@ -8,11 +8,23 @@ if [ $(id -u) = 0 ]; then
    exit 1
 fi
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 echo '==='
 echo "=== Activating Python 3 virtual environment in $PWD/env"
 echo '==='
 
-source env/bin/activate
+# check that install-pie virtual environment exists
+if [ ! -d "pie_env/" ]; then
+	# does not exist
+	echo -e 'install-dht: ${RED}ERROR${NC}: DID NOT FIND VIRTUAL ENVIRONMENT pie_env -->> ABORTING'
+	echo 'Run ./install-pie first'
+	exit 0
+fi
+
+source pie_env/bin/activate
 
 echo '==='
 echo "=== sudo apt-get install --yes python3-dev"

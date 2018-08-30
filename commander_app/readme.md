@@ -51,7 +51,9 @@ python commander.py
 
 In the config section, turn on 'edit ip' checkbox. Enter a valid IP and hit enter. If the IP is for a running PiE server (no port number needed), the red (bad connection) will be replaced with the current status of the specified PiE server.
 
-## Example
+## Example screen shot of the commander controlling 8 PiE servers.
 
-<IMG SRC="img/commander.png">
+<IMG SRC="../docs/img/video-wall-screenshot-1.png">
+<BR>
+<IMG SRC="../docs/img/video-wall-screenshot-2.png">
 
