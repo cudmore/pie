@@ -226,6 +226,25 @@
 			ng-disabled="! allowParamEdit()">		
 		Include hostname</label>
 	</td>
+
+	<td>
+		<label>Default Annotation
+		<select name="" 
+			ng-init="configData.trial.config.video.defaultAnnotation" 
+			ng-model="configData.trial.config.video.defaultAnnotation" 
+			ng-Change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()" 
+			>
+		  <option value="none">none</option>
+		  <option value="date">date</option>
+		  <option value="time">time</option>
+		  <option value="date time">date time</option>
+		  <option value="elapsed">elapsed</option>
+		  <option value="video frame">video frame</option>
+		</select>
+		</label>
+	</td>
+
 	</tr>
 	
 	<tr>
@@ -249,6 +268,30 @@
 	</td>
 
 	<td>
+		<label>Annotation Font Size
+		<select name="" 
+			ng-init="configData.trial.config.video.annotationFontSize" 
+			ng-model="configData.trial.config.video.annotationFontSize" 
+			ng-Change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()" 
+			>
+		  <option value="6">6</option>
+		  <option value="8">8</option>
+		  <option value="10">10</option>
+		  <option value="12">12</option>
+		  <option value="14">14</option>
+		  <option value="16">16</option>
+		  <option value="18">18</option>
+		  <option value="20">20</option>
+		  <option value="24">24</option>
+		  <option value="26">26</option>
+		  <option value="28">28</option>
+		  <option value="30">30</option>
+		  <option value="60">60</option>
+		  <option value="90">90</option>
+		  <option value="120">120</option>
+		</select>
+		</label>
 	</td>
 	
 	<!-- load default config files -->

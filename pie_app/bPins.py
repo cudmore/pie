@@ -76,7 +76,7 @@ class PinThread(threading.Thread):
 					self.trial.newEvent('frame', self.trial.numFrames, now=now, tick=tick)
 					# watermark video
 					if self.trial.camera is not None:
-						self.trial.camera.annotate(self.trial.numFrames)
+						self.trial.camera.annotate(newAnnotation = str(self.trial.numFrames))
 				else:
 					#print('!!! PinThread received frame when not running')
 					pass

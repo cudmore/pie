@@ -34,6 +34,11 @@ class bCamera:
 		self.lastStillTime = 0
 		self.stillPath = os.path.join(os.path.dirname(__file__), 'static/still.jpg')
 		
+		# keep track of time camera really starts recording
+		self.startRecordSeconds = None
+		
+		self.lastAnnotation = ''
+		
 		#
 		# a background thread to convert .h264 to .mp4
 		self.convertFileQueue = queue.Queue()
@@ -84,6 +89,9 @@ class bCamera:
 		#print("ret['led']:", ret['led'])
 		self.camera.led = ret['led']
 
+		# always start with no video frame number annotation
+		self.camera.annotate_frame_num = False
+		
 		resolution = self.trial.getConfig('video', 'resolution')
 		width = int(resolution.split(',')[0])
 		height = int(resolution.split(',')[1])
@@ -103,6 +111,8 @@ class bCamera:
 		ret['converttomp4'] = self.trial.getConfig('video', 'converttomp4')
 		ret['bufferSeconds'] = self.trial.getConfig('video', 'bufferSeconds')
 
+		#ret['defaultAnnotation'] = self.trial.getConfig('video', 'defaultAnnotation')
+		
 		return ret
 		
 	def releaseCamera(self):
@@ -199,10 +209,10 @@ class bCamera:
 				self.state = 'idle'
 				raise
 
-			startRecordSeconds = time.time()
+			self.startRecordSeconds = time.time()
 				
 			# record until duration or we are no longer 'recording'
-			while self.isState('recording') and (time.time() <= (startRecordSeconds + float(repeatDuration))):
+			while self.isState('recording') and (time.time() <= (self.startRecordSeconds + float(repeatDuration))):
 				self.camera.wait_recording()
 				if captureStill and time.time() > (self.lastStillTime + float(stillInterval)):
 					self.camera.capture(self.stillPath, use_video_port=True)
@@ -210,7 +220,8 @@ class bCamera:
 					'''
 					self.trial['lastStillTime'] = datetime.now().strftime('%Y%m%d %H:%M:%S')
 					'''
-				self.secondsElapsedStr = str(round(time.time() - startRecordSeconds, 1))
+				self.annotate()
+				self.secondsElapsedStr = str(round(time.time() - self.startRecordSeconds, 1))
 					
 			self.camera.stop_recording()
 
@@ -445,13 +456,49 @@ class bCamera:
 	#########################################################################
 	# Add an annotation/watermark on top of video
 	#########################################################################
-	def annotate(self, text):
+	def annotate(self, newAnnotation=None):
 		"""
-		Add watermark to video
+		Add watermark to video.
+		Pass newAnnotation, including '' to change self.lastAnnotation
 		"""
 		if self.camera:
 			try:
 				self.camera.annotate_background = picamera.Color('black')
+				# value values are 6 to 160 inclusive, default is 32
+				self.camera.annotate_text_size = int(self.trial.getConfig('video', 'annotationFontSize'))
+				
+				# to do, add these to config json
+				#defaultAnnotation = 'none' # ('none', 'date', 'time', 'date time', 'elapsed', 'video frame')
+				defaultAnnotation = self.trial.getConfig('video', 'defaultAnnotation')
+				
+				dateStr = datetime.now().strftime('%Y-%m-%d')
+				timeStr = datetime.now().strftime('%H:%M:%S')
+				if newAnnotation is None:
+					newAnnotation = self.lastAnnotation # can be ''
+				else:
+					self.lastAnnotation = newAnnotation
+				if newAnnotation == '':
+					origText = ''
+				else:
+					origText = ' ' + newAnnotation
+				text = origText # in case we get a bad value for defaultAnnotation
+				if defaultAnnotation == 'none':
+					text = origText
+				elif defaultAnnotation == 'date':
+					text = dateStr + origText
+				elif defaultAnnotation == 'time':
+					text = timeStr + origText
+				elif defaultAnnotation == 'date time':
+					text = dateStr + ' ' + timeStr + origText
+				elif defaultAnnotation == 'elapsed':
+					elapsedSeconds = time.time() - self.startRecordSeconds
+					elapsedSeconds = math.floor(elapsedSeconds*100)/100
+					elapsedSeconds = '%.2f'% elapsedSeconds
+					text = str(elapsedSeconds) + origText
+				elif defaultAnnotation == 'video frame': # video frame, not scope frame
+					self.camera.annotate_frame_num = True
+					text = '' # don't show any text while showing video frame
+				# add text annotation
 				self.camera.annotate_text = str(text)
 			except (picamera.exc.PiCameraRuntimeError, picamera.exc.PiCameraClosed) as e:
 				logger.error('annotate error: ' + str(e))

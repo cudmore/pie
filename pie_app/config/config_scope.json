@@ -120,7 +120,9 @@
         "led": false,
         "fps": 30,
         "streamResolution": "640,480",
-        "converttomp4": true
+        "converttomp4": true,
+        "defaultAnnotation": "none",
+        "annotationFontSize": "20"
     },
     "motor": {
         "preDur": 0,

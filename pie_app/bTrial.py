@@ -582,13 +582,13 @@ class bTrial():
 				# *this function startTrial() is being called from within the startarmvideo loop
 				# watermark video with trial start
 				if self.camera is not None:
-					self.camera.annotate('S')
+					self.camera.annotate(newAnnotation='S')
 				#pass
 			else:
 				self.camera.record(True, startNewTrial=False)
 
 		"""
-		I need to fix this, it is sending out when we get externally triggered
+		todo: I need to fix this, it is sending out when we get externally triggered
 		"""
 		#
 		# triggerOut
@@ -644,7 +644,7 @@ class bTrial():
 
 		# clear annotations on video
 		if self.camera is not None:
-			self.camera.annotate('')
+			self.camera.annotate(newAnnotation='')
 
 		# tell arduino to stop
 		# this is not symetric, NOT sending serial on start

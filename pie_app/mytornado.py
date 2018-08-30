@@ -1,3 +1,15 @@
+"""
+Author: RObert H Cudmore
+Date: 20180813
+
+Purpose: Quick tornado server to see if it synchronous behavior can fix rest api
+		from delaying GPIO
+
+Conclude: Nope. It seems errors in timing of GPIO are not GPIO per-se but python
+		time.time() not being acccurate and getting throuwn off by time.sleep
+		even when time.sleep is in a different process?
+
+"""
 import mytornadosettings
 import time
 import tornado.web
