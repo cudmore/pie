@@ -12,9 +12,9 @@ The top row displays the PiE server hostname, IP, and current date and time. If 
 
 **Start Recording**. Will start a video recording following 'Repeat Forever', 'Number of Repeats' and 'Repeat Duration'. These parameters can be set and saved in the 'Configure' section. 
 
-**Streaming**. Will start streaming the camera to the web page. If the stream fails to start the first time, try turning it off and then on again.
+**Streaming**. Will start streaming the camera to the web page. If the stream fails to start the first time, try turning it off and then on again. If it still does not work, refresh the page in the browser.
 
-**Arm**. When checked, the PiE server will wait for an input trigger (Input Pins - triggerIn - GPIO 24). Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. Arming is only available when 'Config - Allow Arming' is on. When 'Arm' is on and an input trigger is received, a pre-trigger video recording will be saved following 'Configure - Pre Trigger Buffer (sec)'.
+**Arm**. When checked, the PiE server will wait for an input trigger (Input Pins - triggerIn). Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. Arming is only available when 'Config - Allow Arming' is on. When 'Arm' is on and an input trigger is received, a pre-trigger video recording will be saved. The duration of the pre-trigger video is set in 'Configure - Pre Trigger Buffer (sec)'.
 
 **Last Action**. Is updated with the last action the PiE server took. This is normally updated in response to clicking interface buttons.
 
@@ -46,15 +46,17 @@ The Configure section allows parameters of the PiE server to be set. Current par
 
 **Pre Trigger Buffer (sec)**. Used for 'Armed' recording. Specifies the duration of video recording before each trigger.
 
-**Trial Number**. Allows the trial number to be manually set. The trial number is always automatically incremented each time 'Start Recording' or 'Start Trial' are initiated.
+**Video Annotation and Annotation Font Size**. Annotate text on top of video recording. Select one of: none, date, time, date time, elapsed, or video frame.
 
 **Include Hostname**. If checked, the hostname will be pre-pended to each saved video file.
+
+**Trial Number**. Allows the trial number to be manually set. The trial number is always automatically incremented each time 'Start Recording' or 'Start Trial' are initiated.
 
 **Allow Arming**. If on, will expose the 'Arm' interface. This assumes the PiE server has been wired to a trigger in and optionally a microscope frame-clock.
 
 **Use Serial**. If on, will expose the 'Motor' interface. This assumes a Teensy microcontroller is attached via usb.
 
-**Load**. Buttons to load sets of configuration parameters. This includes the last configuration saved with 'Save Defaults' as well as pre-defined configuration parameters. It is easy and intuitive to specify your own sets of configuration parameters and use 'Save Defaults' exclusively.
+**Load**. Buttons to load presets of configuration parameters. This includes 'Defaults',  the last configuration saved with 'Save Defaults' as well as pre-defined configuration parameters. It is easy and intuitive to specify your own sets of configuration parameters and use 'Save Defaults' exclusively.
 
  - **Defaults**. Load the last configuration saved with 'Save Defaults'.
  - **Homecage**. Auto lights on, arm off, serial off.
@@ -73,7 +75,9 @@ The Pins section allows GPIO pin parameters to be specified. The `triggerIn` and
 
 All parameters in the 'Pins' section will be save with 'Config - Save Defaults'.
 
-**Note**. To change 'Pin' numbers, the config json files need to be manually edited.
+To change 'Pin' numbers, the config json files need to be manually edited.
+
+**DHT Temperautre/Humidity**. If enabled is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If continuous is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page (called environment) using the thermometer icon.
 
 ## Motor
 
@@ -81,4 +85,9 @@ All parameters in the 'Pins' section will be save with 'Config - Save Defaults'.
 <IMG SRC="docs/img/web/web_motor.png">
 </td></tr></table>
 
-The Motor section allows parameters to be uploaded to a Teensy microcontroller. This is only for advanced users.
+The Motor section allows parameters to be uploaded to a Teensy microcontroller. This is only for advanced users. Activate this section by turning on 'Configure - Use Serial'.
+
+## Debug
+
+This section reports all parameters/variables received from the PiE server. Use 'Restart Background Pie Server' to restart the PiE server.
+

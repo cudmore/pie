@@ -180,58 +180,16 @@
 	</td>
 	</tr>
 
-<!--
 	<tr>
-	<td>
-		<label>
-		<input type="checkbox" 
-			ng-model="configData.trial.config.hardware.dhtsensor.readtemperature" 
-			ng-change="configParamChange(configForm.$valid)" 
-			ng-disabled="! allowParamEdit()">		
-		Read Temperature</label>
-	</td>
-	<td>
-		<label>Temperature Interval (sec)
-		<input style="width: 5em" 
-			type="number"
-			ng-model="configData.trial.config.hardware.dhtsensor.temperatureInterval"
-			ng-change="configParamChange(configForm.$valid)"
-			ng-disabled="! allowParamEdit()" 
-			min="1"
-			step="1"
-			required>
-		</label>
-	</td>
-	</tr>
--->
 	
-	<tr>
 	<td>
-		<label>Trial Number
-		<input style="width: 3em" 
-			type="number"
-			ng-model="configData.trial.config.trial.trialNum"
-			ng-change="configParamChange(configForm.$valid)"
-			ng-disabled="! allowParamEdit()" 
-			min="0"
-			step="1"
-			required>
-		</label>
-	</td>	
-	<td>
-		<label>
-		<input type="checkbox" 
-			ng-model="configData.trial.config.trial.includeHostname" 
-			ng-change="configParamChange(configForm.$valid)" 
-			ng-disabled="! allowParamEdit()">		
-		Include hostname</label>
 	</td>
-
+	
 	<td>
-		<label>Default Annotation
+		<label>Video Annotation
 		<select name="" 
-			ng-init="configData.trial.config.video.defaultAnnotation" 
-			ng-model="configData.trial.config.video.defaultAnnotation" 
+			ng-init="configData.trial.config.video.videoAnnotation" 
+			ng-model="configData.trial.config.video.videoAnnotation" 
 			ng-Change="configParamChange(configForm.$valid)" 
 			ng-disabled="! allowParamEdit()" 
 			>
@@ -243,28 +201,6 @@
 		  <option value="video frame">video frame</option>
 		</select>
 		</label>
-	</td>
-
-	</tr>
-	
-	<tr>
-	
-	<td>
-		<label>
-		<input type="checkbox" 
-			ng-model="configData.trial.config.hardware.allowArming" 
-			ng-change="configParamChange(configForm.$valid)" 
-			ng-disabled="! allowParamEdit()">		
-		Allow Arming</label>
-	</td>
-
-	<td>
-		<label>
-		<input type="checkbox" 
-			ng-model="configData.trial.config.hardware.serial.useSerial" 
-			ng-change="configParamChange(configForm.$valid)" 
-			ng-disabled="! allowParamEdit()">		
-		Use Serial</label>
 	</td>
 
 	<td>
@@ -293,6 +229,78 @@
 		</select>
 		</label>
 	</td>
+	
+	</tr>
+	
+<!--
+	<tr>
+	<td>
+		<label>
+		<input type="checkbox" 
+			ng-model="configData.trial.config.hardware.dhtsensor.readtemperature" 
+			ng-change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()">		
+		Read Temperature</label>
+	</td>
+	<td>
+		<label>Temperature Interval (sec)
+		<input style="width: 5em" 
+			type="number"
+			ng-model="configData.trial.config.hardware.dhtsensor.temperatureInterval"
+			ng-change="configParamChange(configForm.$valid)"
+			ng-disabled="! allowParamEdit()" 
+			min="1"
+			step="1"
+			required>
+		</label>
+	</td>
+	</tr>
+-->
+	
+	<tr>
+	<td>
+		<label>
+		<input type="checkbox" 
+			ng-model="configData.trial.config.trial.includeHostname" 
+			ng-change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()">		
+		Include hostname</label>
+	</td>
+	<td>
+		<label>Trial Number
+		<input style="width: 3em" 
+			type="number"
+			ng-model="configData.trial.config.trial.trialNum"
+			ng-change="configParamChange(configForm.$valid)"
+			ng-disabled="! allowParamEdit()" 
+			min="0"
+			step="1"
+			required>
+		</label>
+	</td>
+
+	</tr>
+	
+	<tr>
+	
+	<td>
+		<label>
+		<input type="checkbox" 
+			ng-model="configData.trial.config.hardware.allowArming" 
+			ng-change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()">		
+		Allow Arming</label>
+	</td>
+
+	<td>
+		<label>
+		<input type="checkbox" 
+			ng-model="configData.trial.config.hardware.serial.useSerial" 
+			ng-change="configParamChange(configForm.$valid)" 
+			ng-disabled="! allowParamEdit()">		
+		Use Serial</label>
+	</td>
+
 	
 	<!-- load default config files -->
 	<tr>

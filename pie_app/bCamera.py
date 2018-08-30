@@ -414,7 +414,7 @@ class bCamera:
 					circulario.copy_to(beforefilepath, seconds=bufferSeconds)
 					circulario.clear()
 			
-					startRecordSeconds = time.time()
+					self.startRecordSeconds = time.time()
 					self.secondsElapsedStr = '0'
 			
 					#logger.debug('Start video file: ' + afterfilename)
@@ -422,10 +422,10 @@ class bCamera:
 				
 					# Record ONE video file per start trigger (this is a limitation)
 					stopOnTrigger = False #todo: make this global and set on pin
-					while self.isState('armedrecording') and not stopOnTrigger and (time.time()<(startRecordSeconds + float(repeatDuration))):
+					while self.isState('armedrecording') and not stopOnTrigger and (time.time()<(self.startRecordSeconds + float(repeatDuration))):
 						self.camera.wait_recording() # seconds
 
-						self.secondsElapsedStr = str(round(time.time() - startRecordSeconds, 1))
+						self.secondsElapsedStr = str(round(time.time() - self.startRecordSeconds, 1))
 
 						if captureStill and time.time() > (self.lastStillTime + float(stillInterval)):
 							self.camera.capture(self.stillPath, use_video_port=True)
@@ -469,7 +469,7 @@ class bCamera:
 				
 				# to do, add these to config json
 				#defaultAnnotation = 'none' # ('none', 'date', 'time', 'date time', 'elapsed', 'video frame')
-				defaultAnnotation = self.trial.getConfig('video', 'defaultAnnotation')
+				videoAnnotation = self.trial.getConfig('video', 'videoAnnotation')
 				
 				dateStr = datetime.now().strftime('%Y-%m-%d')
 				timeStr = datetime.now().strftime('%H:%M:%S')
@@ -481,21 +481,21 @@ class bCamera:
 					origText = ''
 				else:
 					origText = ' ' + newAnnotation
-				text = origText # in case we get a bad value for defaultAnnotation
-				if defaultAnnotation == 'none':
+				text = origText # in case we get a bad value for videoAnnotation
+				if videoAnnotation == 'none':
 					text = origText
-				elif defaultAnnotation == 'date':
+				elif videoAnnotation == 'date':
 					text = dateStr + origText
-				elif defaultAnnotation == 'time':
+				elif videoAnnotation == 'time':
 					text = timeStr + origText
-				elif defaultAnnotation == 'date time':
+				elif videoAnnotation == 'date time':
 					text = dateStr + ' ' + timeStr + origText
-				elif defaultAnnotation == 'elapsed':
+				elif videoAnnotation == 'elapsed':
 					elapsedSeconds = time.time() - self.startRecordSeconds
 					elapsedSeconds = math.floor(elapsedSeconds*100)/100
 					elapsedSeconds = '%.2f'% elapsedSeconds
 					text = str(elapsedSeconds) + origText
-				elif defaultAnnotation == 'video frame': # video frame, not scope frame
+				elif videoAnnotation == 'video frame': # video frame, not scope frame
 					self.camera.annotate_frame_num = True
 					text = '' # don't show any text while showing video frame
 				# add text annotation

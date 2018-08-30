@@ -1,6 +1,6 @@
 # Trigger App
 
-A dead simple zero configuration app that uses GPIO input to start a trial and then receive frames.
+A dead simple zero configuration app that uses GPIO input to start a trial and then receive frames. Do not use/run this at the same time as the main PiE server.
 
 ## Install
 

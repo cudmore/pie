@@ -121,7 +121,7 @@
         "fps": 30,
         "streamResolution": "640,480",
         "converttomp4": true,
-        "defaultAnnotation": "none",
+        "videoAnnotation": "none",
         "annotationFontSize": "20"
     },
     "motor": {
