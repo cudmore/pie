@@ -72,10 +72,25 @@ class PinThread(threading.Thread):
 						lastFrameInterval = now - self.trial.runtime['lastFrameTime']
 					self.trial.runtime['lastFrameTime'] = now
 					'''
-					# log the frame
+					# log the frame, if using pigpio(d) we will also get a tick
+					# pigpio tick is orders of magnitude more precise that time.time()
+					# I think this is because background processes in a while loop call time.sleep()
+					# which throw off time.time()
 					self.trial.newEvent('frame', self.trial.numFrames, now=now, tick=tick)
-					# watermark video
+
 					if self.trial.camera is not None:
+						# self.trial.camera is a bCamera object
+						# self.trial.camera.camera is a PiCamera object
+						frame = self.trial.camera.camera.frame
+						if frame is None:
+							#print('got None frame')
+							pass
+						else:
+							#print('frame.timestamp:', frame.timestamp) # micro-seconds since start
+							if frame.timestamp is None:
+								frame.timestamp = 'NaN'
+							self.trial.newEvent('frameTimeStamp', frame.timestamp, str=str(self.trial.numFrames), now=now)
+						# annotate/watermark video with frame number
 						self.trial.camera.annotate(newAnnotation = str(self.trial.numFrames))
 				else:
 					#print('!!! PinThread received frame when not running')

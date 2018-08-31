@@ -15,8 +15,11 @@ sudo ../env/bin/platformio run -e teensy35 --target upload
 ## Screen serial
 
 ```
+# enter screen interface
 screen /dev/ttyACM0 115200
 ```
 
-
-
+```
+# to quit screen serial interface
+ctrl+a then : then type quit
+```

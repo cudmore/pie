@@ -57,7 +57,7 @@ sudo pico /etc/udev/rules.d/49-teensy.rules
 sudo reboot
 ```
 
-## Install platformio (using our script)
+## Install platformio (using the install-platformio script)
 
 	cd ~/pie/platformio
 	./install-platformio
@@ -300,9 +300,12 @@ sudo apt-get install screen
 
 #Use screen to connect to serial port
 screen /dev/ttyACM0 115200
+
+# Quit the screen terminal window
+ctrl+a then : then type quit
 ```
 
-You might have to hit `return` to get it going. Exit screen with `ctrl+a` then type `:` then type `quit`
+You might have to hit `return` to get it going. Quit screen with `ctrl+a` then type `:` then type `quit`
 
 ## udev rules
 
