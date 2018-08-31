@@ -9,6 +9,7 @@ import threading, subprocess, queue
 import picamera
 
 import bTrial
+import bUtil
 
 import logging
 logger = logging.getLogger('flask.app')
@@ -234,6 +235,9 @@ class bCamera:
 
 			if converttomp4:
 				self.convertVideo(videoFilePath, fps)
+			
+			# update drive space remaining
+			self.trial.systemInfo = bUtil.getSystemInfo()
 			
 		self.state = 'idle'
 		self.currentFile = ''

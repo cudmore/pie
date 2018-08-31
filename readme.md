@@ -504,8 +504,12 @@ This happens when you try and start the server but it is already running. Usuall
 
  - Make sure streaming stops when browser tab is closed or browser is quit.
  - Expand sunrise/sunset to fractional hour.
- - Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread).
-  - Have some mechanism to roll-over or otherwise replace the continuous log file.
+ - [partially done 20180831] Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread).
+
+	I am doing this with hard-coded 5GB warning in index.html, see:
+ 	ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
+ 	
+  - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
   
 [install-stretch]: http://blog.cudmore.io/post/2017/11/22/raspian-stretch/
 [steppermotor]: https://www.sparkfun.com/products/9238

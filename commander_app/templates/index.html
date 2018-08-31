@@ -204,7 +204,11 @@
 		<td>{{ videoArray[$index].status.trial.runtime.currentEpoch }}</td>
 		
 		<!-- file name -->
-		<td>
+<!-- i am repeating the exact contents of this <td> in one case with red background, in other with no background -->
+		<td ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5" style="background-color:#FF0000">
+			<A HREF="{{ videoArray[$index].restUrl }}videolist" target="_{{ videoArray[$index].restUrl }}" style="color: #000000;"><i class="fa fa-hdd-o" aria-hidden="true"></i></a>
+			{{ videoArray[$index].status.trial.runtime.currentFile }}
+		<td ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining > 5">
 			<A HREF="{{ videoArray[$index].restUrl }}videolist" target="_{{ videoArray[$index].restUrl }}" style="color: #000000;"><i class="fa fa-hdd-o" aria-hidden="true"></i></a>
 			{{ videoArray[$index].status.trial.runtime.currentFile }}
 		</td>

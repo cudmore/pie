@@ -51,6 +51,12 @@ python commander.py
 
 In the config section, turn on 'edit ip' checkbox. Enter a valid IP and hit enter. If the IP is for a running PiE server (no port number needed), the red (bad connection) will be replaced with the current status of the specified PiE server.
 
+### Warnings and errors
+
+When a PiE server is connected, the corresponding row in 'Server Swarm' will be filled in and active. When there is a connection error, the first column will appear red and all other controls will be inactive.
+
+When the drive space remaining goes below 5 GB, the 'File' column will be displayed in red. Currently, there is no interface to set this trip-point, 5 GB is  **hard-coded** in the commander index.html. Feel free to change it yourself.
+
 ## Example screen shot of the commander controlling 8 PiE servers.
 
 <IMG SRC="../docs/img/video-wall-screenshot-1.png">
