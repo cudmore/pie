@@ -16,9 +16,9 @@ const int triggerOutPin = 9;
 const int frameOutPin = 6;
 
 // global variables
-unsigned long frameStartDelayMillis = 50;	// ms, delay of first frame after startTrialMillis
+unsigned long frameStartDelayMillis = 200;	// ms, delay of first frame after startTrialMillis
 unsigned long frameIntervalMillis = 30;		// ms, frame interval
-unsigned long trialDurMillis = 60000;		// ms, trial duration
+unsigned long trialDurMillis = 300000; // 300000 is 5 min, 60000 is 1 min;		// ms, trial duration
 
 boolean useMicroseconds = true;
 
