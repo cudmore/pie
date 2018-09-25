@@ -199,7 +199,7 @@ class bCamera:
 
 			logger.debug('Start video file:' + self.currentFile + ' dur:' + str(repeatDuration) + ' fps:' + str(fps))
 
-			self.trial.newEvent('recordVideo', currentRepeat, str=videoFilePath)	
+			self.trial.newEvent('startVideoRecord', currentRepeat, str=videoFilePath)	
 
 			try:
 				self.camera.start_recording(videoFilePath)
@@ -226,10 +226,10 @@ class bCamera:
 					
 			self.camera.stop_recording()
 
+			self.trial.newEvent('stopVideoRecord', currentRepeat, str=videoFilePath) # paired with startVideo			
+
 			tmpFolderpath, tmpFilename = os.path.split(videoFilePath)
-			logger.debug('Stop video file: ' + tmpFilename)
-			
-			self.trial.newEvent('stopVideo', currentRepeat, str=videoFilePath) # paired with startVideo			
+			logger.debug('Stop video file: ' + tmpFilename)			
 			
 			currentRepeat += 1
 
@@ -410,6 +410,7 @@ class bCamera:
 
 					self.trial.newEvent('beforefilepath', currentRepeat, str=beforefilepath)
 					self.trial.newEvent('afterfilepath', currentRepeat, str=afterfilepath)
+					self.trial.newEvent('startArmedRecording', currentRepeat, str=afterfilepath)
 
 					# we were in a video loop, save the pre-trigger video and start recording
 					# video for *this trial
@@ -439,6 +440,8 @@ class bCamera:
 						time.sleep(0.1)
 						
 					self.secondsElapsedStr = 'n/a'
+
+					self.trial.newEvent('stopArmedRecording', currentRepeat, str=afterfilepath)
 
 					# stop recording to afterfilepath file and re-engage the circular video
 					self.camera.split_recording(circulario)
