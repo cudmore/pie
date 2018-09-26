@@ -6,7 +6,7 @@
 
 The top row displays the PiE server hostname, IP, and current date and time. If the server is running, the time will be updated each second. In addition, there are links to recorded video files, server logs, environmental sensors, and web help.
 
-**White and IR Switches**. Will turn White and IR lights on and off. This is not allowed when 'Configure - Auto Lights' is on.
+**White and IR Switches**. Will turn White and IR lights on and off. This assumes white and IR leds for the PiE server have been wired correctly to the Raspberry Pi. Both white and IR LEDs cannot be controlled when 'Configure - Auto Lights' is on.
 
 **ID and Condition**. These will be pre-pended to all saved file names. Leave them blank and nothing will be added. This is useful to organize your saved files with an animal ID and condition.
 
@@ -14,7 +14,7 @@ The top row displays the PiE server hostname, IP, and current date and time. If 
 
 **Streaming**. Will start streaming the camera to the web page. If the stream fails to start the first time, try turning it off and then on again. If it still does not work, refresh the page in the browser.
 
-**Arm**. When checked, the PiE server will wait for an input trigger (Input Pins - triggerIn). Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. Arming is only available when 'Config - Allow Arming' is on. When 'Arm' is on and an input trigger is received, a pre-trigger video recording will be saved. The duration of the pre-trigger video is set in 'Configure - Pre Trigger Buffer (sec)'.
+**Arm**. When checked, the PiE server will wait for an input trigger (Input Pins - triggerIn). Arming is only available when 'Configure - Allow Arming' is on. Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. When 'Arm' is on and an input trigger is received, video recording begins and a pre-trigger video recording will be saved. The duration of the pre-trigger video is set in 'Configure - Pre Trigger Buffer (sec)'.
 
 **Last Action**. Is updated with the last action the PiE server took. This is normally updated in response to clicking interface buttons.
 
@@ -24,7 +24,7 @@ The top row displays the PiE server hostname, IP, and current date and time. If 
 <IMG SRC="docs/img/web/web_config.png">
 </td></tr></table>
 
-The Configure section allows parameters of the PiE server to be set. Current parameters can be saved with 'Save Defaults' and parameter pre-sets can be loaded.
+The Configure section allows parameters of the PiE server to be set. Current parameters can be saved with 'Save Defaults' and will automatically be loaded the next time the PiE server is run.
 
 **Repeat Forever**. When checked, 'Start Recording' will record videos of 'Repeat Duration' over and over until 'Stop Recording' is pressed. When 'Arm' is on, this will be turned off.
 
@@ -44,7 +44,7 @@ The Configure section allows parameters of the PiE server to be set. Current par
 
 **Capture Still and Still Interval (Sec)**. If on, still images will be captured at 'Still Interval (Sec)'. These still images can be viewed in real-time in the 'Last Still Image' section.
 
-**Pre Trigger Buffer (sec)**. Used for 'Armed' recording. Specifies the duration of video recording before each trigger.
+**Pre Trigger Buffer (sec)**. Used for 'Armed' recording. Specifies the duration of video recording before an input trigger.
 
 **Video Annotation and Annotation Font Size**. Annotate text on top of video recording. Select one of: none, date, time, date time, elapsed, or video frame.
 
@@ -52,13 +52,13 @@ The Configure section allows parameters of the PiE server to be set. Current par
 
 **Trial Number**. Allows the trial number to be manually set. The trial number is always automatically incremented each time 'Start Recording' or 'Start Trial' are initiated.
 
-**Allow Arming**. If on, will expose the 'Arm' interface. This assumes the PiE server has been wired to a trigger in and optionally a microscope frame-clock.
+**Allow Arming**. If on, will activate the 'Arm' interface. This assumes the PiE server has been wired to a trigger in and optionally a microscope frame-clock.
 
-**Use Serial**. If on, will expose the 'Motor' interface. This assumes a Teensy microcontroller is attached via usb.
+**Use Serial**. If on, will activate the 'Motor' interface. This assumes a Teensy microcontroller is attached via usb.
 
 **Load**. Buttons to load presets of configuration parameters. This includes 'Defaults',  the last configuration saved with 'Save Defaults' as well as pre-defined configuration parameters. It is easy and intuitive to specify your own sets of configuration parameters and use 'Save Defaults' exclusively.
 
- - **Defaults**. Load the last configuration saved with 'Save Defaults'.
+ - **Defaults**. Load the last configuration saved with 'Save Defaults'. These are also loaded when the PiE server is first run.
  - **Homecage**. Auto lights on, arm off, serial off.
  - **Scope**. Arm on, serial off.
  - **Treadmill**. Arm on, serial on.
@@ -71,13 +71,13 @@ The Configure section allows parameters of the PiE server to be set. Current par
 <IMG SRC="docs/img/web/web_pins.png">
 </td></tr></table>
 
-The Pins section allows GPIO pin parameters to be specified. The `triggerIn` and `frame` pins are used during armed recording and their parameters need to be set to match the signals coming off your particular hardware/scope. For example, if your scope outputs a `rising` trigger then `triggerIn` should be set to Polarity `rising` and Pull Up/Down `down`.
+The Pins section allows GPIO pin parameters to be specified. The `triggerIn` and `frame` pins are used during armed recording and their parameters need to be set to match the signals coming off your particular hardware/scope. For example, if your scope outputs a `rising` trigger then `triggerIn` should be set to Polarity `rising` and Pull Up/Down to `down`.
 
-All parameters in the 'Pins' section will be save with 'Config - Save Defaults'.
+All parameters in the 'Pins' section will be save with 'Configure - Save Defaults'.
 
-To change 'Pin' numbers, the config json files need to be manually edited.
+To change 'Pin' numbers, the configuration json files need to be manually edited. These can be found in [pie_app/config](pie_app/config) folder.
 
-**DHT Temperautre/Humidity**. This assumes you have installed the Adafruit DHT temperature sensor driver with `./install-dht`. If 'enabled' is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If 'continuous' is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page (called environment) using the thermometer icon. The temperature and humidity log file is in `pie/pie_app/logs/environment.log`. If you change these options and they do not take effect, try restarting the PiE server in the 'Debug' section.
+**DHT Temperature/Humidity**. This assumes you have installed the Adafruit DHT temperature sensor driver with `./install-dht`. If 'enabled' is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If 'continuous' is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page, named environment, using the thermometer icon. The temperature and humidity log file is in `pie/pie_app/logs/environment.log`. If you change these options and they do not take effect, try restarting the PiE server in the web interface 'Debug' section.
 
 ## Motor
 
