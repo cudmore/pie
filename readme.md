@@ -105,7 +105,7 @@ See the [web interface readme](readme-web.md) for more information.
 
 ### Main
 
-The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in `/video`. At the end of each video file, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](readme-trial-file.md) for more information.
+The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in the `/video` folder. At the end of each video file, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](readme-trial-file.md) for more information.
  
 <table><tr><td>
 <IMG SRC="docs/img/web/web_main.png">
