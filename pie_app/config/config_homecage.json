@@ -2,7 +2,7 @@
     "trial": {
         "numberOfRepeats": 1,
         "repeatDuration": 10,
-        "trialNum": 2,
+        "trialNum": 1,
         "animalID": "",
         "conditionID": "",
         "includeHostname": true,

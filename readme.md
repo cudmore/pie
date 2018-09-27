@@ -4,7 +4,7 @@
 
 A web server to control an experiment to record video and optionally control a motorized treadmill.
 
-#### Features:
+#### Features
 
  - Video recording
  - Video streaming to a browser
@@ -13,17 +13,33 @@ A web server to control an experiment to record video and optionally control a m
  - Control a motor during video recording (requires Teensy microcontroller and a stepper motor)
  - Saves all events into an easy to parse text file
 
-#### System Requirements (video):
+#### System Requirements (video)
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
 
+#### System Requirements (home cage video)
+ 
+ - Raspberry Pi 2/3
+ - Raspberry Pi Camera
+ - 2 channel relay
+ - IR LEDs
+ - White LEDs
+ - Temperature/Humidity sensor
+ 
+#### System Requirements (on scope video)
+
+ - Raspberry Pi 2/3
+ - Raspberry Pi Camera
+ - Level shifter
+ 
 #### System Requirements (treadmill)
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
  - Teensy microcontroller
- - Stepper motor and driver
+ - Stepper motor controller
+ - Stepper motor
  
 ## Disclaimer
 
@@ -89,6 +105,8 @@ See the [web interface readme](readme-web.md) for more information.
 
 ### Main
 
+The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in `/video`. At the end of each video file, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](readme-trial-file.md) for more information.
+ 
 <table><tr><td>
 <IMG SRC="docs/img/web/web_main.png">
 </td></tr></table>
@@ -106,6 +124,8 @@ See the [web interface readme](readme-web.md) for more information.
 </td></tr></table>
 
 ## Parts list
+
+See the complete [parts list](readme-parts.md) for more information.
 
 ### Raspberry Pi
 
@@ -246,7 +266,7 @@ The Raspberry Pi is running a complex operating system which provides many featu
 
 The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
 
-See [analysis/trial_analysis.ipynb](analysis/trial_analysis.ipynb) for a comparising of frame arrival times using GPIO versus pigpio.
+See the Jupyter notebooks in the [analysis/](analysis/) folder for a comparising of frame arrival times using GPIO versus pigpio.
 
 ### Download and install pigpio
 

@@ -15,7 +15,7 @@ Total cost for home-cage and/or on the scope video recording is around $200.
 |1	| 12V 2A LED Driver (does not come with wall plug)	| Power the IR LEDs | $12	| [amazon][led-driver]
 | 1				| Ethernet cable	of sufficient length | Connect the computer to the network | $5 - $20	| [amazon][ethernet-cable]
 
-## For video recording with triggering and frame clock from a scope
+## For video recording on a scope with triggering and frame clock
 
 |Quatity	|Item	| Purpose |Cost	| Vendor Link
 | -----		| -----	| -----	| -----	| -----
