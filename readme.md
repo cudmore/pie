@@ -1,11 +1,15 @@
 # Raspberry Pi Controlled Experiment (PiE)
 
-## This is a work in progress and is updated daily. If you are interested in using this code, please email robert.cudmore@gmail.com
+A complete web based system to control an experiment with video recording and optionally control a motorized treadmill.
 
-A web server to control an experiment to record video and optionally control a motorized treadmill.
+## Disclaimer
 
-#### Features
+This repository is working in my hands but may not in yours. Please email robert.cudmore@gmail.com with questions or better yet, open an [issue](https://github.com/cudmore/pie/issues). If this code is used in any way, please be a good scientist/colleague and give me credit.
 
+
+## Features
+
+ - Configurable web interface
  - Video recording
  - Video streaming to a browser
  - Trigger video recording with general-purpose-input-output (GPIO)
@@ -13,12 +17,14 @@ A web server to control an experiment to record video and optionally control a m
  - Control a motor during video recording (requires Teensy microcontroller and a stepper motor)
  - Saves all events into an easy to parse text file
 
-#### System Requirements (video)
+## Different Options
+
+#### 1) Video recording - Requires
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
 
-#### System Requirements (home cage video)
+#### 2) Home cage video - Requires
  
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
@@ -27,13 +33,13 @@ A web server to control an experiment to record video and optionally control a m
  - White LEDs
  - Temperature/Humidity sensor
  
-#### System Requirements (on scope video)
+#### 3) On the scope video recording - Requires
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
  - Level shifter
  
-#### System Requirements (treadmill)
+#### 4) Full treadmill system - Requires
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
@@ -41,13 +47,9 @@ A web server to control an experiment to record video and optionally control a m
  - Stepper motor controller
  - Stepper motor
  
-## Disclaimer
-
-This repository is working in my hands but may not in yours. Please email with questions or better yet, open an [issue](https://github.com/cudmore/pie/issues). If this code is used in any way, please be a good scientist/colleague and give me credit.
-
 ## Get a functioning Raspberry Pi
 
-We assume you have a functioning Raspberry Pi. To get started, see our [installation][install-stretch] recipe.
+We assume you have a functioning Raspberry Pi 2/3. To get started, see our [installation][install-stretch] recipe.
 
 ## Download
 
@@ -103,15 +105,11 @@ For debugging, use `./pie run` to print the status of the server to the command 
 
 See the [web interface readme](readme-web.md) for more information.
 
-### Main
-
-The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in the `/video` folder. At the end of each video file, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](readme-trial-file.md) for more information.
- 
 <table><tr><td>
 <IMG SRC="docs/img/web/web_main.png">
 </td></tr></table>
 
-### Config
+### Configure
 
 <table><tr><td>
 <IMG SRC="docs/img/web/web_config.png">
@@ -127,43 +125,25 @@ The 'Start Recording' and 'Start Trial' buttons start video recording to a file.
 
 See the complete [parts list](readme-parts.md) for more information.
 
-### Raspberry Pi
-
-The [Raspberry Pi][raspberry-pi] is a complete computer system in an almost credit card size. It has ethernet, usb, general-purpose-input-output pins (GPIO), a dedicated camera port, and runs a version of Debian Linux called [Rasbian][raspbian]. You can pick up the current model, a [Raspberry Pi 3 Model B+][buy-raspberry-pi].
-
-### Raspberry Pi Camera
-
-The Raspberry Pi has a dedicated camera port for the Raspberry Pi Camera. This is an 8 megapixel camera capable of frame rates as high as 90 frames-per-second and comes in two flavors, the [Pi NOIR Camera][raspberry-pi-noir] which can capture images/video using infrared (IR) lights and the '[normal][raspberry-pi-camera]' camera which can capture images/video using visible (white) light. We generally use the [Pi NOIR][raspberry-pi-noir] version to record video in behavior boxes during both the daytime (white LEDs) and night-time (IR LEDs) as well as on the scope to record video during two-photon imaging in the dark using IR LEDs.
-
-### Level shifter
-
-If you need to connect the Raspberry Pi directly to 5V TTL lab equipment you **need** a [level shifter][level-shifter] to convert the 5V signal to 3V as the Raspberry Pi is only 3V tolerant. We normally use [Adafruit level shifters][adafruit-level-shifter].
-
-### Two channel relay
-
-A [relay][relay] is a switch allowing you to turn higher voltage devices (usually LEDs connected to 12V power) on and off with 3V DIO pins. We are using a [sainsmart 2-channel relay][sainsmart-relay].
-
-### Teensy microcontroller
-
-We are using [Teensy 3.2 or 3.5][teensy] microcontrollers. They are Arduino compatible but have a lot more features. These microcontrollers can be programmed from the command line using [platformio][platformio]. No need for the Arduino IDE. The Raspberry Pi first needs a few simple system wide configurations, see the readme in [pie/platformio](platformio/). 
-
-### Stepper motor and  driver
-
-We are using a [Bipolar stepper motor][steppermotor] with the [Easy Driver motor driver][easydriver] from Sparkfun.
 
 ## Wiring the system
 
-#### Option 1: Recording homecage video
+### Option 1: Recording video
+
+ - All you need is a Raspberry Pi 2/3, a Raspberry camera and the PiE server and you are good to go.
+
+### Option 2: Recording homecage video
  
+ - See the [readme-homecage-wiring](readme-homecage-wiring.md) for details.
  - Wire a 2-channel relay with white and IR LEDs connected to 12V power.
  - Wire a Temperature/Humidity sensor like the [AM2302][am2302].
     
-#### Option 2: Record video on a scope (no Teensy)
+### Option 3: Record video on a scope (no Teensy)
 
- - Please see the [scope wiring tutorial](readme-scope.md).
+ - See the [scope wiring tutorial](readme-scope.md).
  - Wire a level shifter connected to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
   
-#### Option 3: Record video on a scope and use a Teensy and a motorized treadmill
+### Option 4: Record video on a scope and use a Teensy and a motorized treadmill
 
  - Wire a Teensy connected to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
  - Wire a stepper motor and motor controller.
@@ -177,13 +157,13 @@ We are using a [Bipolar stepper motor][steppermotor] with the [Easy Driver motor
  
 ### Wiring diagram
 
-This is a full wiring diagram for option #3, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](readme-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](docs/img/pie.fzz) file.
+This is a full wiring diagram for option #4, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](readme-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](docs/img/pie.fzz) file.
 
 <IMG SRC="docs/img/pie_fritzing.png">
 
 ### Pin table
 
-This table shows all the pin connections for option #3. To wire a Raspberry Pi to a scope without a Teensy (option #2), make sure you connect the Raspberry Pi `triggerOut`, `frame`, and `triggerIn` pins to a level-shifter and then to the scope. See the [scope wiring tutorial](readme-scope.md) for details.
+This table shows all the pin connections for the full treadmill system (option #4). To wire a Raspberry Pi to a scope without a Teensy (option #3), make sure you connect the Raspberry Pi `triggerOut`, `frame`, and `triggerIn` pins to a level-shifter and then to the scope. See the [scope wiring tutorial](readme-scope.md) for details.
 
 [Download pdf](docs/img/pie_pins.pdf) of this table.
 
@@ -230,41 +210,11 @@ This table shows all the pin connections for option #3. To wire a Raspberry Pi t
 |  Emergency Stop Button |  |  | Push button (+3V) | ??? | ??? | ??? | X |  | emergencyStopPin | treadmill.cpp | 20 | X |  |  |  |
 |   | X |  | Push button (Gnd) |  |  |  |  |  |  |  |  |  |  |  |  |
 
-## Manually editing user config
-
-The PiE server comes with three default sets of options: Homecage, Scope, and Treadmill. There is an additional `User` configuration that can be edited manually to configure the PiE server.
-
-To edit the `User` file, open [pie_app/config/config_user.json](pie_app/config/config_user.json). The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
-
-To check your work, use
-
-```
-cd ~/pie/pie_app/config
-cat config_user.json | python -m json.tool
-```
-
-If your edits are syntatically correct, this command will output the contents of the file. If you have created an error, they will be reported on the command line. For example, if your forget a comma  after `"enabled": true` like this
-
-```
-        "triggerIn": {
-            "enabled": true
-            "pin": 23,
-            "polarity": "rising",
-            "pull_up_down": "down"
-        },
-```
-
-You will get an error
-
-```
-Expecting , delimiter: line 27 column 13 (char 648)
-```
-
 ## GPIO timing
 
-The Raspberry Pi is running a complex operating system which provides many features including usb ports, an ethernet interface, and hdmi output. Thus, there will be delays in receiving and generating digital input and output (DIO). 
+The Raspberry Pi is running a fully functional operating system which provides many features including USB, ethernet, and HDMI. Thus, there will be unpredictable delays in receiving and generating digital input and output (DIO). 
 
-The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
+The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100-200 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
 
 See the Jupyter notebooks in the [analysis/](analysis/) folder for a comparising of frame arrival times using GPIO versus pigpio.
 
@@ -520,6 +470,38 @@ Make sure other programs are not using the camera and try again. Rebooting with 
 
 This happens when you try and start the server but it is already running. Usually when it is running in the background and you run it again with `./pie run`. Just stop the server with `./pie stop` and then try again with `./pie run`.
 
+
+## Manually editing user config
+
+The PiE server comes with three default sets of options: Homecage, Scope, and Treadmill. There is an additional `User` configuration that can be edited manually to configure the PiE server.
+
+To edit the `User` file, open [pie_app/config/config_user.json](pie_app/config/config_user.json). The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
+
+To check your work, use
+
+```
+cd ~/pie/pie_app/config
+cat config_user.json | python -m json.tool
+```
+
+If your edits are syntatically correct, this command will output the contents of the file. If you have created an error, they will be reported on the command line. For example, if your forget a comma  after `"enabled": true` like this
+
+```
+        "triggerIn": {
+            "enabled": true
+            "pin": 23,
+            "polarity": "rising",
+            "pull_up_down": "down"
+        },
+```
+
+You will get an error
+
+```
+Expecting , delimiter: line 27 column 13 (char 648)
+```
+
+
 ## To Do
 
  - Make sure streaming stops when browser tab is closed or browser is quit.
@@ -530,6 +512,7 @@ This happens when you try and start the server but it is already running. Usuall
  	ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
  	
   - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
+  
   
 [install-stretch]: http://blog.cudmore.io/post/2017/11/22/raspian-stretch/
 [steppermotor]: https://www.sparkfun.com/products/9238
@@ -542,7 +525,6 @@ This happens when you try and start the server but it is already running. Usuall
 [libav]: https://libav.org/
 [dht]: https://github.com/adafruit/DHT-sensor-library
 [level-shifter]: https://en.wikipedia.org/wiki/Level_shifter
-[adafruit-level-shifter]: https://www.adafruit.com/product/757
 [fritzing]: http://fritzing.org/home/
 [raspberry-pi]: https://www.raspberrypi.org/
 [buy-raspberry-pi]: https://www.raspberrypi.org/products/
@@ -556,3 +538,5 @@ This happens when you try and start the server but it is already running. Usuall
 [gpio]: https://sourceforge.net/p/raspberry-gpio-python/wiki/Home/
 [pigpiod]: http://abyz.me.uk/rpi/pigpio/pigpiod.html
 [pigpio]: http://abyz.me.uk/rpi/pigpio/python.html
+[loginlevelconverter_sparkfun]: https://www.sparkfun.com/products/12009
+[loginlevelconverter_adafruit]: https://www.adafruit.com/products/757

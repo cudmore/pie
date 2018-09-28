@@ -1,3 +1,34 @@
+[Jump to the actual parts list](#parts-list)
+
+## Overview
+
+### Raspberry Pi
+
+The [Raspberry Pi][raspberry-pi] is a complete computer system in an almost credit card size. It has ethernet, USB, general-purpose-input-output pins (GPIO), a dedicated camera port, and runs a version of Debian Linux called [Rasbian][raspbian]. You can pick up the current model, a [Raspberry Pi 3 Model B+][buy-raspberry-pi].
+
+### Raspberry Pi Camera
+
+The Raspberry Pi has a dedicated camera port for the Raspberry Pi Camera. This is an 8 megapixel camera capable of frame rates as high as 90 frames-per-second and comes in two flavors, the [Pi NOIR Camera][raspberry-pi-noir] which can capture images/video using infrared (IR) lights and the '[normal][raspberry-pi-camera]' camera which can capture images/video using visible (white) light. We generally use the [Pi NOIR][raspberry-pi-noir] version to record video in behavior boxes during both the daytime (white LEDs) and night-time (IR LEDs) as well as on the scope to record video during two-photon imaging in the dark using IR LEDs.
+
+### Level shifter
+
+If you need to connect the Raspberry Pi directly to 5V TTL lab equipment you **need** a [level shifter][level-shifter] to convert the 5V signal to 3V as the Raspberry Pi is only 3V tolerant. We normally use [Adafruit](loginlevelconverter_adafruit) or [Sparkfun](loginlevelconverter_sparkfun) level shifters.
+
+### Two channel relay
+
+A [relay][relay] is a switch allowing you to turn higher voltage devices (usually LEDs connected to 12V power) on and off with 3V GPIO pins. We are using a [sainsmart 2-channel relay][sainsmart-relay].
+
+### Teensy microcontroller
+
+We are using [Teensy 3.2 or 3.5][teensy] microcontrollers. They are Arduino compatible but have a lot more features. These microcontrollers can be programmed from the command line using [platformio][platformio], no need for the Arduino IDE. To use platformio, the Raspberry Pi needs a few simple system wide configurations, see the readme in [pie/platformio](platformio/). 
+
+### Stepper motor and  driver
+
+Use a [Bipolar stepper motor][steppermotor] with the [Easy Driver][easydriver] motor driver.
+
+<A id="parts-list"></a>
+## Parts List
+
 Total cost for home-cage and/or on the scope video recording is around $200.
 
 ## For video recording
@@ -79,8 +110,8 @@ These are **Actobotics** parts from [ServoCity][servocity]
 |1	|3/32 Hex Key	|1.39	|57185A11
 |6	|.250 in L x 6-32 Zinc-Plated Alloy Steel Socket Head Cap Screw (25 pk)	|1.69	|632106
 
-[super-bright-led-board]: https://www.superbrightleds.com/moreinfo/resistors/universal-4-led-miniature-wedge-base-pcb-mled-pcb/403/1387/
 
+[super-bright-led-board]: https://www.superbrightleds.com/moreinfo/resistors/universal-4-led-miniature-wedge-base-pcb-mled-pcb/403/1387/
 [irled_sparkfun]: https://www.sparkfun.com/products/9469
 [loginlevelconverter_sparkfun]: https://www.sparkfun.com/products/12009
 [loginlevelconverter_adafruit]: https://www.adafruit.com/products/757
@@ -98,3 +129,17 @@ These are **Actobotics** parts from [ServoCity][servocity]
 [rotary-encoder]: https://www.digikey.com/product-detail/en/600128CBL/600CS-ND/53504
 [rotary-encoder-2]: https://www.digikey.com/product-detail/en/honeywell-sensing-and-productivity-solutions/600128CN1/480-5967-ND/4381908
 [servocity]: http://servocity.com
+
+[raspberry-pi]: https://www.raspberrypi.org/
+[buy-raspberry-pi]: https://www.raspberrypi.org/products/
+[buy-noir]: https://www.adafruit.com/product/3100?src=raspberrypi
+[raspbian]: https://www.raspberrypi.org/downloads/raspbian/
+[raspberry-pi-noir]: https://www.raspberrypi.org/products/pi-noir-camera-v2/
+[raspberry-pi-camera]: https://www.raspberrypi.org/products/camera-module-v2/
+[level-shifter]: https://en.wikipedia.org/wiki/Level_shifter
+[relay]: https://en.wikipedia.org/wiki/Relay
+[steppermotor]: https://www.sparkfun.com/products/9238
+[easydriver]: https://www.sparkfun.com/products/12779
+[sainsmart-relay]: https://www.amazon.com/SainSmart-101-70-100-2-Channel-Relay-Module/dp/B0057OC6D8
+[teensy]: https://www.pjrc.com/teensy/
+[platformio]: https://platformio.org/

@@ -12,7 +12,7 @@ This tutorial requires:
 
 ### Raspberry Pi 3 pin out
 
-Here is a schematic of the Raspberry Pi Pin outs. Red is 5V, orange is 3.3V, yellow are GPIO, black are Ground, and white should not be used.
+Here is a schematic of the Raspberry Pi 2/3 pin outs. Red is 5V, orange is 3.3V, yellow are GPIO, black are Ground, and white should not be used.
 
 <IMG SRC="docs/img/raspberry_pins.png">
 
