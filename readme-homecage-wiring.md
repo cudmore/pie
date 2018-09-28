@@ -1,0 +1,76 @@
+# Wiring the homecage
+
+Wiring the homecage system is fairly simple. The Pi needs to be wired to one end of a relay/switch, the other end of the relay/switch is wired to 12V DC, and the temperature/humidity sensor is wired to the Pi.
+
+## Raspberry Pi 2/3 pin out
+
+<IMG SRC="docs/img/raspberry_pins.png">
+
+There are multiple power and ground pins, use these to connect to the relay switch and the temperature sensor. Conceptually, all the ground pins are the same, you can use a [bread-board][bread-board] if you run out of ground pins or the wiring becomes too tangled.
+
+
+## Wiring Diagram
+
+<IMG SRC="docs/img/pie-homecage.png">
+
+## Lights
+
+**Use an external 12V AC/DC power supply.** - Don't power the lights directly from the 5V pins on the Pi, the Pi does not have enough current. A 1 Amp 12V adapter should be fine, don't worry, if it is under-powered your lights will be a little dim.
+
+**Use a relay switch.** - Never connect the 12V adapter directly to the Pi, instead use a relay switch. Only work with DC current coming out of the AC/DC adapter, **DO NOT** work with AC power coming from the wall as it can kill you.
+
+The relay switch effectively separates the 5V, Ground, and GPIO on the Pi (left half of the relay) from the 12V power of the AC/DC adapter and the lights (right half of the relay). Here we will wire the system with the white LED on channel 1 and the IR LED on channel 2 of the relay switch. 
+
+**All LEDs need resistors.** - All LEDs need resistors. If your directly connect an LED to power and ground without a resistor you will burn the LED. All LEDs need a resistor wired in parallel, these are called 'current limiting resistor'.
+
+**Use IR LEDs <900 nm.** - These are within the sensitivity range of the Pi NoIR camera. A lot of IR LEDs are 940nm, these are not well suited for use with the Pi NoIR camera but are designed for IR sensors as is used in a TV remote.
+
+<IMG SRC="docs/img/two-channel-relay.png" width=600>
+
+### Connect a 12V AC/DC adapter, IR, and white lights to the two-channel relay switch.
+
+All LEDs need resistors!
+
+ - Using a 12V AC/DC adapter (1 Amp), cut the wire and stick the positive 'hot' wire into the center 'common' pin' of channel 1 on the relay switch. The 'hot' end wire usually has a white line down the length of the wire. You can also determine the 'hot' end using a multi-meter, it is the one that gives a positive (+) voltage when attached to the positive (normally red) end of the multi-meter.
+ 
+ - Cut a bit of wire and connect the center 'common pin' of channel 1 to the center 'common pin' of channel 2. This is the 'hot' end.
+ 
+ - Stick the positive end of the white LED into the 'normally closed' port of channel 1. Attach the negative end of the white LED to the 'ground' wire of the 12V AC/DC adapter.
+ 
+ - Do the same for the IR LED. Stick the positive end into the 'normally closed' port of channel 2 on the relay switch. Attach the negative end of the IR LED to the 'ground' wire of the 12V AC/DC adapter.
+
+One important concept is that 'all grounds are the same'. This includes the ground on the 12V AC/DC adapter, the ground of the LEDs, the ground of theRaspberry Pi, etc.
+
+### Connect the Pi to the relay switch switch
+
+Connect 4 wires from the Pi to the relay switch. All these wires go on the opposite end from the 12V wires. Look at your relay switch for the correct connects, they are usually clearly labelled but can be in a different order from the image shown.
+
+ - Connect a GPIO pin from the Pi to the 'In1=Digital Input' pin on the relay switch.
+ - Connect a second GPIO pin from the Pi to the 'In2=Digital Input' pin on the relay switch.
+ - Connect a 5V pin from the Pi to the 'Vcc' pin on the relay switch.
+ - Connect a ground pin from the Pi to the 'GND' pin on the relay switch.
+  
+## Temperature and humidity sensor
+
+
+### AM2302
+
+Red is power, black is ground, and yellow is data.
+
+ - Connect a 5V pin from the Pi to the red wire on the sensor.
+ - Connect a ground pin from the Pi to the back wire on the sensor.
+ - Connect a GPIO pin from the Pi to the yellow (data) pin on the sensor.
+
+<IMG SRC="docs/img/am2302.png" width=300>
+
+### DHT 22
+
+ - Connect a 5V pin from the Pi to the 'VCC' pin on the sensor.
+ - Connect a ground pin from the Pi to the 'GND' pin on the sensor.
+ - Connect a GPIO pin from the Pi to the 'DATA' pin on the sensor.
+
+<IMG SRC="docs/img/dht22-pin-out.png" width=300>
+
+
+[bread-board]: https://www.adafruit.com/product/64
+[am2302]: https://www.adafruit.com/product/393
