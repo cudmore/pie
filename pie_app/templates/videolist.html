@@ -36,6 +36,34 @@
  				padding: 8px;
  				text-align:left;
 			}
+
+			.headerTable {
+			    border-collapse: collapse;
+			    width: 65%;
+			    //table-layout: fixed;
+			}
+			/*
+			.headerTable tbody tr:nth-child(even){
+				background-color: #EEEEEE;
+				/* color: #fff; */
+			}
+			*/
+			.headerTable td {
+				font-size: 1.1em;
+ 				padding: 8px;
+			}
+			.headerTable th {
+				font-size: 1.1em;
+ 				padding: 8px;
+ 				text-align:left;
+ 				color: #000;
+ 				background-color: #EEEEEE;
+			}
+			
+			.headerParagraph {
+				width: 65%;
+			}
+			
 		</style>
 		
 	</head>
@@ -47,9 +75,25 @@
 	</video>
 	-->
 	
-	{{ systemInfo.hostname }} {{ systemInfo.ip }} {{ abs_path }}
+	<p class="headerParagraph">
+	<B>Please Note</B>. Do not play video files in your browser during an experiment! This may disrupt ongoing video recording. This is a very simple interface to play recorded video but requires the entire video file to be downloaded first, this is not a streaming interface.
+	</p>
+	
+	<TABLE class="headerTable">
+	<TR>
+		<TH>Hostname</TH>
+		<TH>IP</TH>
+		<TH>path</TH>
+	</TR>
+	<TR>
+		<TD>{{ systemInfo.hostname }}</TD>
+		<TD><B>{{ systemInfo.ip }}</TD>
+		<TD><B>{{ abs_path }}</TD>
+	</TR>
+	</TABLE>
+	
 	<BR>
-		
+	
 	<table class="videoTable">
 		<tr>
 		<th>File</th>

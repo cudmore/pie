@@ -19,12 +19,12 @@ This repository is a work in progess. It is functioning in my hands and fingers 
 
 ## There are options
 
-#### 1) Video recording
+#### Option 1: Video recording
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
 
-#### 2) Home cage video
+#### Option 2: Home cage video
  
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
@@ -33,13 +33,13 @@ This repository is a work in progess. It is functioning in my hands and fingers 
  - White LEDs
  - Temperature/Humidity sensor
  
-#### 3) On the scope video recording
+#### Option 3: On the scope video recording
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
  - Level shifter
  
-#### 4) Full treadmill system
+#### Option 4: Full treadmill system
 
  - Raspberry Pi 2/3
  - Raspberry Pi Camera
@@ -47,11 +47,11 @@ This repository is a work in progess. It is functioning in my hands and fingers 
  - Stepper motor controller
  - Stepper motor
  
-## Get a functioning Raspberry Pi
+## 1) Get a functioning Raspberry Pi
 
 We assume you have a functioning Raspberry Pi 2/3. To get started, see our [installation][install-stretch] recipe.
 
-## Download the code
+## 2) Download the code
 
 	# update your system
 	sudo apt-get update
@@ -63,14 +63,14 @@ We assume you have a functioning Raspberry Pi 2/3. To get started, see our [inst
 	# clone the main PiE repository
 	git clone https://github.com/cudmore/pie.git
 	
-## Install the PiE server
+## 3) Install the PiE server
 
 	cd ~/pie
 	./install-pie
 
 Thats it, the PiE server should be running and you can use the web interface at `http://[ip]:5010`. Where `[ip]` is the IP address of your Raspberry Pi. Make sure you specify port `5010` in the web address.
 
-## Install extras
+## 4) Install extras
 
 Install [uv4l][uv4l] for video streaming.
 
@@ -82,7 +82,7 @@ Install the [DHT temperature/humidity sensor Python library][dht] (optional)
 	cd ~/pie
 	./install-dht
 
-## Running the PiE server (details)
+## 5) Controlling the PiE server from the command line
 
 The [pie/install-pie](install-pie) script installs a system service allowing the PiE server to run in the background. This background PiE server can be controlled as follows:
 
@@ -99,11 +99,11 @@ cd ~/pie
 ./pie run      - run PiE server on command line"
 ```
 
-For debugging, use `./pie run` to print the status of the server to the command line. In all cases, when the PiE server is running it will provide a web interface on port `5010`. To access the website, point a browser to `http://[ip]:5010`.
+For debugging, use `./pie run` to print the status of the server to the command line.
 
 ## Web interface
 
-See the [web interface readme](readme-web.md) for more information.
+In all cases, when the PiE server is running it will provide a web interface on port `5010`. To access the website, point a browser to `http://[ip]:5010`. See the [web interface readme](readme-web.md) for more information.
 
 <table><tr><td>
 <IMG SRC="docs/img/web/web_main.png">
@@ -128,6 +128,8 @@ See the complete [parts list](readme-parts.md) for more information.
 
 ## Wiring the system
 
+**Important**. The Raspberry Pi is **NOT** 5V tolerant. Connecting standard lab equipment using 5V TTL pulses can damage the Pi. These 5V lines can be converted to 3V with a [dedicated level shifter][adafruit-level-shfter]. Or, if you are using a Teensy, these 5V lines can pass through the Teensy which **IS** 5V tolerant but then outputs 3V which can go into the Raspberry Pi. In this way, the Teensy can act as a programmable [level shifter][level-shifter].
+
 ### Option 1: Recording video
 
  - All you need is a Raspberry Pi 2/3, a Raspberry camera and the PiE server and you are good to go.
@@ -145,109 +147,21 @@ See the complete [parts list](readme-parts.md) for more information.
   
 ### Option 4: Record video on a scope and use a Teensy and a motorized treadmill
 
- - Wire a Teensy connected to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
- - Wire a stepper motor and motor controller.
+ - See the [treadmill wiring tutorial](readme-treadmill.md).
  
-### Important
-
- - The Raspberry Pi is **NOT** 5V tolerant. Connecting standard lab equipment using 5V TTL pulses can damage the Pi. These 5V lines can be converted to 3V with a [dedicated level shifter][adafruit-level-shfter]. Or, if you are using a Teensy, these 5V lines can pass through the Teensy which **IS** 5V tolerant but then outputs 3V which can go into the Raspberry Pi. In this way, the Teensy can act as a programmable [level shifter][level-shifter].
- 
- - The Easy Driver Motor Driver has a nasty feature. If you connect the 12V line to the board, the Stepper motor **must** be plugged in or else you will fry the driver board. Thus, check the stepper motor is connected before plugging in the 12V line and check the 12V line is not plugged in before disconnecting the stepper motor.
-
- 
-### Wiring diagram
-
-This is a full wiring diagram for option #4, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](readme-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](docs/img/pie.fzz) file.
-
-<IMG SRC="docs/img/pie_fritzing.png">
-
-### Pin table
-
-This table shows all the pin connections for the full treadmill system (option #4). To wire a Raspberry Pi to a scope without a Teensy (option #3), make sure you connect the Raspberry Pi `triggerOut`, `frame`, and `triggerIn` pins to a level-shifter and then to the scope. See the [scope wiring tutorial](readme-scope.md) for details.
-
-[Download pdf](docs/img/pie_pins.pdf) of this table.
-
-|   |  | **Scope** | **Other Devices** | **Raspberry** |  |  |  |  | **Teensy** |  |  |  |  | **Motor Controller** |  |
-|  ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-|  **Category** | **Ground** | **Description** |  | **Description** | **Config FIle** | **Pin #** | **Input** | **Output** | **Description** | **Config FIle** | **Pin #** | **Input** | **Output** | **Pin** |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Raspberry Ground | X |  |  | Gnd |  | Gnd |  |  |  |  |  |  |  |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Scope Ground | X |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Scope Trigger In |  | Trigger In (5V) |  | triggerOut | hardware.eventOut[0].pin | 15 |  | X | startTrialPin | treadmill.cpp | 3 | X |  |  |  |
-|  Scope Trigger Out |  | Trigger Out (5V) |  |  |  |  |  |  | extTriggerInPin | treadmill.cpp | 8 | X |  |  |  |
-|   |  |  |  | triggerIn | hardware.eventIn[0].pin | 24 | X |  | passThroughExtTriggerInPin | treadmill.cpp | 9 |  | X |  |  |
-|  Scope Frame Out |  | Frame Out (5V) |  |  |  |  |  |  | framePin | treadmill.cpp | 5 | X |  |  |  |
-|   |  |  |  | frame | hardware.eventIn[1].pin | 23 | X |  | passThroughFramePin | treadmill.cpp | 6 |  | X |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  LEDs |  |  | LED 1 (+) | whiteLED | hardware.eventOut[1].pin | 19 |  | X |  |  |  |  |  |  |  |
-|   | X |  | LED 1 (-) |  |  |  |  |  |  |  |  |  |  |  |  |
-|   |  |  | LED 2 (+) | irLED | hardware.eventOut[2].pin | 18 |  | X |  |  |  |  |  |  |  |
-|   | X |  | LED 2 (-) |  |  |  |  |  |  |  |  |  |  |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  DHT Sensor |  |  | data (yellow) | dhtSensor | hardware.dhtSensor.pin | 4 | X |  |  |  |  |  |  |  |  |
-|   |  |  | 5V (red) |  |  | 5V |  |  |  |  |  |  |  |  |  |
-|   | X |  | Gnd (black) |  |  |  |  |  |  |  |  |  |  |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Stepper Motor | X |  |  |  |  |  |  |  |  |  |  |  |  | Gnd |  |
-|   |  |  |  |  |  |  |  |  | motorStepPin | treadmill.cpp | 17 |  | X | Step |  |
-|   |  |  |  |  |  |  |  |  | motorDirPin | treadmill.cpp | 16 |  | X | Dir |  |
-|   |  |  |  |  |  |  |  |  | motorResetPin | treadmill.cpp | 19 |  | X | RST |  |
-|   |  |  |  |  |  |  |  |  | motorEnabledPin | treadmill.cpp | 20 |  | X | Enable |  |
-|   |  |  |  |  |  | 5V |  |  |  |  |  |  |  | 5V (+) |  |
-|   | X |  |  |  |  |  |  |  |  |  |  |  |  | Gnd |  |
-|   |  |  | 12V DV (+) |  |  |  |  |  |  |  |  |  |  | PWR In (M+) |  |
-|   | X |  | 12V DC (Gnd) |  |  |  |  |  |  |  |  |  |  | PWR In (Gnd) |  |
-|   |  |  |  | arduinoMotor | hardware.eventIn[2].pin | 8 | X |  | motorOnPin | treadmill.cpp | 11 |  | X |  |  |
-|   |  |  |  | arduinoNewEpoch | hardware.eventIn[3].pin | 7 | X |  | newEpochPin | treadmill.cpp | 12 |  | X |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Rotary Encoder |  |  | Encoder 1 |  |  |  |  |  | encoderPinA | treadmill.cpp | 15 | X |  |  |  |
-|   |  |  | Encoder 1 |  |  |  |  |  | encoderPinB | treadmill.cpp | 16 | X |  |  |  |
-|   |  |  | Encoder 1 (+5V) |  |  |  |  |  |  |  | 5V |  |  |  |  |
-|   | X |  | Encoder 1 (Gnd) |  |  |  |  |  |  |  |  |  |  |  |  |
-|   |  |  |  |  | ??? |  | X |  | encoderOutPin | treadmill.cpp | 10 |  | X |  |  |
-|   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
-|  Emergency Stop Button |  |  | Push button (+3V) | ??? | ??? | ??? | X |  | emergencyStopPin | treadmill.cpp | 20 | X |  |  |  |
-|   | X |  | Push button (Gnd) |  |  |  |  |  |  |  |  |  |  |  |  |
-
-## GPIO timing
-
-The Raspberry Pi is running a fully functional operating system which provides many features including USB, ethernet, and HDMI. Thus, there will be unpredictable delays in receiving and generating digital input and output (DIO). 
-
-The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100-200 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
-
-See the Jupyter notebooks in the [analysis/](analysis/) folder for a comparising of frame arrival times using GPIO versus pigpio.
-
-### Download and install pigpio
-
-```
-cd
-rm pigpio.zip
-sudo rm -rf PIGPIO
-wget abyz.me.uk/rpi/pigpio/pigpio.zip
-unzip pigpio.zip
-cd PIGPIO
-make
-sudo make install
-```
-
-### To start the pigpio daemon
-
-    sudo pigpiod
-
-### To stop the pigpio daemon
-
-    sudo killall pigpiod
-
-## Troubleshooting
+## Running the PiE server (details)
 
 ### Running the PiE server at boot
 
+The main `./install-pie` script will set the PiE server to run at boot. This can be controlled as follows.
+
 ```
 # To make the background server run at boot
+cd ~/pie
 ./pie enable
 
 # To make the background server NOT run at boot
+cd ~/pie
 ./pie disable
 ```
 
@@ -337,14 +251,45 @@ cd pie
 
 See the [troubleshooting](readme-troubleshooting.md) readme.
 
+## GPIO timing
+
+The Raspberry Pi is running a fully functional operating system which provides many features including USB, ethernet, and HDMI. Thus, there will be unpredictable delays in receiving and generating digital input and output (DIO). 
+
+The PiE server uses the Raspberry [GPIO][gpio] python package by default and will use the [pigpio daemon][pigpiod] if it is installed and running. The GPIO package has a jitter of approximately +/- 2 ms for all DIO with occasional, < 1%, events having absurd jitter on the order of 100-200 ms. This includes trigger in, frame in, and any output. If you are using the PiE server to record video this should be fine. If you want more precision, either offload your timing critical tasks on a Teensy or use the Raspberry [pigpiod][pigpiod] daemon.
+
+See the Jupyter notebooks in the [analysis/](analysis/) folder for a comparising of frame arrival times using GPIO versus pigpio.
+
+### Download and install pigpio
+
+```
+cd
+rm pigpio.zip
+sudo rm -rf PIGPIO
+wget abyz.me.uk/rpi/pigpio/pigpio.zip
+unzip pigpio.zip
+cd PIGPIO
+make
+sudo make install
+```
+
+### To start the pigpio daemon
+
+    sudo pigpiod
+
+### To stop the pigpio daemon
+
+    sudo killall pigpiod
+
 ## Working versions
 
-Here is a snapshot of versions for a working PiE server as of August 8, 2018. As python packages are updated, things can potentially break.
+Here is a snapshot of versions for a working PiE server as of October 2018. As python packages are updated, things can potentially break.
 
 ```
 cd ~/pie
-source pie_env/bin/activate
-pip freeze
+source pie_env/bin/activate # activate the Python3 virtual environment
+pip freeze # print all the Phython packages and their versions
+
+# use 'deactivate' to deactivate the Python3 virtual environmnet and return to the normal command prompt
 ```
 
 ```
@@ -400,7 +345,7 @@ uname -a
 
 ```
 # returns
-Linux workpi 4.14.50-v7+ #1122 SMP Tue Jun 19 12:26:26 BST 2018 armv7l GNU/Linux
+Linux pi15 4.14.52-v7+ #1123 SMP Wed Jun 27 17:35:49 BST 2018 armv7l GNU/Linux
 ```
 
 ## Manually editing user config

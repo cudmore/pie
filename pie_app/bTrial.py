@@ -184,7 +184,9 @@ class bTrial():
 			logger.debug('Did not load DHT temperature sensor')
 
 		# done initializing
-		self.runtime['lastResponse'] = 'PiE server started'
+		now = datetime.now()
+		tmpStartTime = 'on ' + now.strftime('%Y-%m-%d') + ' at ' + now.strftime('%H:%M:%S')
+		self.runtime['lastResponse'] = 'PiE server started ' + tmpStartTime
 		
 	def serialInAppend(self, type, str):
 		"""

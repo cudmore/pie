@@ -666,13 +666,16 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	///////////////////////////////////////////////////////////////////////
 	// does nothing for ~/pie/pie run
 	$scope.restartpieserver = function() {
-		url = $scope.myUrl + 'api/restartpieserver'
-		console.log('restartpieserver() url: ' + url)
-		$http.get(url).
-			then(function(response) {
-				// do nothing
-				//$scope.status = response.data;
-			});
+		restartOK = $window.confirm('Are you sure you want to restart the PiE server?');
+		if (restartOK) {
+			url = $scope.myUrl + 'api/restartpieserver'
+			console.log('restartpieserver() url: ' + url)
+			$http.get(url).
+				then(function(response) {
+					// do nothing
+					//$scope.status = response.data;
+				});
+		}
 	}
 	///////////////////////////////////////////////////////////////////////
     // if streaming then stop streaming on window/tab close

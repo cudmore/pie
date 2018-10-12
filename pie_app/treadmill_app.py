@@ -9,6 +9,8 @@ from flask_socketio import SocketIO, emit
 
 import logging
 
+from datetime import datetime # added to report start of PiE server restart (see restartpieserver)
+
 from treadmill import treadmill
 
 #########################################################################
@@ -218,6 +220,14 @@ def restartpieserver():
 	cmd = [script_path + "/bin/restart_server.sh"]
 
 	app.logger.info(cmd)
+
+	#20181012, want to inform user that request has been issued
+	# the server will respond when restarted
+	# remember, this does not function during ./pie run
+	now = datetime.now()
+	tmpStartTime = 'on ' + now.strftime('%Y-%m-%d') + ' at ' + now.strftime('%H:%M:%S')
+	treadmill.trial.runtime['lastResponse'] = 'Please wait ... PiE server restart requested ' + tmpStartTime
+
 	try:
 		out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 		#self.lastResponse = 'Streaming is on'
