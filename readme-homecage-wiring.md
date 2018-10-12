@@ -8,8 +8,13 @@ Wiring the homecage system is fairly simple. The Pi needs to be wired to one end
 
 There are multiple power and ground pins, use these to connect to the relay switch and the temperature sensor. Conceptually, all the ground pins are the same, you can use a [bread-board][bread-board] if you run out of ground pins or the wiring becomes too tangled.
 
+## Wiring the camera
 
-## Wiring Diagram
+The Raspberry Pi [NoIR camera][noir-pi-camera] (and the [normal Pi camera][normal-pi-camera]) is connected to the Pi with a flat [ribbon cable][flat-camera-cable]. The length should not exceed 2 meters. The cable should have one side with a blue tab (one on each end). When connecting the cable to the camera, the blue side of the cable must go towards the back of the camera. Likewise, when connecting the cable to the Pi, the blue side of the cable must go towards the ethernet and USB ports. If either of these is the other way around, the camera will not function.
+
+The camera must be activated using `sudo raspi-config` by choosing '5 Interface Options' then 'P1 Camera' and answering 'Yes'.
+
+## Wiring diagram
 
 <IMG SRC="docs/img/pie-homecage.png">
 
@@ -52,7 +57,6 @@ Connect 4 wires from the Pi to the relay switch. All these wires go on the oppos
   
 ## Temperature and humidity sensor
 
-
 ### AM2302
 
 Red is power, black is ground, and yellow is data.
@@ -74,3 +78,6 @@ Red is power, black is ground, and yellow is data.
 
 [bread-board]: https://www.adafruit.com/product/64
 [am2302]: https://www.adafruit.com/product/393
+[camera-cable]: https://www.adafruit.com/product/2144
+[normal-pi-camera]: https://www.adafruit.com/product/3099
+[noir-pi-camera]: https://www.adafruit.com/product/3100
