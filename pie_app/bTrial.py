@@ -933,9 +933,14 @@ class bTrial():
 						self.newEvent('humidity', lastHumidity)
 						#logger.debug('temperature/humidity ' + str(lastTemperature) + '/' + str(lastHumidity))
 						if continuouslyLog:
-							# make log file if neccessary
-							script_path = os.path.dirname(os.path.abspath( __file__ ))
+							# save in main /home/pi/video folder
+							logPath = getConfig('trial', 'savePath')
 							logPath = os.path.join(script_path,'logs')
+							
+							# make log file if neccessary
+							#script_path = os.path.dirname(os.path.abspath( __file__ ))
+							#logPath = os.path.join(script_path,'logs')
+							
 							if not os.path.isdir(logPath):
 								os.makedirs(logPath)
 							logFile = os.path.join(logPath, 'environment.log')

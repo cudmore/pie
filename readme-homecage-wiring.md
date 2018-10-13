@@ -4,19 +4,22 @@ Wiring the homecage system is fairly simple. The Pi needs to be wired to one end
 
 ## Raspberry Pi 2/3 pin out
 
-<IMG SRC="docs/img/raspberry_pins.png">
+<IMG SRC="docs/img/raspberry_pins.png" width=700>
 
 There are multiple power and ground pins, use these to connect to the relay switch and the temperature sensor. Conceptually, all the ground pins are the same, you can use a [bread-board][bread-board] if you run out of ground pins or the wiring becomes too tangled.
 
 ## Wiring the camera
 
-The Raspberry Pi [NoIR camera][noir-pi-camera] (and the [normal Pi camera][normal-pi-camera]) is connected to the Pi with a flat [ribbon cable][flat-camera-cable]. The length should not exceed 2 meters. The cable should have one side with a blue tab (one on each end). When connecting the cable to the camera, the blue side of the cable must go towards the back of the camera. Likewise, when connecting the cable to the Pi, the blue side of the cable must go towards the ethernet and USB ports. If either of these is the other way around, the camera will not function.
+The Raspberry Pi [NoIR camera][noir-pi-camera] (and the [normal Pi camera][normal-pi-camera]) is connected to the Pi with a flat [ribbon cable][flat-camera-cable]. The length should not exceed 2 meters. The cable should have one side with a blue tab (one on each end). When connecting the cable to the camera and the Pi, the direction of the blue tab matters. IF it is backwards, the camera will not function.
 
-The camera must be activated using `sudo raspi-config` by choosing '5 Interface Options' then 'P1 Camera' and answering 'Yes'.
+ - The blue side of the cable must go towards the back of the camera.
+ - The blue side of the cable must go towards the ethernet and USB ports.
+
+Finally, the camera must be activated from the command line using `sudo raspi-config` and choosing '5 Interface Options' then 'P1 Camera' and answering 'Yes'.
 
 ## Wiring diagram
 
-<IMG SRC="docs/img/pie-homecage.png">
+<IMG SRC="docs/img/pie-homecage.png" width=600>
 
 ## Lights
 
@@ -30,7 +33,7 @@ The relay switch effectively separates the 5V, Ground, and GPIO on the Pi (left 
 
 **Use IR LEDs <900 nm.** - These are within the sensitivity range of the Pi NoIR camera. A lot of IR LEDs are 940nm, these are not well suited for use with the Pi NoIR camera but are designed for IR sensors as is used in a TV remote.
 
-<IMG SRC="docs/img/two-channel-relay.png" width=600>
+<IMG SRC="docs/img/two-channel-relay.png" width=550>
 
 ### Connect a 12V AC/DC adapter, IR, and white lights to the two-channel relay switch.
 
@@ -57,6 +60,8 @@ Connect 4 wires from the Pi to the relay switch. All these wires go on the oppos
   
 ## Temperature and humidity sensor
 
+<IMG SRC="docs/img/am2302.png" width=250 align="right">
+
 ### AM2302
 
 Red is power, black is ground, and yellow is data.
@@ -65,7 +70,8 @@ Red is power, black is ground, and yellow is data.
  - Connect a ground pin from the Pi to the back wire on the sensor.
  - Connect a GPIO pin from the Pi to the yellow (data) pin on the sensor.
 
-<IMG SRC="docs/img/am2302.png" width=300>
+
+<IMG SRC="docs/img/dht22-pin-out.png" width=250 align="right">
 
 ### DHT 22
 
@@ -73,7 +79,6 @@ Red is power, black is ground, and yellow is data.
  - Connect a ground pin from the Pi to the 'GND' pin on the sensor.
  - Connect a GPIO pin from the Pi to the 'DATA' pin on the sensor.
 
-<IMG SRC="docs/img/dht22-pin-out.png" width=300>
 
 
 [bread-board]: https://www.adafruit.com/product/64

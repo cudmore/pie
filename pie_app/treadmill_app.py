@@ -99,7 +99,7 @@ def environment():
 
 @app.route('/environmentlog')
 def environmentlog():
-	logFilePath = 'logs/environment.log'
+	logFilePath = '/home/pi/video/logs/environment.log'
 	if os.path.isfile(logFilePath):
 		with open(logFilePath, 'r') as f:
 			return Response(f.read(), mimetype='text/plain')
