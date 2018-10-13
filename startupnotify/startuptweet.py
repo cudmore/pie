@@ -1,11 +1,14 @@
-# Robert Cudmore
-# 20181012
-#
-# install
-# pip install tweepy
-#
-# run
-# python startuptweet
+#!/usr/bin/python3
+
+"""
+Author: Robert Cudmore
+Date: 20181013
+Purpose: Send a Tweet with IP and MAC address of a Raspberry Pi
+Install:
+	pip3 install tweepy
+Usage:
+	python3 startuptweet.py 'this is my tweet'
+"""
 
 import tweepy
 import sys
@@ -20,12 +23,6 @@ from my_config import consumer_key
 from my_config import consumer_secret
 from my_config import access_token
 from my_config import access_token_secret
-'''
-consumer_key = '1IOlWk6Gag2ELxOlWKugHAyT0'
-consumer_secret = 'peLFeqXajVSjwpRXOtFX2rkryCvfUIHKabgoc2hZfSbAQhbXnw'
-access_token = '1973173718-8ZaAKsSa0JGvcjm8WrYqeOtl86f4uu7JST2Tf6p'
-access_token_secret = 'dd3yfDmNY2qv9VbR4XxKZj5X2XZBW0sZm2fZ6HH3jUiaP'
-'''
 
 message = ''
 if len( sys.argv ) > 1:

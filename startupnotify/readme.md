@@ -53,6 +53,6 @@ gmail_to = ['recipient@example.com']
 
 ```
 cd ~/pie/startupnotify
-python3 startupmailer.py 'my test worked'
+python3 startupmailer.py 'my test email worked'
 python3 startuptweet.py 'my test tweet worked'
 ```

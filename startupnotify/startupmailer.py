@@ -1,4 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
+"""
+Author: Robert Cudmore
+Date: 20181013
+Purpose: Send an email with IP and MAC address of a Raspberry Pi
+Usage:
+	python3 startupmailer.py 'this is my message'
+"""
+
 import subprocess
 import smtplib
 import socket
@@ -18,15 +27,6 @@ if len( sys.argv ) > 1:
 from my_config import gmail_user
 from my_config import gmail_password
 from my_config import gmail_to
-
-'''
-# list of email accounts to send to
-to = ['robert.cudmore@gmail.com']
-
-# Change to your own account information to send from
-gmail_user = 'cudmore.raspberry@gmail.com'
-gmail_password = 'poetry7d'
-'''
 
 smtpserver = smtplib.SMTP('smtp.gmail.com', 587)
 smtpserver.ehlo()
@@ -63,4 +63,9 @@ msg['Subject'] = mail_subject
 msg['From'] = gmail_user
 smtpserver.sendmail(gmail_user, gmail_to, msg.as_string())
 smtpserver.quit()
+
+print('sent email:')
+print('   gmail_user:', gmail_user)
+print('   gmail_to:', gmail_to)
+print('   contents:', msg.as_string())
 
