@@ -934,19 +934,36 @@ class bTrial():
 						#logger.debug('temperature/humidity ' + str(lastTemperature) + '/' + str(lastHumidity))
 						if continuouslyLog:
 							# save in main /home/pi/video folder
-							logPath = getConfig('trial', 'savePath')
-							logPath = os.path.join(script_path,'logs')
+							logPath = self.getConfig('trial', 'savePath')
+							logPath = os.path.join(logPath,'logs')							
+							# save a second copy based on server start time
 							
+							logPath2 = self.getConfig('trial', 'savePath')
+							logPath2 = os.path.join(logPath2,'logs')							
+							tmpDateStr = time.strftime('%Y%m%d', time.localtime(self.startTimeSeconds))
+							tmpTimeStr = time.strftime('%H%M%S', time.localtime(self.startTimeSeconds))
+							
+							
+							# old, saved in pie/
 							# make log file if neccessary
 							#script_path = os.path.dirname(os.path.abspath( __file__ ))
 							#logPath = os.path.join(script_path,'logs')
 							
 							if not os.path.isdir(logPath):
 								os.makedirs(logPath)
+							
+							headerLine = "Host,DateTime,Seconds,Temperature,Humidity,whiteLight,irLight" + '\n'
+							
+							# 1
 							logFile = os.path.join(logPath, 'environment.log')
 							if not os.path.isfile(logFile):
-								headerLine = "Host,DateTime,Seconds,Temperature,Humidity,whiteLight,irLight" + '\n'
 								with open(logFile, 'a') as f:
+									f.write(headerLine)
+							# 2
+							tmpLogFileName = tmpDateStr + '_' + tmpTimeStr + '.log'
+							logFile2 = os.path.join(logPath2, tmpLogFileName)
+							if not os.path.isfile(logFile2):
+								with open(logFile2, 'a') as f:
 									f.write(headerLine)
 							
 							dateTimeStr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))
@@ -960,6 +977,8 @@ class bTrial():
 								+ '' \
 								+ '\n' 
 							with open(logFile, 'a') as f:
+								f.write(lineStr)
+							with open(logFile2, 'a') as f:
 								f.write(lineStr)
 					else:
 						logger.warning('temperature/humidity error, sensorType:' + sensorTypeStr + ' ' + str(sensorType) + ' pin:' + str(pin) + ' temperatureInterval:' + str(temperatureInterval))

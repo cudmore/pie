@@ -99,7 +99,8 @@ def environment():
 
 @app.route('/environmentlog')
 def environmentlog():
-	logFilePath = '/home/pi/video/logs/environment.log'
+	logFilePath = treadmill.trial.getConfig('trial', 'savePath') # '/home/pi/video/logs/environment.log'
+	logFilePath = os.path.join(logFilePath, 'logs/environment.log')
 	if os.path.isfile(logFilePath):
 		with open(logFilePath, 'r') as f:
 			return Response(f.read(), mimetype='text/plain')
@@ -278,8 +279,16 @@ def videolist(req_path=''):
 	
 	# Check if path is a file and serve
 	if os.path.isfile(abs_path):
-		app.logger.debug(('videolist() is serving file:', abs_path))
-		return send_file(abs_path)
+
+		# serve log files by streaming text, serve video by sending file
+		# this is a very simple interface and requires ENTIRE video file to be 'downloaded'
+		# video files are NOT streaming
+		if abs_path.endswith('.log'):
+			with open(abs_path, 'r') as f:
+				return Response(f.read(), mimetype='text/plain')
+		else:
+			app.logger.debug(('videolist() is serving file:', abs_path))
+			return send_file(abs_path)
 
 	# Show directory contents
 	files = []
@@ -291,8 +300,9 @@ def videolist(req_path=''):
 		
 		fileDict = {}
 		
-		isTrialFile = f.endswith('.txt') # big assumption, should parse '_r%d.txt'
 		'''
+		isTrialFile = f.endswith('.txt') # big assumption, should parse '_r%d.txt'
+		isLogFile = f.endswith('.log')
 		if isTrialFile:
 			fileDict = home.trial.loadTrialFile(f)
 		'''
