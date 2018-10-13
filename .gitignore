@@ -27,3 +27,5 @@ commander_app/config/config_commander.txt
 # when we update software, we need to trash this
 pie_app/config/config_default.json
 
+startupnotify/my_config.py
+
