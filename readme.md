@@ -211,40 +211,46 @@ python treadmill_app.py
 
 ### Uninstalling the PiE server
 
-Use the uninstall script `./uninstall-pie` and remove the ~/pie folder with `sudo -Rf ~/pie`. The uninstall script does the following
+Run the uninstall script `./uninstall-pie` and remove the ~/pie folder with `sudo -Rf ~/pie`.
 
 ```
-# stop
-echo "=== stopping PiE server and Admin server"
-sudo systemctl stop treadmill.service
-sudo systemctl stop pieadmin.service
+# run the uninstall script
+cd ~/pie
+./uninstall-pie
 
-# disable
-echo "=== disabling services"
-sudo systemctl disable treadmill.service
-sudo systemctl disable pieadmin.service
-
-# remove
-echo "=== removing files in /etc/systemd/system/"
-sudo rm /etc/systemd/system/treadmill.service
-sudo rm /etc/systemd/system/pieadmin.service
-
-echo "==="
-echo "PiE server and admin server have been uninstalled"
-echo "You can now remove the PiE server folder with 'sudo rm -Rf ~/pie'"
-echo "You can fetch a new copy with 'cd; git clone https://github.com/cudmore/pie.git"
+# remove the pie folder
+sudo -Rf ~/pie
 ```
 
 ### Full reinstall of the PiE server
 
-Issue these commands to remove and reinstall the PiE server. As always, be careful of using 'sudo'.
+Issue these commands to remove and reinstall the PiE server.
 
 ```
+# stop the PiE server
+cd ~/pie
+./pie stop
+
+# remove existing ~/pie folder
 cd
 sudo rm -Rf pie
+
+# download/clone a new copy of pie folder
+cd ~
 git clone https://github.com/cudmore/pie.git
-cd pie
+
+# install PiE server
+cd ~/pie
 ./install-pie
+
+# install dht sensor (optional)
+cd ~/pie
+./install-dht
+
+# restart the server again
+cd ~/pie
+./pie restart
+
 ```
 
 ## Troubleshooting

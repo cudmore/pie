@@ -13,7 +13,7 @@ GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
 echo '==='
-echo "=== Activating Python 3 virtual environment in $PWD/env"
+echo "=== Activating Python 3 virtual environment in $PWD/pie_env"
 echo '==='
 
 # check that install-pie virtual environment exists
@@ -63,7 +63,11 @@ echo '==='
 
 python setup.py install
 
+echo '==='
+echo "=== deactivate the python virtual environment with 'deactivate'"
+echo '==='
+
 deactivate
 
 echo ' '
-echo 'Done: Adafruit_Python_DHT is now installed'
+echo -e "=== ${GREEN}Done${NC}: Adafruit_Python_DHT is now installed. Please restart the PiE server with './pie restart'"
