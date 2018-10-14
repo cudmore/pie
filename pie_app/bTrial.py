@@ -134,6 +134,15 @@ class bTrial():
 		# GPIO
 		#self.initGPIO_()
 
+		"""
+		testing frame thread to improve detection and precision
+		"""
+		self.myPinThread = PinThread(self)
+		self.myPinThread.init(self.config)
+		# PinThread does nothing in its run() function
+		#self.myPinThread.daemon = True
+		#self.myPinThread.start()
+
 		#
 		# lights thread
 		self.lightsThread = None
@@ -157,15 +166,6 @@ class bTrial():
 		self.mySerialThread.start()
 		"""
 		
-		"""
-		testing frame thread to improve detection and precision
-		"""
-		self.myPinThread = PinThread(self)
-		self.myPinThread.init(self.config)
-		# PinThread does nothing in its run() function
-		#self.myPinThread.daemon = True
-		#self.myPinThread.start()
-
 		#
 		# temperature thread
 		if Adafruit_DHT is not None:
