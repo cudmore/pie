@@ -906,7 +906,6 @@ class bTrial():
 		Thread to run temperature/humidity in background
 		Adafruit DHT sensor code is blocking
 		"""
-		logger.info('tempThread() start')
 		lastTemperatureTime = 0
 		
 		#print('Adafruit_DHT.DHT11:', Adafruit_DHT.DHT11)
@@ -915,6 +914,9 @@ class bTrial():
 		sensorType = dhtSensorDict_[sensorTypeStr]
 		
 		pin = self.config['hardware']['dhtsensor']['pin']
+
+		logger.info('tempThread() sensorTypeStr:' + sensorTypeStr + ' sensorType:' + str(sensorType) + ' pin:' + str(pin))
+
 		while True:
 			now = time.time()
 
@@ -931,27 +933,20 @@ class bTrial():
 						# log this to a file
 						self.newEvent('temperature', lastTemperature)
 						self.newEvent('humidity', lastHumidity)
-						#logger.debug('temperature/humidity ' + str(lastTemperature) + '/' + str(lastHumidity))
 						if continuouslyLog:
-							# save in main /home/pi/video folder
+							# 1) save in main /home/pi/video folder
 							logPath = self.getConfig('trial', 'savePath')
 							logPath = os.path.join(logPath,'logs')							
-							# save a second copy based on server start time
-							
+							# 2) save a second copy based on server start time
 							logPath2 = self.getConfig('trial', 'savePath')
 							logPath2 = os.path.join(logPath2,'logs')							
 							tmpDateStr = time.strftime('%Y%m%d', time.localtime(self.startTimeSeconds))
 							tmpTimeStr = time.strftime('%H%M%S', time.localtime(self.startTimeSeconds))
 							
-							
-							# old, saved in pie/
-							# make log file if neccessary
-							#script_path = os.path.dirname(os.path.abspath( __file__ ))
-							#logPath = os.path.join(script_path,'logs')
-							
 							if not os.path.isdir(logPath):
 								os.makedirs(logPath)
 							
+							# all log files will start with a header
 							headerLine = "Host,DateTime,Seconds,Temperature,Humidity,whiteLight,irLight" + '\n'
 							
 							# 1
@@ -976,9 +971,9 @@ class bTrial():
 								+ '' + ',' \
 								+ '' \
 								+ '\n' 
-							with open(logFile, 'a') as f:
+							with open(logFile, 'a') as f: # 1
 								f.write(lineStr)
-							with open(logFile2, 'a') as f:
+							with open(logFile2, 'a') as f: # 2
 								f.write(lineStr)
 					else:
 						logger.warning('temperature/humidity error, sensorType:' + sensorTypeStr + ' ' + str(sensorType) + ' pin:' + str(pin) + ' temperatureInterval:' + str(temperatureInterval))

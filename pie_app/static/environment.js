@@ -8,6 +8,11 @@
 var myurl = window.location.href;
 console.log(myurl)
 
+// set the browser tab title
+var myurl2 = myurl.replace("http://", "");
+myurl2 = myurl2.replace(":5010/environment", "");
+document.title = myurl2 + " Environment";
+
 //Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/Mining-BTC-180.csv", function(err, rows){
 Plotly.d3.csv(myurl + 'log', function(err, rows){
   
