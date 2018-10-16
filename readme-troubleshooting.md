@@ -19,6 +19,22 @@ sudo raspi-config
 # Answer 'Yes' to question 'Would you like the camera interface to be enabled?'
 ```
 
+### Troubleshooting a DHT temperature/humidity sensor
+
+Run the simplified code in the `testing/` folder. If you can't get a temperature/humidity reading with this code, it will not work within the PiE server.
+
+Check the PiE server logs and make sure the Adafruit DHT driver is installed and run when the PiE server boots. You should see entries in the PiE server log like this:
+
+	[2018-10-14 09:53:59,596] {bTrial.py <module>:51} DEBUG - Loaded Adafruit_DHT
+	[2018-10-14 09:54:00,168] {bTrial.py __init__:178} DEBUG - starting temperature thread
+	[2018-10-14 09:54:00,172] {bTrial.py tempThread:918} INFO - tempThread() sensorTypeStr:AM2302 sensorType:22 pin:4
+
+If the DHT driver is not installed, install it with `./install-dht`, restart the PiE server with `./pie restart`, and check the PiE server logs again.
+
+### Converting video
+
+The PiE server uses [libav (avconv)][libav] to convert video from .h264 to .mp4. If libav (avconv) does not install during `~/pie/install-pie`, this conversion will not work.
+
 ### Checking if uv4l (Streaming) is running
 
 In rare instances the [uv4l][uv4l] streaming server does not stop properly. Streaming with uv4l runs at the system level and not in Python. As such, uv4l needs to be controlled via the command line.
@@ -51,10 +67,6 @@ root     23117 17.2  0.0      0     0 ?        Zsl  20:34   0:37 [uv4l] <defunct
 ```
 
 If you see the `<defunct>` then restart the Pi with `sudo reboot` and it should be fixed.
-
-### Converting video
-
-The PiE server uses [libav (avconv)][libav] to convert video from .h264 to .mp4. If labav (avconv) does not install during `~/pie/install-pie`, this conversion will not work.
 
 ### bCamera PiCameraMMALError: Failed to enable connection: Out of resources
 

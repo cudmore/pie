@@ -19,34 +19,11 @@ This repository is a work in progess. It is functioning in my hands and fingers 
 
 ## There are options
 
-#### Option 1: Video recording
+ 1. **Video recording.** Use the PiE server to record video. All that is needed is a Raspberry Pi and a Pi camera.
+ 2. **Home cage video.** Use the PiE server to record video, control IR and white lights, and log the temperature.
+ 3. **On the scope video recording.** Use the PiE server to record video triggered from a microscope and to log a scanning microscopes frames.
+ 4. **Full treadmill system.** Use the PiE server to record synchronized video on a scope (option 3) while controlling a motorized treadmill.
 
- - Raspberry Pi 2/3
- - Raspberry Pi Camera
-
-#### Option 2: Home cage video
- 
- - Raspberry Pi 2/3
- - Raspberry Pi Camera
- - 2 channel relay
- - IR LEDs
- - White LEDs
- - Temperature/Humidity sensor
- 
-#### Option 3: On the scope video recording
-
- - Raspberry Pi 2/3
- - Raspberry Pi Camera
- - Level shifter
- 
-#### Option 4: Full treadmill system
-
- - Raspberry Pi 2/3
- - Raspberry Pi Camera
- - Teensy microcontroller
- - Stepper motor controller
- - Stepper motor
- 
 ## 1) Get a functioning Raspberry Pi
 
 We assume you have a functioning Raspberry Pi 2/3. To get started, see our [installation][install-stretch] recipe.

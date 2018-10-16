@@ -4,7 +4,7 @@
 <IMG SRC="docs/img/web/web_main.png">
 </td></tr></table>
 
-The top row displays the PiE server hostname, IP, and current date and time. If the server is running, the time will be updated each second. In addition, there are links to recorded video files, server logs, environmental sensors, and web help.
+The top row displays the PiE server hostname, IP, and current date and time. If the server is running, the time will be updated each second. In addition, there are links to recorded video files, server logs, environmental sensors, and the full source code and documentation on Github.
 
 The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in the `/video` folder. At the end of each video file recording, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](readme-trial-file.md) for more information.
  
@@ -14,9 +14,9 @@ The 'Start Recording' and 'Start Trial' buttons start video recording to a file.
 
 **Start Recording**. Will start a video recording following 'Repeat Forever', 'Number of Repeats' and 'Repeat Duration'. These parameters can be set and saved in the 'Configure' section. 
 
-**Streaming**. Will start streaming the camera to the web page. If the stream fails to start the first time, try turning it off and then on again. If it still does not work, refresh the page in the browser.
+**Start Streaming**. Will start streaming the camera to the web page. If the stream fails to start the first time, try turning it off and then on again. If it still does not work, refresh the page in the browser.
 
-**Arm**. When checked, the PiE server will wait for an input trigger (Input Pins - triggerIn). Arming is only available when 'Configure - Allow Arming' is on. Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. When 'Arm' is on and an input trigger is received, video recording begins and a pre-trigger video recording will be saved. The duration of the pre-trigger video is set in 'Configure - Pre Trigger Buffer (sec)'.
+**Arm**. When checked, the PiE server will wait for an input trigger to start video recording. Arming is only available when 'Configure - Allow Arming' is on. Turning 'Arm' on will force 'Repeat Forever' off and 'Number of Repeats' to 1. When 'Arm' is on and an input trigger is received, video recording begins and a pre-trigger video recording will be saved. The duration of the pre-trigger video is set in 'Configure - Pre Trigger Buffer (sec)'.
 
 **Last Action**. Is updated with the last action the PiE server took. This is normally updated in response to clicking interface buttons.
 
@@ -26,7 +26,7 @@ The 'Start Recording' and 'Start Trial' buttons start video recording to a file.
 <IMG SRC="docs/img/web/web_config.png">
 </td></tr></table>
 
-The Configure section allows parameters of the PiE server to be set. Current parameters can be saved with 'Save Defaults' and will automatically be loaded the next time the PiE server is run.
+The Configure section allows parameters of the PiE server to be set. Current parameters can be saved with 'Save Defaults' and will automatically be loaded the next time the PiE server is run. Make sure you save your changes with 'Save Defaults'.
 
 **Repeat Forever**. When checked, 'Start Recording' will record videos of 'Repeat Duration' over and over until 'Stop Recording' is pressed. When 'Arm' is on, this will be turned off.
 
@@ -54,17 +54,17 @@ The Configure section allows parameters of the PiE server to be set. Current par
 
 **Trial Number**. Allows the trial number to be manually set. The trial number is always automatically incremented each time 'Start Recording' or 'Start Trial' are initiated.
 
-**Allow Arming**. If on, will activate the 'Arm' interface. This assumes the PiE server has been wired to a trigger in and optionally a microscope frame-clock.
+**Allow Arming**. If on, will activate the 'Arm' interface. This assumes the PiE server has been wired to a 'trigger in' and optionally a microscope 'frame clock'.
 
 **Use Serial**. If on, will activate the 'Motor' interface. This assumes a Teensy microcontroller is attached via usb.
 
-**Load**. Buttons to load presets of configuration parameters. This includes 'Defaults',  the last configuration saved with 'Save Defaults' as well as pre-defined configuration parameters. It is easy and intuitive to specify your own sets of configuration parameters and use 'Save Defaults' exclusively.
+**Load**. Buttons to load presets of configuration parameters. This includes 'Defaults',  the last configuration saved with 'Save Defaults' as well as pre-defined configuration parameters. It is easy to set your own configuration parameters and use 'Save Defaults' exclusively.
 
  - **Defaults**. Load the last configuration saved with 'Save Defaults'. These are also loaded when the PiE server is first run.
  - **Homecage**. Auto lights on, arm off, serial off.
  - **Scope**. Arm on, serial off.
  - **Treadmill**. Arm on, serial on.
- - **User**. User specified configuration file.
+ - **User**. Only for advanced users. User specified configuration file. 
  - **Factory Defaults**.  Reset the PiE server to its factory default configuration.
 
 ## Pins
@@ -79,7 +79,7 @@ All parameters in the 'Pins' section will be save with 'Configure - Save Default
 
 To change 'Pin' numbers, the configuration json files need to be manually edited. These can be found in [pie_app/config](pie_app/config) folder.
 
-**DHT Temperature/Humidity**. This assumes you have installed the Adafruit DHT temperature sensor driver with `./install-dht`. If 'enabled' is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If 'continuous' is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page, named environment, using the thermometer icon. The temperature and humidity log file is in `pie/pie_app/logs/environment.log`. If you change these options and they do not take effect, try restarting the PiE server in the web interface 'Debug' section.
+**DHT Temperature/Humidity**. This assumes you have installed the Adafruit DHT temperature sensor driver with `./install-dht`. If 'enabled' is checked, temperature and humidity will be logged to all video recording trial files at the specified interval. If 'continuous' is checked, temperature and humidity readings will be logged continuosly (wether video is recording or not). The continuous log can be accessed on a separate page, named environment, using the thermometer icon. The temperature and humidity log file is in `video/logs/environment.log`. If you change these options and they do not take effect, try restarting the PiE server in the web interface 'Debug' section.
 
 ## Motor
 
