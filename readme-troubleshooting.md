@@ -21,7 +21,7 @@ sudo raspi-config
 
 ### Troubleshooting a DHT temperature/humidity sensor
 
-Run the simplified code in the `testing/` folder. If you can't get a temperature/humidity reading with this code, it will not work within the PiE server.
+Run the simplified code in the [testing/](testing/) folder. If you can't get a temperature/humidity reading with this code, it will not work within the PiE server.
 
 Check the PiE server logs and make sure the Adafruit DHT driver is installed and run when the PiE server boots. You should see entries in the PiE server log like this:
 
