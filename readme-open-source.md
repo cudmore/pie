@@ -1,5 +1,8 @@
 The PiE server only exists because of the massive amount of hard-work, creativity, and expertise that has been put in to creating and maintaining a multiplicity of open-source software projects.
 
+"Genius is one percent inspiration, ninety-nine percent perspiration"
+   --- [Thomas Edison](https://en.wikiquote.org/wiki/Thomas_Edison)
+
 "Successful Projects Are The Result Of 99% Hard Work, 1% Innovation”
    --- [Linus Torvalds](https://en.wikipedia.org/wiki/Linus_Torvalds)
 
@@ -7,11 +10,12 @@ The PiE server only exists because of the massive amount of hard-work, creativit
  - [Raspberry Pi Foundation](https://www.raspberrypi.org/) for making the hardware
  - [Raspian](https://www.raspberrypi.org/downloads/raspbian/) for making the operating system
  - [Raspberry GPIO](https://www.raspberrypi.org/documentation/usage/gpio/)
- - [Pigpio](http://abyz.me.uk/rpi/pigpio/)
- 
+ - [Pigpio](http://abyz.me.uk/rpi/pigpio/) 
+ - [PiCamera](https://picamera.readthedocs.io)
+
 ### Server
   - [Debian](https://www.debian.org/) - Operating system
-  - [NGINX ](https://www.nginx.com/) - Web server for load balancing, microservices, and API gateways
+  - [NGINX](https://www.nginx.com/) - Web server for load balancing, microservices, and API gateways
   - [uwsgi](https://uwsgi-docs.readthedocs.io/en/latest/) - Web standard for NGINX to talk to Python
 
 ### [Python](https://www.python.org/) (back-end)
