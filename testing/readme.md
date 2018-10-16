@@ -15,4 +15,41 @@ cd ~/pie/testing
 source ../pie_env/bin/activate # activate the virtual environment used by the PiE server
 python test_dht.py
 ```
- 
+The test should return a temperature reading like:
+
+```
+Trying to read temp/hum, this may take up to 30 seconds ...
+sensor: 22
+pin: 4
+Temp=20.9*C  Humidity=43.0%
+```
+
+If you get an error like the following then keep troubleshooting
+
+```
+Trying to read temp/hum, this may take up to 30 seconds ...
+sensor: 22
+pin: 4
+Failed to get reading. Try again!
+```
+
+Check that the Adafruit DHT driver is installed by listing all the Python packages with `pip freeze`.
+
+```
+cd ~/pie/testing
+source ../pie_env/bin/activate # activate the virtual environment used by the PiE server
+pip freeze
+```
+
+`pip freeze` should output a list of installed Python packages. In this list, you should see
+
+```
+Adafruit-DHT==1.3.4
+```
+
+If you do not, then install the DHT driver again
+
+```
+cd ~/pie
+./install-dht
+```
