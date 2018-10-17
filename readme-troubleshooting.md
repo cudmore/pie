@@ -68,6 +68,74 @@ root     23117 17.2  0.0      0     0 ?        Zsl  20:34   0:37 [uv4l] <defunct
 
 If you see the `<defunct>` then restart the Pi with `sudo reboot` and it should be fixed.
 
+## Working versions
+
+Here is a snapshot of versions for a working PiE server as of October 2018. As python packages are updated, things can potentially break.
+
+```
+cd ~/pie
+source pie_env/bin/activate # activate the Python3 virtual environment
+pip freeze # print all the Phython packages and their versions
+
+# use 'deactivate' to deactivate the Python3 virtual environmnet and return to the normal command prompt
+```
+
+```
+# returns
+click==6.7
+dnspython==1.15.0
+eventlet==0.24.1
+Flask==1.0.2
+Flask-Cors==3.0.6
+Flask-SocketIO==3.0.1
+greenlet==0.4.14
+itsdangerous==0.24
+Jinja2==2.10
+MarkupSafe==1.0
+monotonic==1.5
+picamera==1.13
+pigpio==1.40.post1
+pkg-resources==0.0.0
+pyserial==3.4
+python-engineio==2.2.0
+python-socketio==2.0.0
+RPi.GPIO==0.6.3
+six==1.11.0
+Werkzeug==0.14.1
+```
+
+```
+python --version
+```
+
+```
+# returns
+Python 3.5.3
+```
+
+```
+cat /etc/os-release
+```
+
+```
+# returns
+PRETTY_NAME="Raspbian GNU/Linux 9 (stretch)"
+NAME="Raspbian GNU/Linux"
+VERSION_ID="9"
+VERSION="9 (stretch)"
+ID=raspbian
+ID_LIKE=debian
+```
+
+```
+uname -a
+```
+
+```
+# returns
+Linux pi15 4.14.52-v7+ #1123 SMP Wed Jun 27 17:35:49 BST 2018 armv7l GNU/Linux
+```
+
 ### bCamera PiCameraMMALError: Failed to enable connection: Out of resources
 
 If you receive this error in the web interface or logs, it means the camera is in use by some other process. The Raspberry camera can only do one thing at a time, it can stream or record but not both at the same time. In addition, the camera can not record (or stream) in two different programs simultaneously.

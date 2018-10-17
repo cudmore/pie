@@ -47,19 +47,19 @@ We assume you have a functioning Raspberry Pi 2/3. To get started, see our [inst
 
 Thats it, the PiE server should be running and you can use the web interface at `http://[ip]:5010`. Where `[ip]` is the IP address of your Raspberry Pi. Make sure you specify port `5010` in the web address.
 
-## 4) Install extras
-
-Install [uv4l][uv4l] for video streaming.
+## 4) Install [uv4l][uv4l] for video streaming.
 
 	cd ~/pie
 	./install-uv4l
 
-Install the [DHT temperature/humidity sensor Python library][dht] (optional)
+## 5) Install the DHT temperature/humidity sensor Python package (optional)
+
+If you are using a [DHT temperature/humidity sensor][am2302], the [Adafruit DHT python package][dht] needs to be installed
 
 	cd ~/pie
 	./install-dht
 
-## 5) Controlling the PiE server from the command line
+## 6) Controlling the PiE server from the command line
 
 The [pie/install-pie](install-pie) script installs a system service allowing the PiE server to run in the background. This background PiE server can be controlled as follows:
 
@@ -263,73 +263,6 @@ sudo make install
 
     sudo killall pigpiod
 
-## Working versions
-
-Here is a snapshot of versions for a working PiE server as of October 2018. As python packages are updated, things can potentially break.
-
-```
-cd ~/pie
-source pie_env/bin/activate # activate the Python3 virtual environment
-pip freeze # print all the Phython packages and their versions
-
-# use 'deactivate' to deactivate the Python3 virtual environmnet and return to the normal command prompt
-```
-
-```
-# returns
-click==6.7
-dnspython==1.15.0
-eventlet==0.24.1
-Flask==1.0.2
-Flask-Cors==3.0.6
-Flask-SocketIO==3.0.1
-greenlet==0.4.14
-itsdangerous==0.24
-Jinja2==2.10
-MarkupSafe==1.0
-monotonic==1.5
-picamera==1.13
-pigpio==1.40.post1
-pkg-resources==0.0.0
-pyserial==3.4
-python-engineio==2.2.0
-python-socketio==2.0.0
-RPi.GPIO==0.6.3
-six==1.11.0
-Werkzeug==0.14.1
-```
-
-```
-python --version
-```
-
-```
-# returns
-Python 3.5.3
-```
-
-```
-cat /etc/os-release
-```
-
-```
-# returns
-PRETTY_NAME="Raspbian GNU/Linux 9 (stretch)"
-NAME="Raspbian GNU/Linux"
-VERSION_ID="9"
-VERSION="9 (stretch)"
-ID=raspbian
-ID_LIKE=debian
-```
-
-```
-uname -a
-```
-
-```
-# returns
-Linux pi15 4.14.52-v7+ #1123 SMP Wed Jun 27 17:35:49 BST 2018 armv7l GNU/Linux
-```
 
 ## Manually editing user config
 
@@ -366,12 +299,8 @@ Expecting , delimiter: line 27 column 13 (char 648)
 
  - Make sure streaming stops when browser tab is closed or browser is quit.
  - Expand sunrise/sunset to fractional hour.
- - [partially done 20180831] Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread).
-
-	I am doing this with hard-coded 5GB warning in index.html, see:
- 	ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
- 	
-  - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
+ - [partially done 20180831] Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread). I am doing this with hard-coded 5GB warning in index.html, see: ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
+ - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
   
   
 [install-stretch]: http://blog.cudmore.io/post/2017/11/22/raspian-stretch/

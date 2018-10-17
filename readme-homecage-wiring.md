@@ -33,21 +33,21 @@ The relay switch effectively separates the 5V, Ground, and GPIO on the Pi (left 
 
 **Use IR LEDs <900 nm.** - These are within the sensitivity range of the Pi NoIR camera. A lot of IR LEDs are 940nm, these are not well suited for use with the Pi NoIR camera but are designed for IR sensors as is used in a TV remote.
 
+## Wiring the lights 
+
 <IMG SRC="docs/img/two-channel-relay.png" width=550>
 
 ### Connect a 12V AC/DC adapter, IR, and white lights to the two-channel relay switch.
-
-All LEDs need resistors!
 
  - Using a 12V AC/DC adapter (1 Amp), cut the wire and stick the positive 'hot' wire into the center 'common' pin' of channel 1 on the relay switch. The 'hot' end wire usually has a white line down the length of the wire. You can also determine the 'hot' end using a multi-meter, it is the one that gives a positive (+) voltage when attached to the positive (normally red) end of the multi-meter.
  
  - Cut a bit of wire and connect the center 'common pin' of channel 1 to the center 'common pin' of channel 2. This is the 'hot' end.
  
- - Stick the positive end of the white LED into the 'normally closed' port of channel 1. Attach the negative end of the white LED to the 'ground' wire of the 12V AC/DC adapter.
+ - Stick the positive end of the white LED into the 'normally closed' port of channel 1. Attach the negative end of the white LED to the 'ground' wire of the 12V AC/DC adapter. Remember, all LEDs need resistors!
  
- - Do the same for the IR LED. Stick the positive end into the 'normally closed' port of channel 2 on the relay switch. Attach the negative end of the IR LED to the 'ground' wire of the 12V AC/DC adapter.
+ - Do the same for the IR LED. Stick the positive end into the 'normally closed' port of channel 2 on the relay switch. Attach the negative end of the IR LED to the 'ground' wire of the 12V AC/DC adapter. Remember, all LEDs need resistors!
 
-One important concept is that 'all grounds are the same'. This includes the ground on the 12V AC/DC adapter, the ground of the LEDs, the ground of theRaspberry Pi, etc.
+ - Tie the three grounds together, this includes the ground from the 12V AC/DC adapter, the white LEDs and the IR LEDs.
 
 ### Connect the Pi to the relay switch switch
 
@@ -58,11 +58,21 @@ Connect 4 wires from the Pi to the relay switch. All these wires go on the oppos
  - Connect a 5V pin from the Pi to the 'Vcc' pin on the relay switch.
  - Connect a ground pin from the Pi to the 'GND' pin on the relay switch.
   
-## Temperature and humidity sensor
+## Wiring a temperature and humidity sensor
+
+The PiE server can log temperature and humidity using the DHT line of temperature sensors. To use these sensors, the [Adafruit Python sensor library][dht] needs to to be installed.
+
+```
+cd ~/pie
+./install-dht
+```
+
+There are additional troubleshooting tips in the [testing/](testing/) folder.
+
 
 <IMG SRC="docs/img/am2302.png" width=250 align="right">
 
-### AM2302
+### [AM2302][AM2302]
 
 Red is power, black is ground, and yellow is data.
 
@@ -73,7 +83,7 @@ Red is power, black is ground, and yellow is data.
 
 <IMG SRC="docs/img/dht22-pin-out.png" width=250 align="right">
 
-### DHT 22
+### [DHT22][dht22]
 
  - Connect a 5V pin from the Pi to the 'VCC' pin on the sensor.
  - Connect a ground pin from the Pi to the 'GND' pin on the sensor.
@@ -86,3 +96,5 @@ Red is power, black is ground, and yellow is data.
 [camera-cable]: https://www.adafruit.com/product/2144
 [normal-pi-camera]: https://www.adafruit.com/product/3099
 [noir-pi-camera]: https://www.adafruit.com/product/3100
+[dht22]: https://www.adafruit.com/product/385
+[dht]: https://github.com/adafruit/DHT-sensor-library
