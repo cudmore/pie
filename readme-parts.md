@@ -10,13 +10,19 @@ The [Raspberry Pi][raspberry-pi] is a complete computer system in an almost cred
 
 The Raspberry Pi has a dedicated camera port for the Raspberry Pi Camera. This is an 8 megapixel camera capable of frame rates as high as 90 frames-per-second and comes in two flavors, the [Pi NOIR Camera][raspberry-pi-noir] which can capture images/video using infrared (IR) lights and the '[normal][raspberry-pi-camera]' camera which can capture images/video using visible (white) light. We generally use the [Pi NOIR][raspberry-pi-noir] version to record video in behavior boxes during both the daytime (white LEDs) and night-time (IR LEDs) as well as on the scope to record video during two-photon imaging in the dark using IR LEDs.
 
+### Two channel relay
+
+A [relay][relay] is a switch allowing you to turn higher voltage devices (usually LEDs connected to 12V power) on and off with 3V GPIO pins. We are using a [sainsmart 2-channel relay][sainsmart-relay].
+
+### LEDs
+
+If you end up with lots of LEDs, you could try an [IR LED strip](https://www.amazon.com/LightingWill-Non-waterproof-Multitouch-Application-IR850NM3528X300N/dp/B01DM9AT9C
+) and/or a [white LED strip](https://www.sparkfun.com/products/12621).
+
 ### Level shifter
 
 If you need to connect the Raspberry Pi directly to 5V TTL lab equipment you **need** a [level shifter][level-shifter] to convert the 5V signal to 3V as the Raspberry Pi is only 3V tolerant. We normally use [Adafruit](loginlevelconverter_adafruit) or [Sparkfun](loginlevelconverter_sparkfun) level shifters.
 
-### Two channel relay
-
-A [relay][relay] is a switch allowing you to turn higher voltage devices (usually LEDs connected to 12V power) on and off with 3V GPIO pins. We are using a [sainsmart 2-channel relay][sainsmart-relay].
 
 ### Teensy microcontroller
 
