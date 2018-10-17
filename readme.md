@@ -45,21 +45,29 @@ We assume you have a functioning Raspberry Pi 2/3. To get started, see our [inst
 	cd ~/pie
 	./install-pie
 
-Thats it, the PiE server should be running and you can use the web interface at `http://[ip]:5010`. Where `[ip]` is the IP address of your Raspberry Pi. Make sure you specify port `5010` in the web address.
+Thats it, the PiE server should be running and you can use the web interface at `http://[ip]:5010`. Where `[ip]` is the IP address of your Raspberry Pi. Make sure you specify port `5010` in the web address. By default, the PiE server will start when the machine is booted.
 
 ## 4) Install [uv4l][uv4l] for video streaming.
+
+The [uv4l][uv4l] software runs at the system level (not within the PiE folder) and only needs to be installed once per machine.
 
 	cd ~/pie
 	./install-uv4l
 
 ## 5) Install the DHT temperature/humidity sensor Python package (optional)
 
-If you are using a [DHT temperature/humidity sensor][am2302], the [Adafruit DHT python package][dht] needs to be installed
+If you are using a [DHT temperature/humidity sensor][am2302], the [Adafruit DHT python package][dht] needs to be installed.
 
 	cd ~/pie
 	./install-dht
 
-## 6) Controlling the PiE server from the command line
+## 6) Checking the status of the PiE server.
+
+If all goes well, the web interface is all this is needed. If the PiE server does not work as expected, it is useful to check its log files. Do this with:
+
+	more ~/pie/pie_app/pie.log
+
+## 7) Controlling the PiE server from the command line
 
 The [pie/install-pie](install-pie) script installs a system service allowing the PiE server to run in the background. This background PiE server can be controlled as follows:
 
@@ -76,7 +84,7 @@ cd ~/pie
 ./pie run      - run PiE server on command line"
 ```
 
-For debugging, use `./pie run` to print the status of the server to the command line.
+For debugging, use `./pie run` to print the logs of the PiE server to the command line. The logs can also be viewed from the web interface or using `more ~/pie/pie_app/pie.log`.
 
 ## Web interface
 
@@ -90,12 +98,6 @@ In all cases, when the PiE server is running it will provide a web interface on 
 
 <table><tr><td>
 <IMG SRC="docs/img/web/web_config.png">
-</td></tr></table>
-
-### Motor
-
-<table><tr><td>
-<IMG SRC="docs/img/web/web_motor.png">
 </td></tr></table>
 
 ## Parts list
@@ -301,7 +303,8 @@ Expecting , delimiter: line 27 column 13 (char 648)
  - Expand sunrise/sunset to fractional hour.
  - [partially done 20180831] Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread). I am doing this with hard-coded 5GB warning in index.html, see: ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
  - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
-  
+ - Add code to check the camera as PiE server starts. This way, user can look at logs to troubleshoot.
+ 
   
 [install-stretch]: http://blog.cudmore.io/post/2017/11/22/raspian-stretch/
 [steppermotor]: https://www.sparkfun.com/products/9238

@@ -1,4 +1,17 @@
-### Troubleshooting the camera
+## Troubleshooting the PiE server
+
+The first thing to check is the PiE server log. The log can be viewed in many ways,
+
+ 1. From the web interface
+ 2. By running the PiE server on the command line with `./pie run`
+ 3. By directly viewing the log file with `more ~/pie/pie_app/pie.log`
+
+### OSError: [Errno 98] Address already in use
+
+This happens when you try and start the server but it is already running. Usually when it is running in the background and you run it again with `./pie run`. Just stop the server with `./pie stop` and then try again with `./pie run`.
+
+
+## Troubleshooting the camera
 
 Capture a still image with the Pi camera with:
 
@@ -19,23 +32,30 @@ sudo raspi-config
 # Answer 'Yes' to question 'Would you like the camera interface to be enabled?'
 ```
 
-### Troubleshooting a DHT temperature/humidity sensor
+### bCamera PiCameraMMALError: Failed to enable connection: Out of resources
+
+If you receive this error in the web interface or PiE server log, it means the camera is in use by some other process. The Raspberry camera can only do one thing at a time, it can stream or record but not both at the same time. In addition, the camera can not record (or stream) in two different programs simultaneously.
+
+Make sure other programs are not using the camera and try again. Rebooting with 'sudo reboot' usually does the trick unless these programs, like the PiE server, are set up to run at boot.
+
+
+## Troubleshooting a DHT temperature/humidity sensor
 
 Run the simplified code in the [testing/](testing/) folder. If you can't get a temperature/humidity reading with this code, it will not work within the PiE server.
 
-Check the PiE server logs and make sure the Adafruit DHT driver is installed and run when the PiE server boots. You should see entries in the PiE server log like this:
+Check the PiE server log (see above) and make sure the Adafruit DHT driver is installed and run when the PiE server is started. You should see entries in the PiE server log like this:
 
 	[2018-10-14 09:53:59,596] {bTrial.py <module>:51} DEBUG - Loaded Adafruit_DHT
 	[2018-10-14 09:54:00,168] {bTrial.py __init__:178} DEBUG - starting temperature thread
 	[2018-10-14 09:54:00,172] {bTrial.py tempThread:918} INFO - tempThread() sensorTypeStr:AM2302 sensorType:22 pin:4
 
-If the DHT driver is not installed, install it with `./install-dht`, restart the PiE server with `./pie restart`, and check the PiE server logs again.
+If the DHT driver is not installed, install it with `./install-dht`, restart the PiE server with `./pie restart`, and check the PiE server log again.
 
-### Converting video
+## Converting video
 
 The PiE server uses [libav (avconv)][libav] to convert video from .h264 to .mp4. If libav (avconv) does not install during `~/pie/install-pie`, this conversion will not work.
 
-### Checking if uv4l (Streaming) is running
+## Checking if uv4l (Streaming) is running
 
 In rare instances the [uv4l][uv4l] streaming server does not stop properly. Streaming with uv4l runs at the system level and not in Python. As such, uv4l needs to be controlled via the command line.
 
@@ -135,17 +155,6 @@ uname -a
 # returns
 Linux pi15 4.14.52-v7+ #1123 SMP Wed Jun 27 17:35:49 BST 2018 armv7l GNU/Linux
 ```
-
-### bCamera PiCameraMMALError: Failed to enable connection: Out of resources
-
-If you receive this error in the web interface or logs, it means the camera is in use by some other process. The Raspberry camera can only do one thing at a time, it can stream or record but not both at the same time. In addition, the camera can not record (or stream) in two different programs simultaneously.
-
-Make sure other programs are not using the camera and try again. Rebooting with 'sudo reboot' usually does the trick unless these programs, like the PiE server, are set up to run at boot.
-
-
-### OSError: [Errno 98] Address already in use
-
-This happens when you try and start the server but it is already running. Usually when it is running in the background and you run it again with `./pie run`. Just stop the server with `./pie stop` and then try again with `./pie run`.
 
 [uv4l]: https://www.linux-projects.org/uv4l/
 [libav]: https://libav.org/
