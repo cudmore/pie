@@ -29,7 +29,15 @@ Finally, the camera must be activated from the command line using `sudo raspi-co
 
 The relay switch effectively separates the 5V, Ground, and GPIO on the Pi (left half of the relay) from the 12V power of the AC/DC adapter and the lights (right half of the relay). Here we will wire the system with the white LED on channel 1 and the IR LED on channel 2 of the relay switch. 
 
-**All LEDs need resistors.** - All LEDs need resistors. If your directly connect an LED to power and ground without a resistor you will burn the LED. All LEDs need a resistor wired in parallel, these are called 'current limiting resistor'.
+**All LEDs need resistors.** - All LEDs need a resistor wired in parallel, these are called 'current limiting resistor'. If you directly connect an LED to power and ground without a resistor, you will burn the LED.
+
+The value of the resistor (in Ohms) needs to be calculated using [Ohms law](https://en.wikipedia.org/wiki/Ohm%27s_law), V=I*R. Where:
+
+ - V (Volts) is determined by the power source
+ - I (Amps) depends on the properties of each LED and if they are wired in series or in parallel
+ - R (Ohms) is what needs to be calculated.
+ 
+Follow [this](http://www.resistorguide.com/resistor-for-led/) tutorial to get started calculating the required resistor value.
 
 **Use IR LEDs <900 nm.** - These are within the sensitivity range of the Pi NoIR camera. A lot of IR LEDs are 940nm, these are not well suited for use with the Pi NoIR camera but are designed for IR sensors as is used in a TV remote.
 
