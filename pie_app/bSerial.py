@@ -1,5 +1,7 @@
-# Robert H Cudmore
-# 20180808
+"""
+Author: Robert H Cudmore
+Date: 20180808
+"""
 
 import time, threading
 
@@ -34,7 +36,7 @@ class mySerialThread(threading.Thread):
 		#	errorSerialQueue.put('None')
 
 	def run(self):
-		logger.debug('mySerialThread.run() starting')
+		logger.debug('starting mySerialThread')
 		while True:
 			try:
 				# serialDict is {'type': command/dump, 'str': command/filePath}

@@ -47,7 +47,7 @@ def myAfterRequest(response):
 	to remind user that opening the 'lastimage' tab actually hits the server
 	and can cause problems with gpio timing
 	"""
-	if request.endpoint is None or request.endpoint in ['status', 'static', 'log']:
+	if request.endpoint is None or request.endpoint in ['status', 'static', 'log', 'lastimage']:
 		# ignore
 		pass
 	else:

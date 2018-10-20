@@ -1,5 +1,9 @@
-# Robert H Cudmore
-# 20180525
+"""
+Author: Robert H Cudmore
+Date: 20180525
+
+Purpose: Class to control a raspberry Pi camera.
+"""
 
 import os, io, time, math, json
 from datetime import datetime
@@ -40,6 +44,14 @@ class bCamera:
 		
 		self.lastAnnotation = ''
 		
+		# 20181018, test the camera an log if error
+		if self.initCamera_(cameraErrorQueue=cameraErrorQueue) is None:
+			# error
+			logger.error('bCamera failed to initialize')
+		else:
+			self.releaseCamera()
+			logger.info('bCamera initialized successfully')
+
 		#
 		# a background thread to convert .h264 to .mp4
 		self.convertFileQueue = queue.Queue()
@@ -65,7 +77,7 @@ class bCamera:
 	def initCamera_(self, cameraErrorQueue=None):
 		"""
 		Internal function that retuns the current configuration of the camera.
-		Used by record and are video thread
+		Used by record and arm video thread
 		"""
 		ret = OrderedDict()
 		
@@ -519,7 +531,7 @@ class bCamera:
 		and call ./bin/convert_video.sh to convert .h264 to .mp4
 		"""
 		
-		logger.info('initializing convertVideoThread')
+		logger.info('starting convertVideoThread')
 		while True:
 			try:
 				file = fileQueue.get(block=False, timeout=0)

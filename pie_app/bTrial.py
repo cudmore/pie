@@ -1,5 +1,10 @@
-# Robert H Cudmore
-# 20180525
+"""
+Author: Robert H Cudmore
+Date: 20180525
+
+Purpose: Catch all class to manage a trial. A trial roughly corresponds
+to one video recording. See bTrial() for more information.
+"""
 
 import os, sys, time, json, threading, queue, subprocess
 from collections import OrderedDict
@@ -43,12 +48,12 @@ logger = logging.getLogger('pie')
 logger.addHandler(logFileHandler)
 
 logger.setLevel(logging.DEBUG)
-logger.debug('bTrial initialized pie.log')
+logger.debug('initialized pie.log')
 
 # load dht temperature/humidity sensor library
 try:
 	import Adafruit_DHT 
-	logger.debug('Loaded Adafruit_DHT')
+	logger.info('Loaded Adafruit_DHT')
 except:
 	Adafruit_DHT = None
 	logger.warning('Did not load Adafruit_DHT')
@@ -175,13 +180,13 @@ class bTrial():
 			if self.myPinThread.pigpiod:
 				logger.debug('did not start temperature thread with pigpiod')
 			else:
-				logger.debug('starting temperature thread')
+				#logger.debug('starting temperature thread')
 				GPIO.setup(sensorPin, GPIO.IN) # pins 2/3 have 1K8 pull up resistors
 				myThread = threading.Thread(target = self.tempThread)
 				myThread.daemon = True
 				myThread.start()
 		else:
-			logger.debug('Did not load DHT temperature sensor')
+			logger.warning('Adafruit_DHT is not loaded')
 
 		# done initializing
 		now = datetime.now()
@@ -459,7 +464,7 @@ class bTrial():
 		
 		config_default.json is not included in git repository
 		"""
-		logger.debug('loadConfigFile() loading file: ' + thisFile)
+		logger.debug('loading config file: ' + thisFile)
 
 		mypath = os.path.abspath(os.path.dirname(__file__)) # full path to *this file
 		configpath = os.path.join(mypath, 'config') # *this/config
@@ -537,6 +542,8 @@ class bTrial():
 			logger.warning('start trial aborted, already running')
 			return False
 
+		logger.debug('startTrial')
+
 		if self.camera is not None:
 			if startArmVideo:
 				# *this function startTrial() is being called from within the startarmvideo loop
@@ -594,7 +601,8 @@ class bTrial():
 		"""
 		#
 		# triggerOut
-		self.myPinThread.eventOut('triggerOut', True)
+		#
+		#self.myPinThread.eventOut('triggerOut', True)
 		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
@@ -655,7 +663,7 @@ class bTrial():
 		self.serialInAppend('command', 'stop')
 
 		# triggerOut
-		self.myPinThread.eventOut('triggerOut', False)
+		#self.myPinThread.eventOut('triggerOut', False)
 		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
@@ -861,7 +869,7 @@ class bTrial():
 	# Background threads
 	#############################################################
 	def myLightsThread(self):
-		logger.debug('myLightsThread start')
+		logger.debug('starting myLightsThread')
 		while True:
 			if self.config['lights']['auto']:
 				now = datetime.now()
@@ -899,7 +907,7 @@ class bTrial():
 					tmpConfig['hardware']['eventOut'][irLEDIndex]['state'] = True
 					self.updateLED(tmpConfig, allowAuto=True)
 			time.sleep(1)
-		logger.debug('myLightsThread stop')
+		logger.debug('stopping myLightsThread')
 
 	def tempThread(self):
 		"""
@@ -915,7 +923,8 @@ class bTrial():
 		
 		pin = self.config['hardware']['dhtsensor']['pin']
 
-		logger.info('tempThread() sensorTypeStr:' + sensorTypeStr + ' sensorType:' + str(sensorType) + ' pin:' + str(pin))
+		logger.info('starting temperature thread')
+		logger.info('sensorTypeStr:' + sensorTypeStr + ' sensorType:' + str(sensorType) + ' pin:' + str(pin))
 
 		while True:
 			now = time.time()

@@ -1,5 +1,14 @@
-# 20170817
-# Robert Cudmore
+"""
+Author: Robert Cudmore
+Date: 20170817
+
+Purpose: A class that is a wrapper around a bTrial object.
+
+Details: Derives treadmillTrial from bTrial to provide bidirectional communication
+with a web server (usually Flask) using socketio. This was needed as REST web requests,
+at least in Flask, were disrupting Raspberry GPIO timing. To fix this, the web javascript
+timer that requests REST status is turned off during a trial.
+"""
 
 import os, sys, time
 from collections import OrderedDict

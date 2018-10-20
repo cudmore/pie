@@ -1,5 +1,11 @@
-# Robert Cudmore
-# 20180807
+"""
+Author: Robert Cudmore
+Date: 20180807
+
+Purpose: A thread class to control GPIO pins
+
+Details: Interact with bTrial on triggerIn and frame
+"""
 
 import time, threading
 
@@ -135,7 +141,12 @@ class PinThread(threading.Thread):
 				# todo: fix this
 				self.pigpiod.write(pin, onoff)
 			else:
-				GPIO.output(pin, onoff)
+				try:
+					GPIO.output(pin, onoff)
+				except (RuntimeError) as e:
+					logger.error(str(e) + ' pin:' + str(pin))
+					raise
+					
 			# set the state of the out pin we just set
 			#self.pinNumberDict_[pin]['state'] = onoff
 
