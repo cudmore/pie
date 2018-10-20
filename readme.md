@@ -2,7 +2,7 @@ Raspberry Pi Controlled Experiment (PiE) is a feature rich web based experiment.
 
 ## Getting started
 
-Follow the [install][install] instruction and then control the PiE server with the [web interface][web-interface)].
+Follow the [install][install] instruction and then control the PiE server with the [web interface][web-interface].
 
 ## Build Options
 
