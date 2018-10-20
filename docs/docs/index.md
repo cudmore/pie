@@ -7,9 +7,9 @@ Follow the [install](install) instruction and then control the PiE server with t
 ## Build Options
 
  1. **Video recording.** Use the PiE server to record video. All that is needed is a Raspberry Pi and a Pi camera.
- 2. **[Behavior Box](wiring-behavior-box.md).** Use the PiE server to record video, control IR and white lights, and log the temperature/humidity.
- 3. **[On the scope video recording](wiring-scope.md).** Use the PiE server to trigger video recording from a microscope and to log eevents (including microscope frame) to a [file](trial-file.md).
- 4. **[Full treadmill system](wiring-treadmill.md).** Use the PiE server to record synchronized video on a scope (option 3) while controlling a motorized treadmill.
+ 2. **[Behavior Box](wiring-behavior-box).** Use the PiE server to record video, control IR and white lights, and log the temperature/humidity.
+ 3. **[On the scope video recording](wiring-scope).** Use the PiE server to trigger video recording from a microscope and to log eevents (including microscope frame) to a [file](trial-file.md).
+ 4. **[Full treadmill system](wiring-treadmill).** Use the PiE server to record synchronized video on a scope (option 3) while controlling a motorized treadmill.
 
 ## Disclaimer
 
