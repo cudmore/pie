@@ -6,7 +6,7 @@
 
 ## Wiring
 
-This is a full wiring diagram for option #4, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](readme-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](../img/pie.fzz) file.
+This is a full wiring diagram for option #4, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](wiring-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](../img/pie.fzz) file.
 
  - Wire a Teensy connected to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
  - Wire a stepper motor and motor controller.
@@ -16,7 +16,7 @@ This is a full wiring diagram for option #4, recording video on a scope using a 
 
 ### Pin table
 
-This table shows all the pin connections for the full treadmill system (option #4). To wire a Raspberry Pi to a scope without a Teensy (option #3), make sure you connect the Raspberry Pi `triggerOut`, `frame`, and `triggerIn` pins to a level-shifter and then to the scope. See the [scope wiring tutorial](readme-scope.md) for details.
+This table shows all the pin connections for the full treadmill system (option #4). To wire a Raspberry Pi to a scope without a Teensy (option #3), make sure you connect the Raspberry Pi `triggerOut`, `frame`, and `triggerIn` pins to a level-shifter and then to the scope. See the [scope wiring tutorial](wiring-scope.md) for details.
 
 [Download pdf](../img/pie_pins.pdf) of this table.
 

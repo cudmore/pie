@@ -196,7 +196,7 @@ If you see the `<defunct>` then restart the Pi with `sudo reboot` and it should 
 
 The PiE server comes with three default sets of options: Homecage, Scope, and Treadmill. There is an additional `User` configuration that can be edited manually to configure the PiE server.
 
-To edit the `User` file, open [pie_app/config/config_user.json](pie_app/config/config_user.json). The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
+To edit the `User` file, open `pie/pie_app/config/config_user.json` in the [pie/pie_app/config/](config-folder) folder. The format of the file is [json][json] and basically specifies key/value pairs. Do not add or remove any keys, just change their values. The json format is very strict, if there are any syntax errors, the file will not load and the PiE server will not run.
 
 To check your work, use
 
@@ -292,4 +292,4 @@ Linux pi15 4.14.52-v7+ #1123 SMP Wed Jun 27 17:35:49 BST 2018 armv7l GNU/Linux
 
 [uv4l]: https://www.linux-projects.org/uv4l/
 [libav]: https://libav.org/
-
+[config-folder]: https://github.com/cudmore/pie/tree/master/pie_app/config
