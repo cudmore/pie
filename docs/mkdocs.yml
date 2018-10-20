@@ -1,9 +1,12 @@
 site_name: PiE Docs
+site_description: 'Raspberry Pi Controlled Experiment (PiE)'
+site_author: 'Robert H Cudmore'
 
 theme:
   name: 'material'
   logo: 'img/icons/video-camera-blue.png'
   favicon: 'img/icons/video-camera-blue.png'
+  custom_dir: 'theme'
   
 nav:
  - Home: index.md
@@ -18,13 +21,15 @@ nav:
  - Extras:
    - Trial File: trial-file.md
    - GPIO Timing: gpio-timing.md
-   - Development Notes: development-notes.md
    - File Server: file-server.md
    - Mount USB Drive: mount-usb-drive.md
+ - Release Notes: release-notes.md
  - About: about.md
    
 extra_javascript:
   - 'javascripts/extra.js'
+
+edit_uri: ''
 
 repo_name: 'PiE Repository'
 repo_url: 'https://github.com/cudmore/pie'

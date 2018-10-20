@@ -1,4 +1,4 @@
-Raspberry Pi Controlled Experiment (PiE) is a feature rich web based experiment.
+# Raspberry Pi Controlled Experiment (PiE)
 
 ## Getting started
 
