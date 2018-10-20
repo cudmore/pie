@@ -1,5 +1,3 @@
-## Troubleshooting the PiE server
-
 The first thing to check is the PiE server log. The log can be viewed in many ways,
 
  1. From the web interface

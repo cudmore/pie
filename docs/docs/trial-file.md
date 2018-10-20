@@ -78,29 +78,3 @@ All events end with a 'tick' token. Tick tokens are unsigned float that represen
 | startVideoRecord		| bCamera		| See startArmedRecording. |
 | stopVideoRecord		| bCamera		| Same idea but at the stop of recording, see startArmedRecording |
 
-## bTrial
-
-startTrial
-stopTrial
-newRepeat (epoch)
-whiteLED
-irLED
-temperature
-humidity
-
-## bPins
-
-triggerIn
-frame
-generic: Defined in config json file: arduinoMotor, arduinoNewEpoch, user1, user2
-
-## bCamera
-
-beforefilepath
-afterfilepath
-
-startArmedRecording
-stopArmedRecording
-
-startVideoRecord
-stopVideoRecord

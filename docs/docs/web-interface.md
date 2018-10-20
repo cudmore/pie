@@ -1,5 +1,3 @@
-## Web interface
-
 When the PiE sever is running, the web interface is accesible at `http:/[IP]:5010` where [IP] is the IP address of the PiE.
 
 <A id="web-main"></a>

@@ -1,3 +1,5 @@
+# Install the PiE server
+
 ## 1) Get a functioning Raspberry Pi
 
 We assume you have a functioning Raspberry Pi 2/3. To get started, see our [installation][install-stretch] recipe.

@@ -3,7 +3,7 @@ This is a recipe for configuring a Raspberry Pi as a file-server. Once configure
 If you are working on a Windows machine, you need to use [Samba][samba]. If you are working on macOS you want to use [AFP][afp] but can also use [Samba][samba].
 
 
-# Samba (SMB)
+## Samba (SMB)
 
 This is a recipe to make a Raspberry Pi a [Samba][samba] (SMB) file-server that can be accessed from both Windows and macOS.
 
@@ -55,7 +55,8 @@ In the Pico editor, move the cursor to the end of the file and copy and paste th
 
 On a Windows machine, mount the Raspberry Pi Samba file-server with `smb:\\[piIP]` where [piIP] is the IP address of your pi. Do this by clicking the 'Start' menu and then typing `smb:\\[piIP]`.
 
-# Apple-File-Protocol (AFP)
+
+## Apple-File-Protocol (AFP)
 
 This is a recipe to make a Raspberry Pi an [Apple-File-Protocol][afp] (AFP) file-server that can be accessed from macOS.
 
