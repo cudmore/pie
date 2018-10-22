@@ -1,5 +1,9 @@
 The PiE server was designed, coded, and is maintained by [Robert Cudmore](http://robertcudmore.org).
 
+## History
+
+This project is evolving from 2016 to present. It began as two different projects, one for the [home-cage/behavior box][homecage] and another for the [treadmill][treadmill]. These two projects have been merged into the current PiE server.
+ 
 ## Open Source
 
 The PiE server only exists because of the massive amount of hard-work, creativity, and expertise that has been put in to creating and maintaining a multiplicity of open-source software projects.
@@ -61,3 +65,5 @@ The PiE server only exists because of the massive amount of hard-work, creativit
 [uwsgi]: https://uwsgi-docs.readthedocs.io/en/latest/
 [redis]: https://redis.io/
 [docker]: https://www.docker.com/community-edition
+[treadmill]: https://github.com/cudmore/treadmill
+[homecage]: https://github.com/cudmore/homecage

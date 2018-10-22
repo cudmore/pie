@@ -69,5 +69,11 @@ echo '==='
 
 deactivate
 
+echo '==='
+echo "=== restarting PiE server with './pie restart'"
+echo '==='
+cd ~/pie
+./pie restart
+
 echo ' '
-echo -e "=== ${GREEN}Done${NC}: Adafruit_Python_DHT is now installed. Please restart the PiE server with './pie restart'"
+echo -e "=== ${GREEN}Done${NC}: Adafruit_Python_DHT is now installed."

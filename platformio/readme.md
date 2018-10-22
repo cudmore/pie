@@ -34,30 +34,7 @@ And select the following
 	Would you like the serial port hardware to be enabled?   -->> Yes
 
 
-### 2) Add user pi to dialout group
-
-This is handled by `install-platformio`.
-
-	sudo usermod -a -G dialout pi
-
-### 3) Create a `/etc/udev/rules.d/49-teensy.rules` file
-
-This is handled by `install-platformio`.
-
-The Raspberry Pi needs this file to communicate with serial ports on usb. Either download [49-teensy.rules](https://www.pjrc.com/teensy/49-teensy.rules) or see the end of this page for a copy of its contents.
-
-```
-# edit the file
-sudo pico /etc/udev/rules.d/49-teensy.rules
-
-# manually copy and paste the contents (see contents below)
-# ctrl+x to exit pico
-
-# reboot the raspberry pi
-sudo reboot
-```
-
-## Install platformio (using the install-platformio script)
+## Install platformio using the install-platformio script
 
 	cd ~/pie/platformio
 	./install-platformio
@@ -107,6 +84,34 @@ Booting
 
 # Troubleshooting
 
+## Configure the Raspberry Pi to use serial ports
+
+These should be handled by `~/pie/platformio/install-platformio`. In case there is an error, do it manually.
+
+### Add user pi to dialout group
+
+This is handled by `install-platformio`.
+
+	sudo usermod -a -G dialout pi
+
+### Create a `/etc/udev/rules.d/49-teensy.rules` file
+
+This is handled by `install-platformio`.
+
+The Raspberry Pi needs this file to communicate with serial ports on usb. Either download [49-teensy.rules](https://www.pjrc.com/teensy/49-teensy.rules) or see the end of this page for a copy of its contents.
+
+```
+# edit the file
+sudo pico /etc/udev/rules.d/49-teensy.rules
+
+# manually copy and paste the contents (see contents below)
+# ctrl+x to exit pico
+
+# reboot the raspberry pi
+sudo reboot
+```
+
+
 ## Uploading to Teensy says '(hint: press the reset button)'
 
 ```
@@ -115,7 +120,7 @@ Waiting for Teensy device...
 (hint: press the reset button)
 ```
 
-You might see this error on the first upload to a Teensy. Guess what, push the reset button.
+You might see this error on the first upload to a Teensy. Guess what, push the reset button on the Teensy.
 
 ## Check that platformio.ini specifies your particular board
 

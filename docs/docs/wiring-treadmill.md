@@ -1,20 +1,30 @@
 # Wiring a treadmill
 
-## Important
+## Upload code to a Teensy
 
- - The Raspberry Pi is **NOT** 5V tolerant. Connecting standard lab equipment using 5V TTL pulses can damage the Pi. These 5V lines can be converted to 3V with a [dedicated level shifter][adafruit-level-shfter]. Or, if you are using a Teensy, these 5V lines can pass through the Teensy which **IS** 5V tolerant but then outputs 3V which can go into the Raspberry Pi. In this way, the Teensy can act as a programmable [level shifter][level-shifter].
+Please refer to the [pie/platformio][platformio-folder] readme. The Arduino/Teensy code is in [pie/platformio/treadmill/src/treadmill2.cpp][treadmill2].
 
- - The Easy Driver Motor Driver has a nasty feature. If you connect the 12V line to the board, the Stepper motor **must** be plugged in or else you will fry the driver board. Thus, check the stepper motor is connected before plugging in the 12V line and check the 12V line is not plugged in before disconnecting the stepper motor.
+## Parts
+
+See the main [parts](parts.md) page, scroll down to the treadmill section.
 
 ## Wiring
 
-This is a full wiring diagram for option #4, recording video on a scope using a Teensy with a motorized treadmill. To wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](wiring-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](../img/pie.fzz) file.
+This is a full wiring diagram for microscope triggered video recording and using a Teensy with a motorized treadmill. To just wire a Raspberry Pi to a scope, please see the [scope wiring tutorial](wiring-scope.md). This wiring diagram is made with [Fritzing][fritzing], download the [pie.fzz](../img/pie.fzz) file.
 
- - Wire a Teensy connected to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
- - Wire a stepper motor and motor controller.
-
+ - Wire the Teensy  to `Scope Trigger In`, `Scope Trigger Out`, and `Scope Frame out`.
+ - Wire the Teensy to the Raspberry Pi
+ - Wire the stepper motor to the motor controller.
+ - Wire the motor controller to the Raspberry Pi
 
 <IMG SRC="../img/pie_fritzing.png">
+
+### Important
+
+ - The Raspberry Pi is **NOT** 5V tolerant. Connecting standard lab equipment using 5V TTL pulses can damage the Pi. These 5V lines can be converted to 3V with a [dedicated level shifter][adafruit-level-shifter]. Or, if you are using a Teensy, these 5V lines can pass through the Teensy which **IS** 5V tolerant but then outputs 3V which can go into the Raspberry Pi. In this way, the Teensy can act as a programmable [level shifter][level-shifter].
+
+ - The [Easy Driver][easy-driver] Motor Driver has a nasty feature. If you connect the 12V line to the board, the Stepper motor **must** be plugged in or else you will fry the driver board. Thus, check the stepper motor is connected before plugging in the 12V line and check the 12V line is not plugged in before disconnecting the stepper motor.
+
 
 ### Pin table
 
@@ -64,3 +74,10 @@ This table shows all the pin connections for the full treadmill system (option #
 |   |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
 |  Emergency Stop Button |  |  | Push button (+3V) | ??? | ??? | ??? | X |  | emergencyStopPin | treadmill.cpp | 20 | X |  |  |  |
 |   | X |  | Push button (Gnd) |  |  |  |  |  |  |  |  |  |  |  |  |
+
+[fritzing]: http://fritzing.org/home/
+[adafruit-level-shifter]: https://www.adafruit.com/product/757
+[level-shifter]: https://en.wikipedia.org/wiki/Level_shifter
+[easy-driver]: https://www.sparkfun.com/products/12779
+[treadmill2]: https://github.com/cudmore/pie/blob/master/platformio/treadmill/src/treadmill2.cpp
+[platformio-folder]: https://github.com/cudmore/pie/tree/master/platformio

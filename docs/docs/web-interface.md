@@ -1,4 +1,4 @@
-When the PiE sever is running, the web interface is accesible at `http:/[IP]:5010` where [IP] is the IP address of the PiE.
+When the PiE sever is running, the web interface is accesible at `http:/[IP]:5010` where [IP] is the IP address of the Pi.
 
 <A id="web-main"></a>
 
@@ -6,7 +6,7 @@ When the PiE sever is running, the web interface is accesible at `http:/[IP]:501
 <IMG SRC="../img/web/web_main.png">
 </td></tr></table>
 
-The top row displays the PiE server hostname, IP, and current date and time. If the server is running, the time will be updated each second. In addition, there are links to recorded video files, server logs, environmental sensors, and the full source code and documentation on Github.
+The top row displays the Pi hostname, IP, and current date and time. When the PiE server is running, the time will be updated each second. In addition, there are links to recorded video files, PiE server logs, environmental sensors, and the full source code and documentation on Github.
 
 The 'Start Recording' and 'Start Trial' buttons start video recording to a file. All files are saved in the `/video` folder. At the end of each video file recording, a trial file is also saved. Trial files are plain text files with a record of 'events' that occurred during the video recording. See the [trial file readme](trial-file.md) for more information.
  

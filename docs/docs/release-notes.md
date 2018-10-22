@@ -7,7 +7,8 @@
  - [partially done 20180831] Add warning when video/ drive space remaining is less than 1 GB. Do this by updating status.trial.systemInfo.gbRemaining at the end of each recording (record video thread, and armed recording thread). I am doing this with hard-coded 5GB warning in index.html, see: ng-if="videoArray[$index].status.trial.systemInfo.gbRemaining < 5"
  - Have some mechanism to roll-over or otherwise replace the continuous environment log file.
  - [done 20181018] Add code to check the camera as PiE server starts. This way, user can look at logs to troubleshoot.
-
+ - Add popup to web interface for selecting supported DHT (AM2302, DHT11) sensors
+ 
 ### Major Changes
 
 20181013
@@ -71,3 +72,18 @@ cd ~/pie/pie_app
 /home/pi/pie/env/bin/gunicorn -w 1 --bind 192.168.1.15:5010 treadmill_app:app
 ```
 
+### MkDocs
+
+Had to install with
+
+	sudo pip install mkdocs
+	
+Run on an external port
+
+	cd ~/pie/docs
+	mkdocs serve -a 192.168.1.4:8000
+
+Push to github
+
+	cd ~/pie/docs
+	mkdocs gh-deploy
