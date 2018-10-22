@@ -30,9 +30,21 @@ The commander server is designed to run in the background and can be controlled 
 
 If you run into trouble with the commander, run it on the command line to see the output with `./commander run`.
 		
+## Web interface
+
+### Editing IP addresses
+
+In the config section, turn on 'edit ip' checkbox. Enter a valid IP and hit enter. If the IP is for a running PiE server (no port number needed), the red (bad connection) will be replaced with the current status of the specified PiE server.
+
+### Warnings and errors
+
+When a PiE server is connected, the corresponding row in 'Server Swarm' will be filled in and active. When there is a connection error, the first column will appear red and all other controls will be inactive.
+
+When the drive space remaining goes below 5 GB, the 'File' column will be displayed in red. Currently, there is no interface to set this trip-point, 5 GB is  **hard-coded** in the commander index.html. Feel free to change it yourself.
+
 ## Troubleshooting
 
-### Show status on command line
+### Run the commander manually
 
 `install-commander` installs a python virtual env in ~/pie/commander_app/commander_env. The commander server needs to be run in this environment.
 
@@ -47,15 +59,6 @@ source commander_env/bin/activate
 python commander.py
 ```
 
-### Editing IP addresses in the web interface
-
-In the config section, turn on 'edit ip' checkbox. Enter a valid IP and hit enter. If the IP is for a running PiE server (no port number needed), the red (bad connection) will be replaced with the current status of the specified PiE server.
-
-### Warnings and errors
-
-When a PiE server is connected, the corresponding row in 'Server Swarm' will be filled in and active. When there is a connection error, the first column will appear red and all other controls will be inactive.
-
-When the drive space remaining goes below 5 GB, the 'File' column will be displayed in red. Currently, there is no interface to set this trip-point, 5 GB is  **hard-coded** in the commander index.html. Feel free to change it yourself.
 
 ## Example screen shot of the commander controlling 8 PiE servers.
 
