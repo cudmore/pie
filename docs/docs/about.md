@@ -2,7 +2,7 @@ The PiE server was designed, coded, and is maintained by [Robert Cudmore](http:/
 
 ## History
 
-This project is evolving from 2016 to present. It began as two different projects, one for the [home-cage/behavior box][homecage] and another for the [treadmill][treadmill]. These two projects have been merged into the current PiE server.
+This project is evolving from 2016 to present. It began as more than three different projects, one for [video recording][trigger-camera2], one for the [home-cage/behavior box][homecage], and another for the [treadmill][treadmill]. The functionality of all these projects have been merged into the current PiE server.
  
 ## Open Source
 
@@ -67,3 +67,4 @@ The PiE server only exists because of the massive amount of hard-work, creativit
 [docker]: https://www.docker.com/community-edition
 [treadmill]: https://github.com/cudmore/treadmill
 [homecage]: https://github.com/cudmore/homecage
+[trigger-camera2]: https://github.com/cudmore/triggercamera2
