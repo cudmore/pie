@@ -24,7 +24,6 @@ The commander server is designed to run in the background and can be controlled 
 	./commander status      - get the status of the background commander server
 	./commander enable      - start the background commander server at boot
 	./commander disable     - do not start the background commander server at boot
-	./commander disable     - do not start the background commander server at boot
 	====================
 	./commander run         - run commander on command line
 
