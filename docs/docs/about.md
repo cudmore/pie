@@ -49,7 +49,7 @@ The PiE server only exists because of the massive amount of hard-work, creativit
   - [Docker][docker] - Software containers are the future
 
 ### Documentation
-  - [Jekyll](https://jekyllrb.com/) - Static site generator (Main [Map Manager](https://mapmanager.github.io/) documentation)
+  - [Jekyll](https://jekyllrb.com/) - Static site generator (Main [Map Manager](http://mapmanager.net/) documentation)
   - [mkDocs](http://www.mkdocs.org/) - Static site generator (This Website)
   - [Sphinx](http://www.sphinx-doc.org/en/master/) - To create documentation ([PyMapManager API Documentation](http://pymapmanager.readthedocs.io/en/latest/))
 
