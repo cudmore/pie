@@ -492,7 +492,7 @@ void newFrame(unsigned long now) {
 }
 /////////////////////////////////////////////////////////////
 void PrintHelp() {
-	Serial.println("=== treadmill_2 help ===");
+	Serial.println("=== treadmill help ===");
 	Serial.println("start : start");
 	Serial.println("stop : stop");
 	Serial.println("p : print state of the trial parameters");
@@ -624,7 +624,7 @@ void SerialIn(unsigned long now, String str) {
 		SetTrial(nameStr, valueStr);
 	}
 	else {
-		Serial.println("treadmill_2 did not handle serial: '" + str + "'");
+		Serial.println("treadmill did not handle serial: '" + str + "'");
 	}
 		
 }

@@ -15,8 +15,8 @@ Follow the [install][install] instruction and then control the PiE server with t
 
 This repository is a work in progess. It is functioning in my hands and fingers but may not in yours. Please email [robert.cudmore [at] gmail.com](http://robertcudmore.org) with questions or better yet, open an [issue](https://github.com/cudmore/pie/issues). If this code is used in any way, please be a good scientist/colleague and give me credit. If you see utility in this system and would like to see it customized for a particular experiment, contact me and we can collaborate.
 
-[install]: http://blog.cudmore.io/pie/install/
-[web-interface]: http://blog.cudmore.io/pie/web-interface/
-[wiring-behavior-box]: http://blog.cudmore.io/pie/wiring-behavior-box/
-[wiring-scope]: http://blog.cudmore.io/pie/wiring-scope/
-[wiring-treadmill]: http://blog.cudmore.io/pie/wiring-treadmill/
+[install]: http://blog.cudmore.io/pie-doc/install/
+[web-interface]: http://blog.cudmore.io/pie-doc/web-interface/
+[wiring-behavior-box]: http://blog.cudmore.io/pie-doc/wiring-behavior-box/
+[wiring-scope]: http://blog.cudmore.io/pie-doc/wiring-scope/
+[wiring-treadmill]: http://blog.cudmore.io/pie-doc/wiring-treadmill/
