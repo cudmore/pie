@@ -392,6 +392,13 @@ class bTrial():
 
 		self.lastResponse = 'Updated pins'
 		
+	# 20181024, while working on processing
+	# this needs to be made more bullet proof, assuming ledIdx is in (1,2)
+	def updateLED2(self, ledIdx, newValue):
+		self.config['hardware']['eventOut'][ledIdx]['state'] = newValue
+		# set actual pins
+		self.myPinThread.eventOut('whiteLED', newValue)
+		
 	def updateLED(self, configDict, allowAuto=True):
 		
 		now = time.time()

@@ -46,4 +46,60 @@ The `PiE Admin` server provides a REST insterface (port 5011) to control a PiE s
  - Get status of work the `PiE Admin` server has done
   
 	/status
- 
+
+### Examples
+
+#### Manually interacting
+
+If your  Pi IP is 192.168.1.4
+
+	http://192.168.1.4:5011/api/restartserver
+
+Then
+
+	http://192.168.1.4:5011/status
+
+Returns
+
+```
+{
+  "runtime": {
+    "bashQueue": [
+      "[hc4] 2018-10-23 17:19:07 :  Restarting PiE server http://192.168.1.4:5010", 
+      "[hc4] 2018-10-23 17:19:07 :  PiE server is running at http://192.168.1.4:5010", 
+      ""
+    ]
+  }
+}
+```
+
+#### Interacting with Python
+
+Install requests if necessary
+
+	pip3 install requests
+	
+Put this code into a file called 'testrest.py'
+
+```
+import requests
+from pprint import pprint
+
+url = 'http://192.168.1.4:5011/status'
+r = requests.get(url)
+r.json()
+
+pprint(r.json())
+```
+
+Run on command line
+
+	python3 testrest.py
+	
+Will print
+
+{'runtime': {'bashQueue': ['[hc4] 2018-10-23 17:19:07 :  Restarting PiE server '
+                           'http://192.168.1.4:5010',
+                           '[hc4] 2018-10-23 17:19:07 :  PiE server is running '
+                           'at http://192.168.1.4:5010',
+                           '']}}

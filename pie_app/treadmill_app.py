@@ -199,6 +199,13 @@ def submit(submitThis):
 
 	return jsonify(treadmill.getStatus())
 
+# 20181024, writing processsing examples
+@app.route('/api/v2/set/led/<int:ledIdx>/<int:newValue>')
+def set_led(ledIdx, newValue):
+	print("ledIdx:", ledIdx, "newValue:", newValue)
+	treadmill.trial.updateLED2(ledIdx, True if newValue else False)
+	return jsonify(treadmill.getStatus())
+	
 #########################################################################
 #  Load default config files from /config
 #########################################################################
@@ -207,6 +214,9 @@ def loadconfig(loadThis):
 	treadmill.loadConfig(loadThis)
 	return jsonify(treadmill.getStatus())
 
+#########################################################################
+#  not used -->> remove
+#########################################################################
 #########################################################################
 #  restart server
 #########################################################################
