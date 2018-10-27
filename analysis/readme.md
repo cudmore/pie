@@ -1,6 +1,6 @@
-See a renered version of [trial_analysis](https://nbviewer.jupyter.org/github/cudmore/pie/blob/master/analysis/trial_analysis.ipynb) with plots.
+See a rendered version of [trial_analysis](https://nbviewer.jupyter.org/github/cudmore/pie/blob/master/analysis/trial_analysis.ipynb) with plots.
 
-See a renered version of [timeStampAnalysis](https://nbviewer.jupyter.org/github/cudmore/pie/blob/master/analysis/timeStampAnalysis.ipynb) with plots.
+See a rendered version of [timeStampAnalysis](https://nbviewer.jupyter.org/github/cudmore/pie/blob/master/analysis/timeStampAnalysis.ipynb) with plots.
 
 ## Analysis
 
