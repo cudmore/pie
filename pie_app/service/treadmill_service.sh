@@ -7,7 +7,7 @@
 
 myip=`hostname -I | xargs`
 
-echo "Starting homecage server in $homecage_path"
+echo "Starting PiE server in $homecage_path"
 
 cd $treadmill_path
 
@@ -19,11 +19,9 @@ else
 	source ../pie_env/bin/activate
 fi
 
-# python -V
-
-echo "calling 'python treadmill_app.py'"
+echo "Calling 'python treadmill_app.py'"
 python treadmill_app.py 
 
-echo "   Browse to the server at http://"$myip":5000"
+echo "Browse to the server at http://"$myip":5010"
 
 exit 0
