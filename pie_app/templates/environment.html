@@ -1,40 +1,112 @@
-<head>
-  <!-- Plotly.js -->
-  	<link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+<!doctype html>
+<html ng-app="environment_app">
 
-	<!-- <script src="https://cdn.plot.ly/plotly-latest.min.js"></script> -->
+	<head>
+		<link rel="stylesheet" href="static/treadmill.css">
+		<link rel="stylesheet" href="static/bootstrap/css/bootstrap.min.css">
+		<link rel="stylesheet" href="static/font-awesome-4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="static/angular-ui-switch.min.css">
+
+		<script src="static/angular/angular.min.js"></script>
+		<script src="static/angular/angular-route.js">
+
+		<script src="static/bootstrap/js/bootstrap.min.js"></script>
+
+		<script src="static/angular-ui-switch.min.js"></script>
+  
+      	<script src="static/socketio.js"></script>
+
+		<script src="static/environment.js"></script>
 
 		<script src="static/plotly/plotly-1.38.3.min.js"></script>
 		
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	
-	<script src="static/environment.js"></script>
 
-<style>
-h4, h5 {
-  margin-left: 30px; /* change this as you like */
-}
-</style>
+		<link rel="shortcut icon" href="static/favicon-thermometer-half.ico">
 
-</head>
+		<style>
+			h4, h5 {
+			margin-left: 30px; /* change this as you like */
+			}
+		</style>
+	</head>
 
 <body>
+	<div ng-controller="environmentController">
 
-	<br>
-	<h4>
-	PiE Server Environmental Monitoring
-	</h4>
 	
-	<div id="myplot"></div>
-
-	<h5>
-	<dd>Once plotted, refresh the page to see new values.</dd>
-	</h5>
+	<table style="width:50%; margin-left: 30px">
+	<tr>
+		<td>{{ lastTime }}</td>
+		<td>{{ lastTemp }} &#8451;</td>
+		<td>{{ lastHum }} %</td>
+	</tr>
+	</table>
 	
-	<h5>
-	<dd>View the raw <A HREF="/environmentlog">Log file</A>.</dd>
-	</h5>
+	<!-- main plotly plot -->
+	<div id="myplot" style="height: 100%; margin-left: 30px; margin-right: 30px;"></div>
 
-	<div id="graph"></div>
+	<div style="margin-left: 30px">
+		
+<!--
+		<label>Days Before
+			<input style="width: 5em" 
+				name = "daysBeforeID"
+				type="number"
+				ng-model="daysBefore"
+				ng-change="setDaysBefore()"
+				>
+			</label>
+		</label>
+	
+		<label>End Date
+		<input type="date"
+		   ng-model="endDate.value"
+		   placeholder="yyyy-MM-dd"
+		   name="setEndDateID"
+		   ng-change="setEndDate()">
+		</label>
+-->
+		
+		<label>Temperature Y-Axis Min
+			<input style="width: 5em" 
+				name = "yAxisMinID"
+				type="number"
+				ng-model="yAxisMin"
+				ng-change="setYMin()"
+				>
+			</label>
+		</label>
+	
+		<label>Max
+			<input style="width: 5em" 
+				name = "yAxisMaxID"
+				type="number"
+				ng-model="yAxisMax"
+				ng-change="setYMax()"
+				>
+			</label>
+		</label>
+	
+		<button type="button"
+			class="btn btn-success btn-sm"
+			ng-click="reloadDataButton()">
+			Reload Page
+		</button>
+	</div>
+	
+	<BR>
+	
+	<div style="margin-left: 30px">
+	View the raw <A HREF="/environmentlog">Log file</A>.
+	</div>
 
+	<!-- table with contents of log text file -->
+	<div id="mytable" style="width: 100%; height: 100%;"></div>
+
+
+	</div> <!-- ng-controller="environmentController"
+
+	
 </body>
+</html>
