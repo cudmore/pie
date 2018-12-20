@@ -7,3 +7,14 @@ i am now getting this error
 see
 
 https://www.raspberrypi.org/forums/viewtopic.php?t=205327
+
+fuck this is error n newest RPi GPIO, see
+
+https://github.com/RPi-Distro/python-gpiozero/issues/687
+
+fix by downgrading
+
+source pie_env/bin/activate
+sudo pip install RPi.GPIO==0.6.3
+
+
