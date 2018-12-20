@@ -3,7 +3,7 @@ Author: Robert H Cudmore
 Date: 20180808
 """
 
-import time, threading
+import time, threading, serial, queue
 
 import logging
 logger = logging.getLogger('flask.app')

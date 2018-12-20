@@ -17,7 +17,7 @@ from pprint import pprint
 
 import logging
 
-import RPi.GPIO as GPIO
+#import RPi.GPIO as GPIO
 
 import bUtil
 import bTrial
@@ -175,7 +175,9 @@ class treadmill():
 	def serialUpdateMotor(self, motorDict):
 		""" todo: put this in bTrial """
 
-		#print('updateMotor()')
+		print('serialUpdateMotor()')
+		print(motorDict)
+		
 		for key, value in motorDict.items():
 			#convert python based variable to arduino
 			if key == 'motorNumEpochs':

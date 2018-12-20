@@ -306,11 +306,49 @@ sudo apt-get install screen
 #Use screen to connect to serial port
 screen /dev/ttyACM0 115200
 
+# Start typing some commands to the treadmill code on the teensy
+# for example
+# p: print the current state.
+# h: print help
+
 # Quit the screen terminal window
 ctrl+a then : then type quit
 ```
 
 You might have to hit `return` to get it going. Quit screen with `ctrl+a` then type `:` then type `quit`
+
+## Serial Errors
+
+The serial port can only be opened and in use by one process. If you get the following error, some other process is using the serial port.
+
+```
+[Errno 16] could not open port /dev/ttyACM0: [Errno 16] Device or resource busy: '/dev/ttyACM0'
+```
+
+Sometimes this error will occur. 
+
+```
+[Errno 2] could not open port /dev/ttyACM0: [Errno 2] No such file or directory: '/dev/ttyACM0'
+```
+
+Check the /dev directory for ttyACM0 with `ls /dev/ttyA*` and you will most probably find /dev/ttyACM1 instead of ttyACM0. This means you tried to upload Teensy code while the Pie server was running.
+
+Solution is to ensure the PiE server is stopped and re-upload the Teensy treadmill code
+
+```
+# Make sure you are not running the pie server on command line with '~/pie/pie run'
+
+# shutdown the background PiE server
+~/pie/pie stop
+
+# upload Teensy code
+cd ~/pie/platformio/treadmill
+sudo ../env/bin/platformio run -e teensy35 --target upload
+
+# restart the background PiE server
+~/pie/pie start
+```
+
 
 ## udev rules
 

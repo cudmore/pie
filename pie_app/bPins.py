@@ -5,6 +5,9 @@ Date: 20180807
 Purpose: A thread class to control GPIO pins
 
 Details: Interact with bTrial on triggerIn and frame
+
+ToDo: For this to actually be a thread, need to implement in/out queue
+
 """
 
 import time, threading
@@ -17,13 +20,14 @@ import logging
 logger = logging.getLogger('pie')
 
 #########################################################################
+#class PinThread(threading.Thread):
 class PinThread(threading.Thread):
 	# need 'isRunning'
 	def __init__(self, trial):
 		"""
 		trial: bTrial object
 		"""
-		threading.Thread.__init__(self)
+		#threading.Thread.__init__(self)
 		self.trial = trial
 		self.pigpiod = None
 
@@ -33,11 +37,64 @@ class PinThread(threading.Thread):
 		"""
 		self.pinNumberDict_ = {}
 		
+		# not working
+		# 3, 8, 24 (sometimes 25)
+		# working
+		# 4, 7, 25
+		if 0:
+			GPIO.setmode(GPIO.BCM)
+			GPIO.setwarnings(True)	
+			tmpPin = 25
+			GPIO.setup(tmpPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+			GPIO.add_event_detect(tmpPin, GPIO.RISING, callback=self.gpio_InputPinCallback, bouncetime=20)
+		
+	#########################################################################
+	# Initialize from config json
+	#########################################################################
+	def init(self, config, initFirstTime=False):
+
+		print('=== bPins.init() config')
+		if initFirstTime:
+			#self.pigpiod = pigpio.pi()
+			if self.pigpiod is None or not self.pigpiod.connected:
+				self.pigpiod = None
+	
+			if self.pigpiod:
+				logger.info('Initialized pigpio')
+				pass
+			else:
+				logger.info('Initialized GPIO with GPIO.setmode(GPIO.BCM)')
+				#GPIO.cleanup() # can't cleanup before we setup
+				GPIO.setmode(GPIO.BCM)
+				GPIO.setwarnings(True)	
+	
+		self.pinNumberDict_ = {} # assigned in self.configPin()
+
+		#
+		# input (e.g. triggerIn, frame)
+		for idx,eventIn in enumerate(config['hardware']['eventIn']):
+			self.configPin('input', eventIn)
+			#self.config['hardware']['eventIn'][idx]['idx'] = idx # for reverse lookup
+
+		#
+		# output (e.g. led, motor, or lick port)
+		for idx,eventOut in enumerate(config['hardware']['eventOut']):
+			self.configPin('output', eventOut)
+			# set the status in the config struct
+			#self.config['hardware']['eventOut'][idx]['state'] = defaultValue # so javascript can read state
+			#self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
+	
+	def exiting(self):
+		GPIO.cleanup()
+		
 	#########################################################################
 	# Input pin callbacks
 	#########################################################################
+	# todo: merge gpio_InputPinCallback and pigpio_InputCallback by using level=None, tick=None
+	#	then check for level/tick and we are in pigpio
 	def gpio_InputPinCallback(self, pin):
 		""" Input pin callback for GPIO """
+		print('=== bPins.gpio_InputPinCallback() pin:', pin)
 		now = time.time()
 		self.inputCallback(pin, now)
 		
@@ -142,10 +199,12 @@ class PinThread(threading.Thread):
 				self.pigpiod.write(pin, onoff)
 			else:
 				try:
+					logger.info(name + ' ' + str(onoff))
 					GPIO.output(pin, onoff)
 				except (RuntimeError) as e:
+					# we will always get here with start/stop trial when out trigger is off
 					logger.error(str(e) + ' pin:' + str(pin))
-					raise
+					#raise
 					
 			# set the state of the out pin we just set
 			#self.pinNumberDict_[pin]['state'] = onoff
@@ -155,6 +214,8 @@ class PinThread(threading.Thread):
 	#########################################################################
 	def configPin(self, inout, configDict):
 
+		#print('\nbPins.configPin() inout:', inout, 'configDict:', configDict)
+		
 		# dictionaries to map config json to GPIO and pigpio packages
 		gpioPolarityDict = { 'rising': GPIO.RISING, 'falling': GPIO.FALLING, 'both': GPIO.BOTH}
 		gpioPullUpDownDict = { 'up': GPIO.PUD_UP, 'down': GPIO.PUD_DOWN}
@@ -167,6 +228,8 @@ class PinThread(threading.Thread):
 		enabled = configDict['enabled']
 		
 		self.pinNumberDict_[pin] = configDict
+		
+		print('=== configPin() name:', name, 'pin:', pin, 'enabled:', enabled, 'inout:', inout)
 		
 		# input
 		if inout == 'input':
@@ -191,27 +254,41 @@ class PinThread(threading.Thread):
 					#self.pigpiod.callback(pin, pigpio.RISING_EDGE, self.frameIn_Callback)
 					pass
 				else:
+					#print('GPIO.remove_event_detect() pin:', pin)
 					GPIO.remove_event_detect(pin)
+					logger.info('GPIO.remove_event_detect() name:'+ name + ' pin:' + str(pin))
 			except (RuntimeError) as e:
-				print('error in eventIn remove_event_detect, enabled: ' + str(e))
-
+				logger.error('error in eventIn remove_event_detect, enabled: ' + str(e) + ', name:' + name + ' pin:' + str(pin))
+			except (RuntimeWarning) as e:
+				print('xxx yyy')
+			except:
+				print('xxx bPins.configPin() unexpected exception')
+				
 			if enabled:
 				if self.pigpiod:
 					self.pigpiod.set_mode(pin, pigpio.INPUT)
 					self.pigpiod.set_pull_up_down(pin, pullUpDown) # (pigpio.PUD_OFF, pigpio.PUD_UP, pigpio.PUD_DOWN)
 				else:
+					#print('GPIO.setup() pin:', pin, GPIO.IN, pullUpDown)
+					#print('1')
+					#print('calling GPIO.setup() GPIO.IN pin:', pin)
 					GPIO.setup(pin, GPIO.IN, pull_up_down=pullUpDown)
-
+					logger.info('GPIO.setup() GPIO.IN name:'+ name + ' pin:' + str(pin) + ' pull_up_down:' + str(pullUpDown))
+					#print('2')
 				try:
 					if self.pigpiod:
+						print('=== self.pigpiod.callback')
 						self.pigpiod.callback(pin, polarity, self.pigpio_InputCallback)
 					else:
 						GPIO.add_event_detect(pin, polarity, callback=self.gpio_InputPinCallback, bouncetime=bouncetime)
+						logger.info('GPIO.add_event_detect() name:'+ name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' bouncetime:' + str(bouncetime))
 				except (RuntimeError) as e:
-					logger.warning('eventIn add_event_detect: ' + str(e))
+					logger.error('eventIn add_event_detect: ' + str(e) + ', name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' bouncetime:' + str(bouncetime))
 					pass
+				except:
+					print('xxx bPins.configPin() unexpected exception --- add_event_detect()')
 					
-				logger.info('ENABLED eventIn name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' pull_up_down:' + str(pullUpDown) + ' bouncetime:' + str(bouncetime))
+				#logger.info('ENABLED eventIn name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' pull_up_down:' + str(pullUpDown) + ' bouncetime:' + str(bouncetime))
 
 		elif inout == 'output':
 			defaultValue = configDict['defaultValue']
@@ -226,8 +303,18 @@ class PinThread(threading.Thread):
 					self.pigpiod.set_mode(pin, pigpio.OUTPUT)
 					self.pigpiod.write(pin, defaultValue)
 				else:
-					GPIO.setup(pin, GPIO.OUT)
-					GPIO.output(pin, defaultValue)
+					try:
+						print('3')
+						print('calling GPIO.setup() GPIO.OUT pin:', pin)
+						GPIO.setup(pin, GPIO.OUT)
+						print('4')
+						self.eventOut(name, defaultValue)
+						#GPIO.output(pin, defaultValue)
+						print('5')
+					except (RuntimeError) as e:
+						print('xxx runtime error e:', str(e))
+					except:
+						print('yyy runtime error e:', str(e))
 				logger.info('ENABLED eventOut name:' + name + ' pin:' + str(pin) + ' defaultValue:' + str(defaultValue))
 			else:
 				pass
@@ -243,7 +330,7 @@ class PinThread(threading.Thread):
 			'''
 			
 			"""
-			# testing pulse-width-modulation (PWM) on piins (18, 19)
+			# testing pulse-width-modulation (PWM) on pins (18, 19)
 			if name == 'whiteLED':
 				tmpPin = pin #19
 				tmpFreq = 50 # Hz
@@ -261,37 +348,6 @@ class PinThread(threading.Thread):
 				except KeyboardInterrupt:
 					pass
 			"""
-			
-	#########################################################################
-	# Initialize from config json
-	#########################################################################
-	def init(self, config):
-
-		self.pigpiod = pigpio.pi()
-		if not self.pigpiod.connected:
-			self.pigpiod = None
-
-		if self.pigpiod:
-			logger.info('Initialized pigpio')
-			pass
-		else:
-			logger.info('Initialized GPIO')
-			GPIO.setmode(GPIO.BCM)
-			GPIO.setwarnings(False)	
-	
-		self.pinNumberDict_ = {} # assigned in self.configPin()
-
-		# input (e.g. triggerIn, frame)
-		for idx,eventIn in enumerate(config['hardware']['eventIn']):
-			self.configPin('input', eventIn)
-			#self.config['hardware']['eventIn'][idx]['idx'] = idx # for reverse lookup
-
-		# output (e.g. led, motor, or lick port)
-		for idx,eventOut in enumerate(config['hardware']['eventOut']):
-			self.configPin('output', eventOut)
-			# set the status in the config struct
-			#self.config['hardware']['eventOut'][idx]['state'] = defaultValue # so javascript can read state
-			#self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
 			
 	#########################################################################
 	# utility

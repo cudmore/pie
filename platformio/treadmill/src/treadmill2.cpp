@@ -504,6 +504,7 @@ void PrintHelp() {
 /////////////////////////////////////////////////////////////
 void GetState() {
 	//trial
+	Serial.println("");
 	Serial.println("armed=" + String(trial.armed));
 
 	Serial.println("trialNumber=" + String(trial.trialNumber));
@@ -547,6 +548,7 @@ void SetTrial(String name, String strValue) {
 	} else if (name=="postDur") {
 		trial.postDur = value;
 		Serial.println("trial.postDur=" + String(trial.postDur));
+
 	} else if (name=="useMotor") {
 		if (strValue=="motorOn") {
 			trial.useMotor = true;
@@ -554,6 +556,7 @@ void SetTrial(String name, String strValue) {
 			trial.useMotor = false;
 		}
 		Serial.println("trial.useMotor=" + String(trial.useMotor));
+
 	} else if (name=="motorDel") {
 		trial.motorDel = value;
 		Serial.println("trial.motorDel=" + String(trial.motorDel));
@@ -570,6 +573,7 @@ void SetTrial(String name, String strValue) {
 	//} else if (name=="direction") {
 	//	trial.direction = value;
 	//	Serial.println("trial.direction=" + String(trial.direction));
+
 	} else if (name=="arm") {
 		if (strValue == "True") {
 			trial.armed = true;
@@ -577,12 +581,14 @@ void SetTrial(String name, String strValue) {
 			trial.armed = false;
 		}
 		Serial.println("trial.armed=" + String(trial.armed));
+
 	} else if (name=="duringPulse") {
 		trial.duringPulse = strValue;
 		Serial.println("trial.duringPulse=" + trial.duringPulse);
 	} else if (name=="betweenPulse") {
 		trial.betweenPulse = strValue;
 		Serial.println("trial.betweenPulse=" + trial.betweenPulse);
+
 	} else {
 		Serial.println("SetValue() did not handle '" + name + "'");
 	}

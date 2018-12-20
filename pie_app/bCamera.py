@@ -3,6 +3,10 @@ Author: Robert H Cudmore
 Date: 20180525
 
 Purpose: Class to control a raspberry Pi camera.
+
+Details:
+	self.convertVideoThread is a background thread to convert video to mp4 in background using system level avconv
+
 """
 
 import os, io, time, math, json

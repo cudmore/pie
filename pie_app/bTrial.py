@@ -10,7 +10,7 @@ import os, sys, time, json, threading, queue, subprocess
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import pprint
-import serial
+#import serial
 
 # for dht sensor
 import RPi.GPIO as GPIO
@@ -143,7 +143,7 @@ class bTrial():
 		testing frame thread to improve detection and precision
 		"""
 		self.myPinThread = PinThread(self)
-		self.myPinThread.init(self.config)
+		self.myPinThread.init(self.config, initFirstTime=True)
 		# PinThread does nothing in its run() function
 		#self.myPinThread.daemon = True
 		#self.myPinThread.start()
@@ -165,11 +165,9 @@ class bTrial():
 		baud = self.config['hardware']['serial']['baud']
 		self.mySerialThread = None
 		# start serial thread
-		"""
 		self.mySerialThread = mySerialThread(self.inSerialQueue, self.outSerialQueue, self.errorSerialQueue, port, baud)
 		self.mySerialThread.daemon = True
 		self.mySerialThread.start()
-		"""
 		
 		#
 		# temperature thread
@@ -203,9 +201,11 @@ class bTrial():
 			serialDict = {}
 			serialDict['type'] = type
 			serialDict['str'] = str
+			
+			#print('serialInAppend() serialDict:', serialDict)
 			self.inSerialQueue.put(serialDict)
 		else:
-			#logger.warning('serial port ' + self.mySerialThread.port + ' not defined: ' + str)
+			logger.error('serial thread self.mySerialThread not defined')
 			pass
 			
 	#########################################################################
@@ -385,6 +385,7 @@ class bTrial():
 		self.lastResponse = 'Updated configure'
 		
 	def updatePins(self, configDict):
+		print('=== bTrial.updatePins()')
 		self.config['hardware']['eventIn'] = configDict['hardware']['eventIn']
 		self.config['hardware']['eventOut'] = configDict['hardware']['eventOut']
 		self.config['hardware']['dhtsensor'] = configDict['hardware']['dhtsensor']
@@ -471,7 +472,9 @@ class bTrial():
 		
 		config_default.json is not included in git repository
 		"""
-		logger.debug('loading config file: ' + thisFile)
+		print('=== bTrial.loadConfigFile()')
+		
+		logger.info('loading config file: ' + thisFile)
 
 		mypath = os.path.abspath(os.path.dirname(__file__)) # full path to *this file
 		configpath = os.path.join(mypath, 'config') # *this/config
@@ -492,14 +495,15 @@ class bTrial():
 				logger.error('config.json ValueError: ' + str(e))
 				# if there is an error in loading config file (json is wrong) we REALLY want to exit
 				sys.exit(1)
-			else:
-				#logger.debug('loaded config file: ' + thisFile)
-				#logger.debug('calling initGPIO_() to re-initialize the Raspberry GPIO')
-				self.config = config
-				if initGPIO:
-					self.initGPIO_()
-				self.lastResponse = 'Loaded configuration file ' + thisFile
-				return config
+			#201812, why was thin in else clause? does else cluase get executed when 'try' suceeds?
+			#else:
+			#logger.debug('loaded config file: ' + thisFile)
+			#logger.debug('calling initGPIO_() to re-initialize the Raspberry GPIO')
+			self.config = config
+			if initGPIO:
+				self.initGPIO_()
+			self.lastResponse = 'Loaded configuration file ' + thisFile
+			return config
 
 	def saveConfig(self):
 		""" Save self.config to a file """
@@ -533,6 +537,7 @@ class bTrial():
 		"""
 		Init gpio pins with data in self.config dict (loaded from json file)
 		"""
+		print('=== bTrial.initGPIO_()')
 		self.myPinThread.init(self.config)
 					
 	#########################################################################
@@ -609,7 +614,11 @@ class bTrial():
 		#
 		# triggerOut
 		#
+		#201812, I really need to fix this, i need to know the feault state (True) and send opposite
+		# was this
 		#self.myPinThread.eventOut('triggerOut', True)
+		self.myPinThread.eventOut('triggerOut', False)
+
 		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
@@ -670,7 +679,11 @@ class bTrial():
 		self.serialInAppend('command', 'stop')
 
 		# triggerOut
+		#201812, this need to be paired with startTRial
+		# was this
 		#self.myPinThread.eventOut('triggerOut', False)
+		self.myPinThread.eventOut('triggerOut', True)
+		
 		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]

@@ -366,3 +366,6 @@ if __name__ == '__main__':
 	# 0.0.0.0 will run on external ip	
 	#app.run(host='0.0.0.0', port=5010, debug=debug, threaded=True)
 	socketio.run(app, host='0.0.0.0', port=5010, debug=debug)
+
+	treadmill.trial.myPinThread.exiting()
+	print('treadmill_app.__main__ is exiting')
