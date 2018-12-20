@@ -20,14 +20,13 @@ import logging
 logger = logging.getLogger('pie')
 
 #########################################################################
-#class PinThread(threading.Thread):
 class PinThread(threading.Thread):
 	# need 'isRunning'
 	def __init__(self, trial):
 		"""
 		trial: bTrial object
 		"""
-		#threading.Thread.__init__(self)
+		threading.Thread.__init__(self)
 		self.trial = trial
 		self.pigpiod = None
 
@@ -53,7 +52,7 @@ class PinThread(threading.Thread):
 	#########################################################################
 	def init(self, config, initFirstTime=False):
 
-		print('=== bPins.init() config')
+		#print('=== bPins.init() config')
 		if initFirstTime:
 			#self.pigpiod = pigpio.pi()
 			if self.pigpiod is None or not self.pigpiod.connected:
@@ -85,7 +84,9 @@ class PinThread(threading.Thread):
 			#self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
 	
 	def exiting(self):
-		GPIO.cleanup()
+		# if we do not cleanup then all pins will remain as is (set by user/software)
+		#GPIO.cleanup()
+		pass
 		
 	#########################################################################
 	# Input pin callbacks
@@ -229,7 +230,7 @@ class PinThread(threading.Thread):
 		
 		self.pinNumberDict_[pin] = configDict
 		
-		print('=== configPin() name:', name, 'pin:', pin, 'enabled:', enabled, 'inout:', inout)
+		#print('=== configPin() name:', name, 'pin:', pin, 'enabled:', enabled, 'inout:', inout)
 		
 		# input
 		if inout == 'input':
@@ -256,7 +257,7 @@ class PinThread(threading.Thread):
 				else:
 					#print('GPIO.remove_event_detect() pin:', pin)
 					GPIO.remove_event_detect(pin)
-					logger.info('GPIO.remove_event_detect() name:'+ name + ' pin:' + str(pin))
+					#logger.info('GPIO.remove_event_detect() name:'+ name + ' pin:' + str(pin))
 			except (RuntimeError) as e:
 				logger.error('error in eventIn remove_event_detect, enabled: ' + str(e) + ', name:' + name + ' pin:' + str(pin))
 			except (RuntimeWarning) as e:
@@ -273,7 +274,7 @@ class PinThread(threading.Thread):
 					#print('1')
 					#print('calling GPIO.setup() GPIO.IN pin:', pin)
 					GPIO.setup(pin, GPIO.IN, pull_up_down=pullUpDown)
-					logger.info('GPIO.setup() GPIO.IN name:'+ name + ' pin:' + str(pin) + ' pull_up_down:' + str(pullUpDown))
+					#logger.info('GPIO.setup() GPIO.IN name:'+ name + ' pin:' + str(pin) + ' pull_up_down:' + str(pullUpDown))
 					#print('2')
 				try:
 					if self.pigpiod:
@@ -281,14 +282,14 @@ class PinThread(threading.Thread):
 						self.pigpiod.callback(pin, polarity, self.pigpio_InputCallback)
 					else:
 						GPIO.add_event_detect(pin, polarity, callback=self.gpio_InputPinCallback, bouncetime=bouncetime)
-						logger.info('GPIO.add_event_detect() name:'+ name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' bouncetime:' + str(bouncetime))
+						#logger.info('GPIO.add_event_detect() name:'+ name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' bouncetime:' + str(bouncetime))
 				except (RuntimeError) as e:
 					logger.error('eventIn add_event_detect: ' + str(e) + ', name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' bouncetime:' + str(bouncetime))
 					pass
 				except:
 					print('xxx bPins.configPin() unexpected exception --- add_event_detect()')
 					
-				#logger.info('ENABLED eventIn name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' pull_up_down:' + str(pullUpDown) + ' bouncetime:' + str(bouncetime))
+				logger.info('ENABLED eventIn name:' + name + ' pin:' + str(pin) + ' polarity:' + str(polarity) + ' pull_up_down:' + str(pullUpDown) + ' bouncetime:' + str(bouncetime))
 
 		elif inout == 'output':
 			defaultValue = configDict['defaultValue']
@@ -304,13 +305,11 @@ class PinThread(threading.Thread):
 					self.pigpiod.write(pin, defaultValue)
 				else:
 					try:
-						print('3')
-						print('calling GPIO.setup() GPIO.OUT pin:', pin)
+						#print('calling GPIO.setup() GPIO.OUT pin:', pin)
 						GPIO.setup(pin, GPIO.OUT)
-						print('4')
-						self.eventOut(name, defaultValue)
+						# was this
 						#GPIO.output(pin, defaultValue)
-						print('5')
+						self.eventOut(name, defaultValue)
 					except (RuntimeError) as e:
 						print('xxx runtime error e:', str(e))
 					except:

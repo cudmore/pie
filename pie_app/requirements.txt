@@ -1,4 +1,4 @@
-RPi.GPIO
+RPi.GPIO==0.6.3 # as of Oct 2018, 0.6.4 has bug in 
 picamera
 pyserial
 

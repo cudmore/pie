@@ -385,7 +385,7 @@ class bTrial():
 		self.lastResponse = 'Updated configure'
 		
 	def updatePins(self, configDict):
-		print('=== bTrial.updatePins()')
+		#print('=== bTrial.updatePins()')
 		self.config['hardware']['eventIn'] = configDict['hardware']['eventIn']
 		self.config['hardware']['eventOut'] = configDict['hardware']['eventOut']
 		self.config['hardware']['dhtsensor'] = configDict['hardware']['dhtsensor']
@@ -472,7 +472,8 @@ class bTrial():
 		
 		config_default.json is not included in git repository
 		"""
-		print('=== bTrial.loadConfigFile()')
+		
+		#print('=== bTrial.loadConfigFile()')
 		
 		logger.info('loading config file: ' + thisFile)
 
@@ -537,7 +538,7 @@ class bTrial():
 		"""
 		Init gpio pins with data in self.config dict (loaded from json file)
 		"""
-		print('=== bTrial.initGPIO_()')
+		#print('=== bTrial.initGPIO_()')
 		self.myPinThread.init(self.config)
 					
 	#########################################################################
