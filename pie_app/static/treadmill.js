@@ -93,7 +93,9 @@ app.controller('configFormController', function($scope, $rootScope, $http, $inte
         if ($scope.configData.trial.runtime.cameraState == 'armed' || $scope.configData.trial.runtime.cameraState == 'armedrecording') {
         	//20180718, get this working
         	//console.log('CallParentMethod_SetConfigData() is calling $route.reload()')
-        	console.log('$rootScope.$on("CallParentMethod_SetConfigData" is calling $route.reload')
+        	
+        	// this gets called at an interval (very expensive for Pi to be serving this)
+        	//console.log('$rootScope.$on("CallParentMethod_SetConfigData" is calling $route.reload')
         	$route.reload();
         }
         
@@ -224,7 +226,9 @@ app.controller('configFormController', function($scope, $rootScope, $http, $inte
 }); // configFormController
 
 
+
 //////////////////////////////////////////////////////////////////////////////
+// controller for motor
 app.controller('arduinoFormController', function($scope, $rootScope, $http, statusFactory) {
     
     // take current params and submit
@@ -244,12 +248,77 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
         	});
     };
     
-    //rebuild plotly but do not submit
+    // 20181220
+	//$scope.$on('someEvent', function(event, args) {
+	/*
+	$scope.$on('someEvent', function(event, data) {
+		//args is secondsElapsedStr
+		console.log('arduinoFormController received someEvent')
+		//$scope.refreshPlotly(args);
+	});
+	*/
+	
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	// THIS IS FUCKING IMPOSSIBLE TO GET WORKING
+	// I CAN NOT DEAL WITH THESE JAVASCRIPT FRAMEWORKS !!!!!!!!!!!!!!!!!
+	// THEY MAKE MY CODING STALL FOR DAYS AND WEEKS
+	// COME ON GOOD AND FACEBOOK, THIS IS FUCKING BULLSHIT
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	//
+	
+	/*
+	$rootScope.$on("rootEvent", function(event, thisConfig) {
+		console.log('arduinoFormController received rootEvent')
+	})
+	$scope.$on("rootEvent", function(event, thisConfig) {
+		console.log('arduinoFormController received rootEvent')
+	})
+	*/
+	
+	$scope.$on('rootEvent2', function (event, secondsElapsedStr) {        
+			console.log('I am from motor controller', secondsElapsedStr);
+			var msElapsed = parseFloat(secondsElapsedStr) * 1000;
+			Plotly.restyle('test_plotly', 'x', [[msElapsed, msElapsed]]);
+		});
+	
+	/*
+	$scope.$on('rootEvent', function(event, data){
+		console.log('arduinoFormController received rootEvent')
+	})
+	$rootScope.$on('rootEvent', function(event, data){
+		console.log('arduinoFormController received rootEvent')
+	})
+	*/
+	
+	//rebuild plotly but do not submit
     $scope.motorParamChange = function() {
     	// if form fields don't pass validation, they will be 'undefined'
     	console.log('motorParamChange()', $scope.data)
     	buildPlotly($scope.data)
     }
+    
+    // respond to new secondsElapsedStr
+    /*
+    $scope.updateRuntime - function() {
+    	// Plotly.react(gd, data, layout, config)
+    	//buildPlotly($scope.data) //$scope.data is motorParams
+    	$scope.refreshPlotly($scope.status)
+    }
+    */
     
     var myPromise = statusFactory.getStatus()
     myPromise.then(function(result) {
@@ -268,6 +337,11 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
 		
 	}); // mypromise.then
 
+    // respond to new secondsElapsedStr
+	$scope.refreshPlotly = function(status) {
+		console.log('refreshPlotly()')
+	}
+	
 	var buildPlotly = function(motorParams){
 		var trialMS = motorParams.motorNumEpochs * motorParams.motorRepeatDuration
 		//console.log('buildPlotly() trialMS:', trialMS)
@@ -292,8 +366,8 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
 
 		var data = [
 		  {
-			x: [],
-			y: [],
+			x: [100,100],
+			y: [0, 1],
 			type: 'scatter'
 		  }
 		];
@@ -316,6 +390,7 @@ app.controller('arduinoFormController', function($scope, $rootScope, $http, stat
 					'color': lineColor,
 				},
 				'fillcolor': lineColor,
+				opacity: 0.5,
 			};
 			shapeList.push(thisRect)
 		}
@@ -569,6 +644,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 
 	///////////////////////////////////////////////////////////////////////////
 	// counter to display elapsed recording time rather than hitting REST with http.get
+	// this is used while we are acquiring data, VERY IMPORTANT
 	var defaultInterval = 800; // 800
 	var counter = 0;
 	$scope.myIntervalFunction = function(){
@@ -578,6 +654,51 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 		counter += 0.4
 		counter = Math.round(counter * 100) / 100
 		$scope.status.trial.runtime.secondsElapsedStr = counter
+		
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		// THIS IS FUCKING IMPOSSIBLE TO GET WORKING
+		// I CAN NOT DEAL WITH THESE JAVASCRIPT FRAMEWORKS !!!!!!!!!!!!!!!!!
+		// THEY MAKE MY CODING STALL FOR DAYS AND WEEKS
+		// COME ON GOOD AND FACEBOOK, THIS IS FUCKING BULLSHIT
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+
+		// see: https://stackoverflow.com/questions/9293423/can-one-angularjs-controller-call-another
+		// 20181220, update plot of motor !!!
+		//$scope.refreshPlotly($scope.status)
+		
+		// emit an update (for motor controller)
+		//$rootScope.$broadcast('someEvent', $scope.status.trial.runtime.secondsElapsedStr);
+		
+		//broadcast from rootScope and receive on $scope, this is fucking confusing
+		//console.log('emit someEvent', $scope.status.trial.runtime.secondsElapsedStr)
+		//$rootScope.$broadcast('someEvent', $scope.status.trial.runtime.secondsElapsedStr);
+		
+		console.log('emit rootEvent', $scope.status.trial.runtime.secondsElapsedStr)
+		//$rootScope.$broadcast('rootEvent', 'Hello from the rootScope!'); 
+		//$rootScope.$emit("rootEvent", 'Hello from the rootScope!'); 
+		$rootScope.$broadcast("rootEvent2", $scope.status.trial.runtime.secondsElapsedStr); 
+		//$scope.$broadcast('rootEvent', 'Hello from the rootScope!'); 
+		//$scope.$emit('rootEvent', 'Hello from the rootScope!'); 
+		
+		//$scope.$emit('someEvent', $scope.status.trial.runtime.secondsElapsedStr);
+		// this will be captured/responded in motor controller with
+		// motor controller repsonds with
+		//$scope.$on('someEvent', function(event, args) {});
 	}
 
 	$scope.setInterval = function(state) {

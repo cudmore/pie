@@ -1,3 +1,7 @@
+<!-- 20181220, had to add this <div> so we actually instantiate a motor controller -->
+<!-- and it can receive $on events from main contorller -->
+<div ng-controller="arduinoFormController">
+
 <span ng-if="status.trial.config.hardware.serial.useSerial">
 	<button type="button"
 		class="btn btn-link btn-sm"
@@ -101,7 +105,7 @@
 			ng-disabled="! allowParamEdit()"	
 			min="1"
 			step="1"
-			max="700"
+			max="1000"
 			required>
 		</label>
 	</td>
@@ -166,3 +170,5 @@
 
 </span> <!-- showMotor -->
 </span> <!-- use serial -->
+
+</div> <!-- arduinoFormController -->

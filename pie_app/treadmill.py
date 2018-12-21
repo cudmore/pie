@@ -175,8 +175,8 @@ class treadmill():
 	def serialUpdateMotor(self, motorDict):
 		""" todo: put this in bTrial """
 
-		print('serialUpdateMotor()')
-		print(motorDict)
+		#print('serialUpdateMotor()')
+		#print('motorDict:', motorDict)
 		
 		for key, value in motorDict.items():
 			#convert python based variable to arduino

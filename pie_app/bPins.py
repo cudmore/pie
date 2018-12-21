@@ -95,7 +95,7 @@ class PinThread(threading.Thread):
 	#	then check for level/tick and we are in pigpio
 	def gpio_InputPinCallback(self, pin):
 		""" Input pin callback for GPIO """
-		print('=== bPins.gpio_InputPinCallback() pin:', pin)
+		#print('=== bPins.gpio_InputPinCallback() pin:', pin)
 		now = time.time()
 		self.inputCallback(pin, now)
 		
@@ -110,6 +110,7 @@ class PinThread(threading.Thread):
 		if pin not in self.pinNumberDict_:
 			print('error: PinThread.inputCallback received bad pin', pin)
 		else:
+			currentState = GPIO.input(pin)
 			pinDict = self.pinNumberDict_[pin]
 			name = pinDict['name']
 			if name == 'triggerIn':
@@ -180,7 +181,7 @@ class PinThread(threading.Thread):
 							videoTimestamp = str(frame.timestamp)
 				
 				# log the event
-				self.trial.newEvent(name, True, now=now, str=videoTimestamp, tick=tick)
+				self.trial.newEvent(name, currentState, now=now, str=videoTimestamp, tick=tick)
 				
 	##########################################
 	# Output pins on/off

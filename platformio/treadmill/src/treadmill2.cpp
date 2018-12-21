@@ -58,8 +58,9 @@ const int newEpochPin = 12;//output pulse when new motor epoch
 const int encoderOutPin = 10; //output pulse when encoder changes
 
 //encoder pins (these pins need to have low level interrupts)
-const int encoderPinA = 15;
-const int encoderPinB = 16;
+//todo: 20181220, this is not working any more. Give encoder unique pins and make sure output to raspberry is working
+const int encoderPinA = 21;
+const int encoderPinB = 22;
 
 //motor pins (assuming easydriver board)
 const int motorStepPin = 17;
@@ -87,10 +88,15 @@ struct trial
 	//parameters
 	int  armed; //boolean, added 20180702
 
-	int  preDur; //ms
-	int  postDur; //ms
+	//was this
+	//int  preDur; //ms
+	//int  postDur; //ms
+	unsigned long  preDur; //ms
+	unsigned long  postDur; //ms
 
-	int epochDur;
+	//was this
+	//int epochDur;
+	unsigned long epochDur;
 	int numEpoch;
 	
 	//int numPulse;
@@ -103,12 +109,15 @@ struct trial
 
 	String duringPulse; // ("Rotate", "Locked", "Free")
 	String betweenPulse; // ("Locked", "Free")
+	String betweenTrial; // ("Locked", "Free")
 	
 	//runtime
 	boolean trialIsRunning;
 	int trialNumber;
 	unsigned long trialStartMillis;
-	int trialDur; //ms, numEpoch*epochDur
+	//was this
+	//int trialDur; //ms, numEpoch*epochDur
+	unsigned long trialDur; //ms, numEpoch*epochDur
 	int currentEpoch;
 	unsigned long epochStartMillis;
 	//unsigned int currentPulse; //count 0,1,2,... as we run
@@ -290,6 +299,7 @@ void setup()
 
   trial.duringPulse = "Rotate";
   trial.betweenPulse = "Locked";
+  trial.betweenTrial = "Locked"; // ("Locked", "Free")
   
   trial.currentFrame = 0;
   //trial.currentEncoderIndex = 0;
@@ -657,12 +667,14 @@ void updateTrial(unsigned long now) {
 		return;
 	}
 
-	g_inPreTrial = (g_msIntoTrial <= trial.preDur);
+	// '<' is critical here!!!, <= and the first epoch overlaps with 2nd
+	g_inPreTrial = (g_msIntoTrial < trial.preDur);
 	g_inPostTrial = (g_msIntoTrial > (trial.preDur + (trial.epochDur * trial.numEpoch)));
 	g_inPulseTrial = ((!g_inPreTrial) && (!g_inPostTrial));
 	
-	if (!g_inPreTrial) {
-		int tmpCurrEpoch = (g_msIntoTrial-trial.preDur) / trial.epochDur + 1;
+	//if (!g_inPreTrial) {
+	if (g_inPulseTrial) {
+		int tmpCurrEpoch = int(floor((g_msIntoTrial-trial.preDur) / trial.epochDur) + 1);
 		if (tmpCurrEpoch>0 && tmpCurrEpoch<=trial.numEpoch) {
 			//epoch
 			if (tmpCurrEpoch != trial.currentEpoch) {
@@ -674,22 +686,31 @@ void updateTrial(unsigned long now) {
 				digitalWrite(newEpochPin, LOW);
 			}
 
+			//was here
 			g_msIntoEpoch = now - trial.epochStartMillis;
 
 		}
+		//g_msIntoEpoch = now - trial.epochStartMillis;
+
 	}
+	//g_msIntoEpoch = now - trial.epochStartMillis;
 }
 
 /////////////////////////////////////////////////////////////
 void updateMotor(unsigned long now) {
-	if (trial.trialIsRunning && trial.useMotor && g_inPulseTrial) {
-		int motorStart = trial.motorDel;
-		int motorStop = motorStart + trial.motorDur;
-		if (!motor.isRunning && (g_msIntoEpoch >= motorStart) && (g_msIntoEpoch < motorStop)) {
+	//need to use g_inPulseTrial as g_msIntoEpoch is not defined until g_msIntoEpoch is defined
+	unsigned long tmpMillis = (now - trial.trialStartMillis - trial.preDur) % (trial.epochDur);
+	//if (trial.trialIsRunning && trial.useMotor && g_inPulseTrial) {
+	if (trial.trialIsRunning && trial.useMotor) {
+		unsigned long motorStart = trial.motorDel;
+		unsigned long motorStop = motorStart + trial.motorDur;
+		//if (!motor.isRunning && (g_msIntoEpoch >= motorStart) && (g_msIntoEpoch < motorStop)) {
+		if (!motor.isRunning && (tmpMillis > motorStart) && (tmpMillis <= motorStop)) {
 			digitalWrite(motorOnPin, HIGH);
 			motor.isRunning = true;
 			newevent(g_msIntoTrial, "startMotor", trial.currentEpoch);
-		} else if (motor.isRunning && (g_msIntoEpoch > motorStop)) {
+		//} else if (motor.isRunning && (g_msIntoEpoch > motorStop)) {
+		} else if (motor.isRunning && (tmpMillis <= motorStart)) {
 			digitalWrite(motorOnPin, LOW);
 			motor.isRunning = false;
 			newevent(g_msIntoTrial, "stopMotor", trial.currentEpoch);
@@ -725,7 +746,15 @@ void updateMotor(unsigned long now) {
 	} else {
 		// this should not effect arduino code (it is just visual output)
 		// treadmill.py WILL receive a motor off event and log it !!!
-		digitalWrite(motorOnPin, LOW);
+
+		// motor is free to spin when not running a trial
+		//digitalWrite(motorOnPin, LOW);
+		// motor is locked when not running a trial
+		if (trial.betweenTrial == "Locked") {
+			digitalWrite(motorResetPin, HIGH);
+		} else if (trial.betweenTrial == "Free") {
+			digitalWrite(motorResetPin, LOW);
+		}
 	}
 }
 
@@ -764,7 +793,7 @@ unsigned long now;
 /////////////////////////////////////////////////////////////
 void loop()
 {
-	now = millis();
+	now = millis(); // returns unsigned long
 
 	//
 	//process trial and frame triggers
