@@ -44,7 +44,10 @@
 	<span>Server Swarm</span>
 
 <!-- i am cheating, this will fail when there are no servers -->
-	<span style="float:right">{{ videoArray[0].status.trial.runtime.currentDate}} {{ videoArray[0].status.trial.runtime.currentTime}}</span>
+	<span style="float:right">
+	<A HREF="{{myUrl}}sync"><i class="fa fa-cloud-download" aria-hidden="true"></i></A>&nbsp;
+	{{ videoArray[0].status.trial.runtime.currentDate}} {{ videoArray[0].status.trial.runtime.currentTime}}
+	</span>
 	
 	<span ng-show="showServerConfig">
 		<!-- <button ng-click="refreshStatusButton()" class="btn btn-default btn-sm"><i class="fa fa-refresh fa-1x" aria-hidden="true"></i></button> -->

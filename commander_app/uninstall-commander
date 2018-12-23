@@ -12,4 +12,4 @@ sudo rm /etc/systemd/system/videowall.service
 
 echo "==="
 echo "Commander server has been uninstalled"
-echo "To install again, use './commander-install'
+echo "To install again, use './commander-install'"

@@ -6,9 +6,11 @@ from __future__ import print_function    # (at top of module)
 import os, sys, subprocess
 import json, queue
 
-from flask import Flask, render_template, send_file, jsonify, abort#, redirect, make_response
+from flask import Flask, render_template, send_file, jsonify, abort, request#, redirect, make_response
 from flask_cors import CORS
 from subprocess import check_output
+
+import commandersync
 
 import logging
 
@@ -49,16 +51,81 @@ logger.debug('commander initialized commander.log')
 app = Flask(__name__)
 CORS(app)
 
-"""
-def getStatus():
-	# Get struct of status from the backend
-	status = home.getStatus()
-	return status
-"""
+# added 20181223
+app.logger = logger
+
+# turn off werkzeug logging
+werkzeugLogger = logging.getLogger('werkzeug')
+werkzeugLogger.setLevel(logging.ERROR)
+###
 	
 @app.route('/')
+@app.route('/commander')
 def hello_world():
 	return send_file('templates/index.html')
+
+#########################################################################
+@app.after_request
+def myAfterRequest(response):
+	"""
+	ignore some specific endpoints to reduce log clutter
+	we could put 'lastimage' in this list but are intentionally leaving it out
+	to remind user that opening the 'lastimage' tab actually hits the server
+	and can cause problems with gpio timing
+	"""
+	if request.endpoint is None or request.endpoint in ['sync_status', 'static', 'log', 'lastimage']:
+		# ignore
+		pass
+	else:
+		#request.endpoint is name of my function (not web address)
+		#print(request.url)
+		app.logger.info('myAfterRequest: ' + request.path)
+	return response
+
+##################################################################
+# commandersync
+# 20181223
+##################################################################
+# this has to be instantiated as a threaded commandersync and live in background
+# insert commands into a queue ['fetchfilelist', 'runsync']
+inQueue = queue.Queue()
+cs = commandersync.CommanderSync(inQueue)
+cs.daemon = True
+cs.start()
+
+@app.route('/sync')
+def sync():
+	return send_file('templates/commander_sync.html')
+
+@app.route('/sync/fetchfiles')
+def sync_fetchfiles():
+	global inQueue
+	inQueue.put('fetchfiles')
+	return jsonify(cs.ipDict)
+
+@app.route('/sync/run')
+def sync_run():
+	global inQueue
+	inQueue.put('sync')
+	return jsonify(cs.mySyncList)
+
+@app.route('/sync/cancel')
+def sync_cancel():
+	global inQueue
+	inQueue.put('cancel')
+	return jsonify(cs.mySyncList)
+
+@app.route('/sync/status')
+def sync_status():
+	global cs
+	status = {
+		'fetchIsBusy': cs.fetchIsBusy,
+		'syncIsBusy': cs.syncIsBusy,
+		'ipDict': cs.ipDict,
+		'myFileList': cs.myFileList,
+		'mySyncList': cs.mySyncList
+	}
+	return jsonify(status)
 
 ##################################################################
 # Config
@@ -94,8 +161,11 @@ def saveconfig(iplist):
 	
 ##################################################################
 def whatismyip():
-	ips = check_output(['hostname', '--all-ip-addresses'])
-	ips = ips.decode('utf-8').strip()
+	try:
+		ips = check_output(['hostname', '--all-ip-addresses'])
+		ips = ips.decode('utf-8').strip()
+	except:
+		ips = '[IP]'
 	return ips
 
 ##################################################################

@@ -24,7 +24,19 @@ if [ $(id -u) = 0 ]; then
    exit 1
 fi
 
-ip=`hostname -I | xargs`
+# 20181223, was this
+#ip=`hostname -I | xargs`
+# cross platform for both Pi and macOS
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+   # do raspberry stuff
+   ip=`hostname -I | xargs`
+   echo "Platform is Raspberry, IP is "$ip
+elif [[ "$unamestr" == 'Darwin' ]]; then
+   # do macOS stuff
+   ip=`ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}'`
+   echo "Platform is macOS, IP is "$ip
+fi
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -43,7 +55,19 @@ if ! type "virtualenv" > /dev/null; then
 	echo '==='
 	echo "=== Installing virtualenv"
 	echo '==='
-	sudo /usr/bin/easy_install virtualenv
+	
+	# raspberry specific
+	#sudo /usr/bin/easy_install virtualenv
+
+	if [[ "$unamestr" == 'Linux' ]]; then
+	   echo "Raspberry"
+	   # do raspberry stuff
+	   sudo /usr/bin/easy_install virtualenv
+	elif [[ "$unamestr" == 'Darwin' ]]; then
+	   # do macOS stuff
+	   echo "macOS"
+	   pip install virtualenv
+	fi
 fi
 
 if [ ! -d "commander_env/" ]; then
@@ -81,20 +105,27 @@ echo '==='
 deactivate
 
 # copy 
-echo ' '
-echo '==='
-echo '=== Configuring systemctl in /etc/systemd/system/videowall.service'
-echo '==='
-echo '=== Copying service/videowall.service  ->  /etc/systemd/system/videowall.service'
-sudo cp service/videowall.service /etc/systemd/system/videowall.service
-sudo chmod 664 /etc/systemd/system/videowall.service
+if [[ "$unamestr" == 'Linux' ]]; then
 
-echo '=== Reloading system daemons'
-sudo systemctl daemon-reload
+	echo ' '
+	echo '==='
+	echo '=== Configuring systemctl in /etc/systemd/system/videowall.service'
+	echo '==='
+	echo '=== Copying service/videowall.service  ->  /etc/systemd/system/videowall.service'
+	sudo cp service/videowall.service /etc/systemd/system/videowall.service
+	sudo chmod 664 /etc/systemd/system/videowall.service
 
-echo '=== Enabling and starting videowall.service  (with enable will run at boot)'
-sudo systemctl enable videowall.service
-sudo systemctl start videowall.service
+	echo '=== Reloading system daemons'
+	sudo systemctl daemon-reload
+
+	echo '=== Enabling and starting videowall.service  (with enable will run at boot)'
+	sudo systemctl enable videowall.service
+	sudo systemctl start videowall.service
+
+elif [[ "$unamestr" == 'Darwin' ]]; then
+   echo "Platform is macOS, will have to run by hand with `commander run`"
+fi
+
 
 
 if false;
@@ -127,14 +158,22 @@ fi
 
 echo ' '
 
-systemctl is-active --quiet videowall.service
-if [ $? -eq 0 ]
-then
+if [[ "$unamestr" == 'Linux' ]]; then
+
+	systemctl is-active --quiet videowall.service
+	if [ $? -eq 0 ]
+	then
+		echo -e "${GREEN}Success${NC}: The commander server is running and will run at boot."
+		echo "Browse the commander server at http://$ip:8000"
+	else
+		echo -e "${RED}ERROR${NC}: The commander server failed to install and is not running."
+	fi
+	echo ' '
+
+elif [[ "$unamestr" == 'Darwin' ]]; then
 	echo -e "${GREEN}Success${NC}: The commander server is running and will run at boot."
 	echo "Browse the commander server at http://$ip:8000"
-else
-	echo -e "${RED}ERROR${NC}: The commander server failed to install and is not running."
 fi
-echo ' '
+
 
 

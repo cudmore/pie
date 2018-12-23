@@ -14,13 +14,16 @@
 #todo: we are now saving in same directory
 # simplify this by (1) remove .h264, dst will then just have .mp4
 
+#
 # get file name without extension
 filename=$(basename "$1")
 filename="${filename%.*}"
 
+#
 # get the source directory from full path to file
 mydir=$(dirname $1)
 
+#
 # make full path to output file
 # this is really bad form, hard to read (my fault)
 #dstfile=$mydir'/mp4/'$filename'.mp4'
@@ -28,13 +31,26 @@ dstfile=$mydir'/'$filename'.mp4'
 
 #cmd="avconv -i $1 -r $2 -vcodec copy $dstfile"
 
+#
 # check that uv4l is available
 type avconv >/dev/null 2>&1 || { echo >&2 "avconv not installed"; exit 1; }
 
+#
+# make a .lock file
+touch $dstfile.lock
+
+#
+# convert to mp4
 cmd="avconv -loglevel error -framerate $2 -i $1 -vcodec copy $dstfile"
 echo $cmd
 $cmd
 
+#
+# remove the lock file
+#rm $dstfile.lock
+
+#
+# delete original file (usually .h264)
 if [ "$#" -eq 3 ]; then
 	if [ $3 = "delete" ]; then
 		rm $1
