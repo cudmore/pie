@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pie',
-    version=1.0.0,
+    version="1.0.0",
     description='Raspberry Pi Controlled Experiment (PiE)',
     url='http://github.com/cudmore/pie',
     author='Robert H Cudmore',
