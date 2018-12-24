@@ -43,6 +43,7 @@ function streamStop() {
 
 case "$1" in
 	start) 
+		# start the background PiE server
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
 		then
@@ -60,6 +61,7 @@ case "$1" in
 		;;
 	
 	stop)
+		# stop the background PiE server (and stop uv4l streaming)
 		streamStop
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
@@ -72,6 +74,7 @@ case "$1" in
 		;;
 	
 	restart)
+		# restart the background PiE server (and stop uv4l streaming)
 		streamStop
 		sudo systemctl restart treadmill.service 
 		systemctl is-active --quiet treadmill.service
@@ -93,6 +96,7 @@ case "$1" in
 		echo "pie server will not run at boot"
 		;;
 	run)
+		# run PiE server on command line
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
 		then
@@ -105,7 +109,14 @@ case "$1" in
 		cd pie_app
 		python treadmill_app.py
 		;;
+	version)
+		echo '=== Activating virtual environment pie_env/bin/activate'
+		source pie_env/bin/activate
+		cd pie_app
+		python version.py
+		;;
 	debug)
+		# run PiE server on command line in debug mode
 		systemctl is-active --quiet treadmill.service
 		if [ $? -eq 0 ]
 		then
