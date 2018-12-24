@@ -61,8 +61,8 @@
 	
 	<table class="myTable">
 	<tr>
-	<th>hostname</th>
-	<th>ip</th>
+	<th>Hostname</th>
+	<th>IP</th>
 	<th>Total Files</th>
 	<th>Files To Copy</th>
 	</tr>
@@ -123,12 +123,12 @@
 	<table class="myTable">
 	<tr>
 	<th></th> <!-- index -->
-	<th>hostname</th>
-	<th>ip</th>
-	<th>remotePath</th>
-	<th>remoteFile</th>
-	<th>size</th>
-	<th>progress</th>
+	<th>Hostname</th>
+	<th>IP</th>
+	<th>Remote Path</th>
+	<th>Remote File</th>
+	<th>Size</th>
+	<th>Progress</th>
 	</tr>
 	<tr ng-repeat="(k,v) in status.myFileList | filter:{localExists:false}">	
 		<td>
@@ -149,7 +149,10 @@
 		<td>
 			{{ v.size }}
 		</td>
-		<td>
+		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
+			{{ v.progress }}
+		</td>
+		<td ng-if="v.size != v.progress">
 			{{ v.progress }}
 		</td>
 	</tr>

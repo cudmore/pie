@@ -161,12 +161,18 @@ def saveconfig(iplist):
 	
 ##################################################################
 def whatismyip():
-	try:
-		ips = check_output(['hostname', '--all-ip-addresses'])
-		ips = ips.decode('utf-8').strip()
-	except:
-		ips = '[IP]'
-	return ips
+	platform = sys.platform
+	print('platform:', platform)
+	if platform.startswith('linux'):
+		ip = check_output(['hostname', '--all-ip-addresses'])
+		ip = ip.decode('utf-8').strip()
+	elif platform == 'darwin':
+		ip = subprocess.check_output('bin/whatismyip')
+		ip = ip.decode('utf-8').strip()
+	else:
+		print('unknown platform')
+		ip = ''
+	return ip
 
 ##################################################################
 if __name__ == '__main__':

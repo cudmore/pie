@@ -123,11 +123,12 @@ if [[ "$unamestr" == 'Linux' ]]; then
 	sudo systemctl start videowall.service
 
 elif [[ "$unamestr" == 'Darwin' ]]; then
-   echo "Platform is macOS, will have to run by hand with `commander run`"
+   echo "Platform is macOS, will have to run by hand with './commander run'"
 fi
 
 
 
+# failed attempt to have the commander run a git server, instead we are using github
 if false;
 then
 	echo ' '
@@ -171,8 +172,9 @@ if [[ "$unamestr" == 'Linux' ]]; then
 	echo ' '
 
 elif [[ "$unamestr" == 'Darwin' ]]; then
-	echo -e "${GREEN}Success${NC}: The commander server is running and will run at boot."
-	echo "Browse the commander server at http://$ip:8000"
+	echo -e "${GREEN}Success${NC}: The commander server is installed."
+	echo "On macOS, you have to run the commander by hand with './commander run'"
+	echo "Then, browse the commander server at http://$ip:8000"
 fi
 
 
