@@ -1,1 +1,0 @@
-Made /test and /test/mytest.py when trying to get travis working
