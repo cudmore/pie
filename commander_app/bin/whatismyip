@@ -1,0 +1,14 @@
+#!/bin/bash
+
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+   # do raspberry stuff
+   ip=`hostname -I | xargs`
+   #echo "Platform is Raspberry, IP is "$ip
+elif [[ "$unamestr" == 'Darwin' ]]; then
+   # do macOS stuff
+   ip=`ifconfig | grep "inet " | grep -Fv 127.0.0.1 | awk '{print $2}'`
+   #echo "Platform is macOS, IP is "$ip
+fi
+
+echo $ip
