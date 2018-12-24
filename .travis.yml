@@ -1,9 +1,0 @@
-language: python
-before_install:
-- cd commander_app
-python:
-- '3.6'
-install:
-- pip install .
-script:
-- pytest
