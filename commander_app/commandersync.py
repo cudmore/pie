@@ -2,13 +2,15 @@
 # Date: 20181222
 
 """
-Purpose: Copy files from any number of PiE servers to local
+Purpose: Copy files from any number of PiE servers to local.
 
 Important:
-	- need to authenticate each PiE server using
-	    ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=./known_hosts pi@192.168.1.3
-	- will remove from remote PiE server
-	- should be able to mount a server (e.g. LindenNas) and copy there
+	- Will remove from remote PiE server as follows
+	    if gDoRemove
+	    and if we copy the file
+	    and the file we copied has same size as file on PiE server
+	- All files are copied into a folder 'mydata' that is always in the same folder as this script/code
+	    Should be able to mount a server into /mydata (e.g. LindenNas)
 """
 
 import os, time, math, stat
@@ -17,50 +19,17 @@ import threading, queue
 
 import socket, paramiko
 
-# this code requires a local copy of known_hosts
-"""
-ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=./known_hosts pi@192.168.1.3
-ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=./known_hosts pi@192.168.1.4
-ssh -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=./known_hosts pi@192.168.1.15
-"""
-
-gDoRemove = False # if True then remove remote file after copy
+gDoRemove = True # if True then remove remote file after copy
 gCopyTheseExtensions = ['.mp4', '.txt']
-gTimeout = 5 # seconds
+gTimeout = 5 # seconds # timeout when trying to establish ssh connection
 
 class CommanderSync(threading.Thread):
 
 	def __init__(self, inQueue):
 		threading.Thread.__init__(self)
 		
-		self.inQueue = inQueue
+		self.inQueue = inQueue # commands are ('fetchfiles', 'sync', 'cancel')
 		
-		"""
-		self.ipList = [
-			'192.168.1.3',
-			'192.168.1.4',
-			'192.168.1.15',
-			'192.168.1.99',
-		]
-		"""
-		
-		self.loadConfig()
-		"""
-		self.ipList = self.loadConfig()
-		
-		
-		#self.numToCopy = [0 for _ in self.ipList]
-		self.ipDict = {}
-		for ip in self.ipList:
-			self.ipDict[ip] = {
-				'ip': ip,
-				'hostname': '',
-				'madeConnection': False,
-				'numFiles': 0,
-				'numFilesToCopy': 0,
-			}
-		"""
-
 		self.cancel = False
 		self.fetchIsBusy = False
 		self.syncIsBusy = False
@@ -73,15 +42,18 @@ class CommanderSync(threading.Thread):
 		
 		self.localFolder = 'mydata' # all local files with be in this folder
 		
+		# load ip list (same as commander) and assign (ipList, ipDict)
+		self.loadConfig()
+
 		self.numFilesToCopy = 0 # total number across all ip in ipList
 		self.myFileList = []
 		
 		self.mySyncList = [] # what we actually synchronized
 		
-		self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
+		#self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
 		
 	def loadConfig(self):
-		# taken from commander.py, v
+		# taken from commander.py
 		thisFile = 'config/config_commander.txt'
 		if not os.path.isfile(thisFile):
 			#logger.info('defaulting to config/config_commander_factory.txt')
@@ -320,18 +292,22 @@ class CommanderSync(threading.Thread):
 				pass
 	
 			if lockFileExists:
+				"""
 				print('    copyThread()')
 				print('    ip:', ip, 'hostname:', hostname)
 				print('    remote file:', remoteFilePath)
 				print('    FOUND LOCK FILE ON REMOTE -->> did not copy')
+				"""
 				syncDict['lockFile'] = True
 			else:
 				#
 				# copy the file from remote to local
+				"""
 				print('    copyThread()')
 				print('    ip:', ip, 'hostname:', hostname)
 				print('    remote file:', remoteFilePath)
 				print('    local file:', localFilePath)
+				"""
 				try:
 					lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
 					ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
@@ -344,7 +320,7 @@ class CommanderSync(threading.Thread):
 					#
 					# once file is copied to local and we are 100% sure this is true, remove from remote
 	
-					print('    done copying from remote')
+					print('    done copying from remote:', remoteFilePath)
 					syncDict['madeCopy'] = True
 					
 					# before we delete from remote, check the size of local is same as size of remote?
@@ -359,7 +335,7 @@ class CommanderSync(threading.Thread):
 					if remoteSize == localSize:
 						if gDoRemove:
 							print('    removing remote file:', remoteFilePath)
-							ftp.remove(fullRemoteFile)
+							ftp.remove(remoteFilePath)
 						else:
 							print('    not removing from remote server, gDoRemove == False')
 					else:
