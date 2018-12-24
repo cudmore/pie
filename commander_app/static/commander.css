@@ -40,6 +40,11 @@ span.mysmall {
     height: 65px;
 }
 
+/* add to class and will override myTable td */
+.myTable-short td {
+    height: 20px;
+}
+
 .myTable tr:nth-child(even){background-color: #f2f2f2;}
 
 .myTable td:nth-child(16){ width:350px; }

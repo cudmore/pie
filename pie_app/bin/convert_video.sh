@@ -47,7 +47,7 @@ $cmd
 
 #
 # remove the lock file
-#rm $dstfile.lock
+rm $dstfile.lock
 
 #
 # delete original file (usually .h264)
