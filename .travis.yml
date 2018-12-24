@@ -4,6 +4,6 @@ before_install:
 python:
 - '3.6'
 install:
-- pip install requirements.txt
+- pip install .
 script:
 - pytest
