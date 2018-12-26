@@ -13,7 +13,7 @@ Important:
 	    Should be able to mount a server into /mydata (e.g. LindenNas)
 """
 
-import os, time, math, stat
+import os, time, math, stat, sys
 import threading, queue
 import socket, paramiko
 
@@ -24,7 +24,27 @@ class CommanderSync(threading.Thread):
 	def __init__(self, inQueue):
 		threading.Thread.__init__(self)
 		
-		self.localFolder = '../../mydata' # all local files with be in this folder
+		###
+		###
+		if getattr(sys, 'freeze', False):
+			# running as bundle (aka frozen)
+			print('commandersync running FROZEN')
+			self.bundle_dir = sys._MEIPASS
+		else:
+			# running live
+			print('commandersync running NORMAL')
+			self.bundle_dir = os.path.dirname(os.path.abspath(__file__))
+		print('commandersync.py got self.bundle_dir:', self.bundle_dir)
+		###
+		###
+
+		##
+		##
+		# CHANGE THIS BACK FOR pyinstaller
+		##
+		##
+		#self.localFolder = '../../mydata' # all local files with be in this folder
+		self.localFolder = 'mydata' # all local files with be in this folder
 		
 		self._localFolder = os.path.abspath(self.localFolder)
 		print('Commander sync will save into:', self._localFolder)
@@ -78,10 +98,13 @@ class CommanderSync(threading.Thread):
 			self.ipDict
 		"""
 		
-		thisFile = 'config/config_commander.txt'
+		
+		#thisFile = 'config/config_commander.txt'
+		thisFile = os.path.join(self.bundle_dir, 'config/config_commander.txt')
 		if not os.path.isfile(thisFile):
 			#logger.info('defaulting to config/config_commander_factory.txt')
-			thisFile = 'config/config_commander_factory.txt'
+			#thisFile = 'config/config_commander_factory.txt'
+			thisFile = os.path.join(self.bundle_dir, 'config/config_commander_factory.txt')
 		#logger.info('Loading config file ' + thisFile)
 		with open(thisFile, 'r') as f:
 			configfile = f.readlines()
@@ -452,7 +475,8 @@ class CommanderSync(threading.Thread):
 		
 		self.mySyncList = [] # keep track of what we actually sync
 		
-		self.pool = ThreadPoolExecutor(max_workers=5) #max_workers
+		#self.pool = ThreadPoolExecutor(max_workers=5) #max_workers
+		self.pool = ThreadPoolExecutor() #max_workers
 		
 		self.myFutures = []
 

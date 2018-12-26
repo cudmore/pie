@@ -17,6 +17,23 @@ import logging
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
 
+###
+###
+if getattr(sys, 'freeze', False):
+	# running as bundle (aka frozen)
+	bundle_dir = sys._MEIPASS
+	#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+else:
+	# running live
+	bundle_dir = os.path.dirname(os.path.abspath(__file__))
+print('commnder.py got')
+print("    getattr(sys, 'freeze', False)", getattr(sys, 'freeze', False))
+print('    bundle_dir:', bundle_dir)
+#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+###
+###
+
+
 logFormat = "[%(asctime)s] {%(filename)s %(funcName)s:%(lineno)d} %(levelname)s - %(message)s"
 dictConfig({
 	'version': 1,
@@ -48,7 +65,14 @@ logger.setLevel(logging.DEBUG)
 logger.debug('commander initialized commander.log')
 
 
+###
+print('\n\n    CHANGE THIS BACK app=Flas()')
+app = Flask(__name__, static_url_path=bundle_dir, template_folder=bundle_dir)
+###
+
+# was this 20181226
 app = Flask(__name__)
+
 CORS(app)
 
 # added 20181223
@@ -58,11 +82,14 @@ app.logger = logger
 werkzeugLogger = logging.getLogger('werkzeug')
 werkzeugLogger.setLevel(logging.ERROR)
 ###
-	
+
+
 @app.route('/')
 @app.route('/commander')
 def hello_world():
-	return send_file('templates/index.html')
+	indexPath = os.path.join(bundle_dir, 'templates/index.html')
+	return send_file(indexPath)
+	#return send_file('templates/index.html')
 
 #########################################################################
 @app.after_request
@@ -145,10 +172,12 @@ def sync_status():
 ##################################################################
 @app.route('/loadconfig')
 def loadconfig():
-	thisFile = 'config/config_commander.txt'
+	#thisFile = 'config/config_commander.txt'
+	thisFile = os.path.join(bundle_dir, 'config/config_commander.txt')
 	if not os.path.isfile(thisFile):
 		logger.info('defaulting to config/config_commander_factory.txt')
-		thisFile = 'config/config_commander_factory.txt'
+		#thisFile = 'config/config_commander_factory.txt'
+		thisFile = os.path.join(bundle_dir, 'config/config_commander_factory.txt')
 	logger.info('Loading config file ' + thisFile)
 	with open(thisFile, 'r') as f:
 		configfile = f.readlines()
@@ -162,7 +191,9 @@ def saveconfig(iplist):
 	"""
 	iplist is string list of ip numbers
 	"""
-	thisFile = 'config/config_commander.txt'
+	#thisFile = 'config/config_commander.txt'
+	thisFile = os.path.join(bundle_dir, 'config/config_commander.txt')
+	
 	logger.info('saveconfig() configfile: ' + thisFile)
 	with open(thisFile, 'w') as outfile:
 		for line in iplist.split(','):
@@ -182,15 +213,18 @@ def whatismyip():
 		ip = check_output(['hostname', '--all-ip-addresses'])
 		ip = ip.decode('utf-8').strip()
 	elif platform == 'darwin':
-		ip = subprocess.check_output('bin/whatismyip')
+		whatismyip_cmd = os.path.join(bundle_dir,'bin/whatismyip')
+		ip = subprocess.check_output(whatismyip_cmd)
 		ip = ip.decode('utf-8').strip()
 	else:
 		print('unknown platform')
 		ip = ''
 	return ip
 
+
 ##################################################################
 if __name__ == '__main__':
+
 	myip = whatismyip()
 	
 	debug = False
