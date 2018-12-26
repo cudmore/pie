@@ -21,7 +21,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 
     //
     // global variables
-	$scope.deleteAfterCopy = true;
+	$scope.deleteAfterCopy = false;
 	
 	//
 	// commander_sync

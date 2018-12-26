@@ -17,6 +17,8 @@ import os, time, math, stat
 import threading, queue
 import socket, paramiko
 
+from concurrent.futures import ThreadPoolExecutor #ProcessPoolExecutor
+
 class CommanderSync(threading.Thread):
 
 	def __init__(self, inQueue):
@@ -55,6 +57,9 @@ class CommanderSync(threading.Thread):
 		self.myFileList = []
 		
 		self.mySyncList = [] # what we actually synchronized
+		
+		self.pool = None
+		self.myFutures = None
 		
 		#self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
 		
@@ -105,6 +110,17 @@ class CommanderSync(threading.Thread):
 		Continuosly process icoming commands in self.inQueue Queue
 		"""
 		while True:
+			allDone = True
+			if self.myFutures is not None:
+				for future in self.myFutures:
+					if not future.done():
+						allDone = False
+						break
+				if allDone:
+					if self.syncIsBusy:
+						print('run() determined all future(s) are done()')
+					self.syncIsBusy = False
+					
 			try:
 				inDict = self.inQueue.get(block=False, timeout=0)
 			except (queue.Empty) as e:
@@ -302,111 +318,128 @@ class CommanderSync(threading.Thread):
 
 		startTime = time.time()
 		
-		# self.mySyncList
-		syncDict = {
-			'ip': ip,
-			'hostname': hostname,
-			'remoteFile': remoteFilePath,
-			'localFile': localFilePath,
-			'lockFile': False,
-			'madeCopy': False,
-		}
-		
-		ssh = paramiko.SSHClient()
-		#ssh.load_host_keys(self.known_hosts)
-		#ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		
+		# don't start work if there is a pending cancel
 		try:
-			ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
-		except (paramiko.ssh_exception.BadHostKeyException) as e:
-			print('exception copyThread() 1:', str(e))
-		except(paramiko.ssh_exception.AuthenticationException) as e:
-			print('exception copyThread() 2:', str(e))
-		except (paramiko.ssh_exception.SSHException) as e:
-			print('exception copyThread() 3:', str(e))
-		except (paramiko.ssh_exception.NoValidConnectionsError) as e:
-			print('exception copyThread() 4:', str(e))
-		except (socket.timeout) as e:
-			print('exception copyThread() 5:', str(e))
+			inDict = self.inQueue.get(block=False, timeout=0)
+		except (queue.Empty) as e:
+			# there was nothing in the queue
+			pass
 		else:
-			ftp = ssh.open_sftp()
+			if inDict == 'cancel': # cancel a sync
+				if self.syncIsBusy:
+					self.cancel = True
 
-			#
-			# if the remote has a .lock then DO NOT get()
-			lockFileExists = False
-			lockFile = remoteFilePath + '.lock'
-			#print('copyThread() looking for lock file:', lockFile)
-			try:
-				attr = ftp.stat(lockFile)
-				lockFileExists = True
-				print('    !!! found lock file:', lockFile)
-			except (IOError) as e:
-				# no .lock file
-				#print('    !!! no lock file:', lockFile)
-				pass
-	
-			if lockFileExists:
-				"""
-				print('    copyThread()')
-				print('    ip:', ip, 'hostname:', hostname)
-				print('    remote file:', remoteFilePath)
-				print('    FOUND LOCK FILE ON REMOTE -->> did not copy')
-				"""
-				syncDict['lockFile'] = True
-			else:
-				#
-				# copy the file from remote to local
-				"""
-				print('    copyThread()')
-				print('    ip:', ip, 'hostname:', hostname)
-				print('    remote file:', remoteFilePath)
-				print('    local file:', localFilePath)
-				"""
-				try:
-					self.myFileList[idx]['startSeconds'] = time.time()
-					lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
-					ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
-				except (IOError) as e:
-					print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', file:', remoteFilePath)
-				except:
-					print('MY EXCEPTION: unknown exception in ftp.get(), file:', remoteFilePath)
-					# should try and remove fullLocalPath
-				else: # else is only executed if no exceptions !!!
-					#
-					# once file is copied to local and we are 100% sure this is true, remove from remote
-	
-					print('    done copying from remote:', remoteFilePath)
-					syncDict['madeCopy'] = True
-					
-					# before we delete from remote, check the size of local is same as size of remote?
-					attr_remote = ftp.lstat(path=remoteFilePath)
-					remoteSize = attr_remote.st_size
-	
-					attr_local = os.stat(localFilePath)
-					localSize = attr_local.st_size # 1 Byte = 10**-6 MB
-	
-					#print('    remoteSize:', remoteSize, 'localSize:', localSize)
-	
-					if remoteSize == localSize:
-						if self.deleteRemoteFiles:
-							print('    removing remote file:', remoteFilePath)
-							ftp.remove(remoteFilePath)
-						else:
-							print('    not removing from remote server, self.deleteRemoteFiles == False')
-					else:
-						print('    ERROR: sizes did not match -->> did not remove from remote server')
+		if self.cancel:
+			pass
+		else:
+			print('copyThread() is starting sftp copy remoteFilePath:', remoteFilePath)
+			
+			# self.mySyncList
+			syncDict = {
+				'ip': ip,
+				'hostname': hostname,
+				'remoteFile': remoteFilePath,
+				'localFile': localFilePath,
+				'lockFile': False,
+				'madeCopy': False,
+			}
 		
-			ftp.close()
+			ssh = paramiko.SSHClient()
+			#ssh.load_host_keys(self.known_hosts)
+			#ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+		
+			try:
+				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
+			except (paramiko.ssh_exception.BadHostKeyException) as e:
+				print('exception copyThread() 1:', str(e))
+			except(paramiko.ssh_exception.AuthenticationException) as e:
+				print('exception copyThread() 2:', str(e))
+			except (paramiko.ssh_exception.SSHException) as e:
+				print('exception copyThread() 3:', str(e))
+			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
+				print('exception copyThread() 4:', str(e))
+			except (socket.timeout) as e:
+				print('exception copyThread() 5:', str(e))
+			else:
+				ftp = ssh.open_sftp()
 
-		ssh.close()
+				#
+				# if the remote has a .lock then DO NOT get()
+				lockFileExists = False
+				lockFile = remoteFilePath + '.lock'
+				#print('copyThread() looking for lock file:', lockFile)
+				try:
+					attr = ftp.stat(lockFile)
+					lockFileExists = True
+					print('    !!! found lock file:', lockFile)
+				except (IOError) as e:
+					# no .lock file
+					#print('    !!! no lock file:', lockFile)
+					pass
+	
+				if lockFileExists:
+					"""
+					print('    copyThread()')
+					print('    ip:', ip, 'hostname:', hostname)
+					print('    remote file:', remoteFilePath)
+					print('    FOUND LOCK FILE ON REMOTE -->> did not copy')
+					"""
+					syncDict['lockFile'] = True
+				else:
+					#
+					# copy the file from remote to local
+					"""
+					print('    copyThread()')
+					print('    ip:', ip, 'hostname:', hostname)
+					print('    remote file:', remoteFilePath)
+					print('    local file:', localFilePath)
+					"""
+					try:
+						self.myFileList[idx]['startSeconds'] = time.time()
+						lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
+						ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
+					except (IOError) as e:
+						print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', file:', remoteFilePath)
+					except:
+						print('MY EXCEPTION: unknown exception in ftp.get(), file:', remoteFilePath)
+						# should try and remove fullLocalPath
+					else: # else is only executed if no exceptions !!!
+						#
+						# once file is copied to local and we are 100% sure this is true, remove from remote
+	
+						print('    done copying from remote:', remoteFilePath)
+						syncDict['madeCopy'] = True
+					
+						# before we delete from remote, check the size of local is same as size of remote?
+						attr_remote = ftp.lstat(path=remoteFilePath)
+						remoteSize = attr_remote.st_size
+	
+						attr_local = os.stat(localFilePath)
+						localSize = attr_local.st_size # 1 Byte = 10**-6 MB
+	
+						#print('    remoteSize:', remoteSize, 'localSize:', localSize)
+	
+						if remoteSize == localSize:
+							if self.deleteRemoteFiles:
+								print('    removing remote file:', remoteFilePath)
+								ftp.remove(remoteFilePath)
+							else:
+								print('    not removing from remote server, self.deleteRemoteFiles == False')
+						else:
+							print('    ERROR: sizes did not match -->> did not remove from remote server')
+		
+				ftp.close()
 
-		self.mySyncList.append(syncDict)
+			ssh.close()
+
+			self.mySyncList.append(syncDict)
 		
 		stopTime = time.time()
 		elapsedSeconds = round(stopTime-startTime,2)
-		print('    took', elapsedSeconds)
+		print('    copyThread() took', elapsedSeconds, 'remoteFilePath:', remoteFilePath)
 		
+	
 	def sync(self):
 		"""
 		Copy all files in self.myFileList
@@ -419,11 +452,16 @@ class CommanderSync(threading.Thread):
 		
 		self.mySyncList = [] # keep track of what we actually sync
 		
+		self.pool = ThreadPoolExecutor(max_workers=5) #max_workers
+		
+		self.myFutures = []
+
 		startTime = time.time()
 		numCopied = 0
 		for idx, file in enumerate(self.myFileList):
 
 			# check if we were cancelled
+			"""
 			try:
 				inDict = self.inQueue.get(block=False, timeout=0)
 			except (queue.Empty) as e:
@@ -440,6 +478,7 @@ class CommanderSync(threading.Thread):
 				print('commandersync.sync() is cancelling')
 				self.cancel = False
 				break
+			"""
 			
 			#print(file)
 			ip = file['ip']
@@ -459,6 +498,8 @@ class CommanderSync(threading.Thread):
 				#print('local already exists:', fullLocalPath)
 				continue
 		
+			# todo: put all 3 of these mkdir into copy thread
+			
 			# make local directory for all files (e.g. 'video')
 			if not os.path.isdir(self.localFolder):
 				os.mkdir(self.localFolder) # will make in same dir as *this file
@@ -480,16 +521,43 @@ class CommanderSync(threading.Thread):
 			#
 			# todo: get this into a thread
 			#
-			print('copying file', numCopied+1, 'of', self.numFilesToCopy, 'idx:', idx, 'of', len(self.myFileList))
-			self.copyThread(idx, ip, hostname, fullRemoteFile, fullLocalPath)
-
+			
+			# was working, trying ThreadPoolExecutor
+			#print('copying file', numCopied+1, 'of', self.numFilesToCopy, 'idx:', idx, 'of', len(self.myFileList))
+			#self.copyThread(idx, ip, hostname, fullRemoteFile, fullLocalPath)
+			
+			# ThreadPoolExecutor 20181226
+			future = self.pool.submit(self.copyThread, idx, ip, hostname, fullRemoteFile, fullLocalPath)
+			self.myFutures.append(future)
+			
+			# somehow, in main run(), go through this list of future(s)
+			# check is ALL are done()
+			# once all are done() then self.syncIsBusy = False
+			
 			numCopied += 1
 		
 		stopTime = time.time()
 		elapsedSeconds = round(stopTime - startTime,2)
 		print('finished, copied', numCopied, 'files in', elapsedSeconds, 'seconds, ', round(elapsedSeconds/60,2), 'minutes')
 		
-		self.syncIsBusy = False
+		# was this before using pool
+		#self.syncIsBusy = False
+		
+		# wait for background threads to stop
+		print('sync() self.pool.shutdown(wait=True)')
+		#self.pool.shutdown(wait=True)
+		
+		#
+		# this will return immediately but we still need to wait for running tasks !!!!
+		#
+		self.pool.shutdown(wait=False)
+		
+		#
+		# i need to change the logic here
+		# self.syncIsBusy needs to be updated to reflect that threads in pool are still running???
+		self.syncIsBusy = True
+		
+		print('sync() is exiting')
 		
 if __name__ == '__main__':
 	inQueue = queue.Queue()
