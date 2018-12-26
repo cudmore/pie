@@ -483,6 +483,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	$scope.myUrl = $location.absUrl(); //with port :5000
 	console.log('$scope.myUrl:', $scope.myUrl)
 	
+	document.title = 'PiE ' + $location.host()
+	
     myStreamUrl = 'http://' + $location.host() + ':8080/stream';
     $scope.myStreamUrl0 = myStreamUrl
     $scope.myStreamUrl = $sce.trustAsResourceUrl(myStreamUrl);
@@ -543,6 +545,19 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
         	});
     };
     
+	// new 20181225
+	$scope.hardCloseStream = 0
+	function callStreamAtTimeout() {
+		console.log("callStreamAtTimeout()");
+		if ($scope.hardCloseStream) {
+			console.log('hardCloseStream')
+			$scope.myStreamUrl = ''
+		} else {
+			myStreamUrl = 'http://' + $location.host() + ':8080/stream' + '?' + new Date().getTime()
+			$scope.myStreamUrl = $sce.trustAsResourceUrl(myStreamUrl);
+		}
+	}
+
 	// one button callback
 	$scope.buttonCallback = function(buttonID) {
 		console.log('buttonCallback() buttonID=', buttonID)
@@ -553,6 +568,18 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 			case 'stopStream':
 			case 'startArmVideo':
 			case 'stopArmVideo':
+				
+		        // new 20181225
+				// try and get stream to always show on first click
+				if (buttonID == 'startStream') {
+					$scope.hardCloseStream = 0;
+				}
+				if (buttonID == 'stopStream') {
+					$scope.hardCloseStream = 1;
+					callStreamAtTimeout();
+				}
+				
+				// was this 20181225
 				url = $scope.myUrl + 'api/action/' + buttonID
 				$http.get(url).
     		    	then(function(response) {
@@ -565,6 +592,15 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
        				
         				$scope.setInterval($scope.status.trial.runtime.cameraState)
         			});
+
+		        // new 20181225
+		        //refresh stream
+				if (buttonID == 'startStream') {
+					//callAtTimeout()
+					// give strem some time to refresh after rest call???
+					$timeout(callStreamAtTimeout, 1000);
+				}
+
 				break;
 			case 'toggleArm':
 				if ($scope.isState('armed')) {

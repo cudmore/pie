@@ -113,6 +113,9 @@
 
 	<span ng-if="status.syncIsBusy">
 	Working
+		<span ng-if="status.cancel">
+		... Cancel Pending
+		</span>
 	</span>
 	<!--
 	<span ng-if="! status.syncIsBusy">
@@ -120,6 +123,18 @@
 	</span>
 	-->
 
+		<label>
+		<input type="checkbox" 
+			ng-model="deleteAfterCopy" 
+			ng-change="deleteAfterCopyChange()" 
+			ng-disabled="status.syncIsBusy">		
+		Delete from remote server after copy
+		</label>
+
+		<span style="float:right">
+		Saving files to {{ status.localFolder }}
+		</span>
+		
 	<table class="myTable myTable-short">
 	<tr>
 	<th></th> <!-- index -->
@@ -129,6 +144,7 @@
 	<th>Remote File</th>
 	<th>Size</th>
 	<th>Progress</th>
+	<th>Elapsed</th>
 	</tr>
 	<tr ng-repeat="(k,v) in status.myFileList | filter:{localExists:false}">	
 		<td>
@@ -147,13 +163,16 @@
 			{{ v.remoteFile }}
 		</td>
 		<td>
-			{{ v.size }}
+			{{ v.humanSize }}
 		</td>
 		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
-			{{ v.progress }}
+			{{ v.humanProgress }}
 		</td>
 		<td ng-if="v.size != v.progress">
-			{{ v.progress }}
+			{{ v.humanProgress }}
+		</td>
+		<td>
+			{{ v.elapsedTime }}
 		</td>
 	</tr>
 	</table>

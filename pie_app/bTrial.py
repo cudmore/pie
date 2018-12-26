@@ -157,6 +157,7 @@ class bTrial():
 		
 		#
 		# serial thread
+		"""
 		self.serialResponseStr = []
 		self.inSerialQueue = queue.Queue() # queue is infinite length
 		self.outSerialQueue = queue.Queue()
@@ -168,7 +169,10 @@ class bTrial():
 		self.mySerialThread = mySerialThread(self.inSerialQueue, self.outSerialQueue, self.errorSerialQueue, port, baud)
 		self.mySerialThread.daemon = True
 		self.mySerialThread.start()
-		
+		"""
+		if self.config['hardware']['serial']['useSerial']:
+			self.serialThread(True)
+			
 		#
 		# temperature thread
 		if Adafruit_DHT is not None:
@@ -191,13 +195,39 @@ class bTrial():
 		tmpStartTime = 'on ' + now.strftime('%Y-%m-%d') + ' at ' + now.strftime('%H:%M:%S')
 		self.runtime['lastResponse'] = 'PiE server started ' + tmpStartTime
 		
+	def serialThread(self, onoff):
+		if onoff:
+			logger.info('creating serial thread')
+			self.serialResponseStr = []
+			self.inSerialQueue = queue.Queue() # queue is infinite length
+			self.outSerialQueue = queue.Queue()
+			self.errorSerialQueue = queue.Queue()
+			port = self.config['hardware']['serial']['port']
+			baud = self.config['hardware']['serial']['baud']
+			# start serial thread
+			self.mySerialThread = mySerialThread(self.inSerialQueue, self.outSerialQueue, self.errorSerialQueue, port, baud)
+			self.mySerialThread.daemon = True
+			self.mySerialThread.start()
+		else:
+			if self.mySerialThread is not None:
+				logger.info('stopping and destroying serial thread')
+				self.mySerialThread.stop()
+				self.mySerialThread.join()
+				# As far as I understand, setting to None is sufficient (=None destroys but does not remove from namespace?)
+				# del(self.mySerialThread)
+				#
+				self.mySerialThread = None
+			
 	def serialInAppend(self, type, str):
 		"""
 		type : (str) can be either 'command' or 'dump'
 				if type is 'command' then 'str' is command
 				if type is 'dump' then str is full path to file
 		"""
-		if self.mySerialThread:
+		if not self.config['hardware']['serial']['useSerial']:
+			return 0
+			
+		if self.mySerialThread is not None:
 			serialDict = {}
 			serialDict['type'] = type
 			serialDict['str'] = str
@@ -339,20 +369,23 @@ class bTrial():
 
 		#
 		# append both outSerialQueue and errorSerialQueue to serialResponseStr
-		while not self.outSerialQueue.empty():
-			serialItem = self.outSerialQueue.get(block=False)
-			self.serialResponseStr.append(serialItem)
-
-		while not self.errorSerialQueue.empty():
-			serialItem = self.errorSerialQueue.get(block=False)
-			#print('   errorSerialQueue serialItem:', serialItem)
-			self.serialResponseStr.append(serialItem)
-
-		if self.serialResponseStr:	
-			status['runtime']['serialQueue'] = self.serialResponseStr
+		if self.config['hardware']['serial']['useSerial']:
+			while not self.outSerialQueue.empty():
+				serialItem = self.outSerialQueue.get(block=False)
+				self.serialResponseStr.append(serialItem)
+	
+			while not self.errorSerialQueue.empty():
+				serialItem = self.errorSerialQueue.get(block=False)
+				#print('   errorSerialQueue serialItem:', serialItem)
+				self.serialResponseStr.append(serialItem)
+	
+			if self.serialResponseStr:	
+				status['runtime']['serialQueue'] = self.serialResponseStr
+			else:
+				status['runtime']['serialQueue'] = ['None']
 		else:
-			status['runtime']['serialQueue'] = ['None']
-				
+				status['runtime']['serialQueue'] = ['None']
+						
 		return status
 	
 	#########################################################################
@@ -381,6 +414,9 @@ class bTrial():
 		self.config['hardware']['serial']['useSerial'] = configDict['hardware']['serial']['useSerial']
 
 		self.config['hardware'] = configDict['hardware']
+		
+		# turn serial on/off
+		self.serialThread(self.config['hardware']['serial']['useSerial'])
 		
 		self.lastResponse = 'Updated configure'
 		
@@ -618,7 +654,11 @@ class bTrial():
 		#201812, I really need to fix this, i need to know the feault state (True) and send opposite
 		# was this
 		#self.myPinThread.eventOut('triggerOut', True)
-		self.myPinThread.eventOut('triggerOut', False)
+		
+		# enable output trigger but also respect its default state
+		# enabling an output pin with default value True/High will set value to False/Low
+		#self.myPinThread.eventOut('triggerOut', False)
+		self.myPinThread.eventOutEnable('triggerOut', True)
 
 		'''
 		if self.triggerOutIndex is not None:
@@ -674,17 +714,22 @@ class bTrial():
 			self.camera.annotate(newAnnotation='')
 
 		# tell arduino to stop
-		# this is not symetric, NOT sending serial on start
+		# this is not symmetric, NOT sending serial on start
 		# but sending serial here in case user hits stop
-		# maybe make this use other teensy pin for 'emergency stop
-		self.serialInAppend('command', 'stop')
+		# maybe make this use other teensy pin for 'emergency' stop?
+		if self.config['hardware']['serial']['useSerial']:
+			self.serialInAppend('command', 'stop')
 
 		# triggerOut
 		#201812, this need to be paired with startTRial
 		# was this
 		#self.myPinThread.eventOut('triggerOut', False)
-		self.myPinThread.eventOut('triggerOut', True)
+		#self.myPinThread.eventOut('triggerOut', True)
 		
+		# this will respect default state
+		# if default state is True/High, enable False will set it to its default state (True/High)
+		self.myPinThread.eventOutEnable('triggerOut', False)
+
 		'''
 		if self.triggerOutIndex is not None:
 			triggerOutDict = self.config['hardware']['eventOut'][self.triggerOutIndex]
@@ -770,11 +815,18 @@ class bTrial():
 	def saveTrial(self):
 		delim = ','
 		eol = '\n'
-		saveFile = self.getFilename(useStartTime=True) + '.txt'
-		savePath = os.path.join('/home/pi/video', self.runtime['startDateStr'])
+		saveFile = self.getFilename(useStartTime=True) + '.txt' # the file
+		savePath = os.path.join('/home/pi/video', self.runtime['startDateStr']) # the folder
 		saveFilePath = os.path.join(savePath, saveFile)
 		if not os.path.exists(savePath):
 			os.makedirs(savePath)
+		
+		# todo
+		# make a .lock file
+		lockFilePath = saveFilePath + '.lock'
+		lockFileID = open(lockFilePath, 'w')
+		lockFileID.close()
+		
 		with open(saveFilePath, 'w') as file:
 			# one line header
 			# todo: clean up numRepeats = ['currentEpoch']
@@ -835,12 +887,16 @@ class bTrial():
 
 		logger.info('saved: ' + saveFilePath)
 		
+		# remove .lock file
+		os.remove(lockFilePath)
+		
 		#
 		# grab from arduino/teensy and save
-		teensySavePath = os.path.join('/home/pi/video', self.runtime['startDateStr'])
-		teensyFile = self.getFilename(useStartTime=True) + '_a.txt' # a is for arduino
-		saveFilePath = os.path.join(savePath, teensyFile)
-		self.serialInAppend('dump', saveFilePath)
+		if self.config['hardware']['serial']['useSerial']:
+			teensySavePath = os.path.join('/home/pi/video', self.runtime['startDateStr'])
+			teensyFile = self.getFilename(useStartTime=True) + '_a.txt' # a is for arduino
+			saveFilePath = os.path.join(savePath, teensyFile)
+			self.serialInAppend('dump', saveFilePath)
 
 	#########################################################################
 	# NOT WORKING !!!

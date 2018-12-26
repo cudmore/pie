@@ -15,6 +15,8 @@ class mySerialThread(threading.Thread):
 	"""
 	def __init__(self, inSerialQueue, outSerialQueue, errorSerialQueue, port, baud):
 		threading.Thread.__init__(self)
+		self._stop_event = threading.Event()
+		
 		self.inSerialQueue = inSerialQueue
 		self.outSerialQueue = outSerialQueue
 		self.errorSerialQueue = errorSerialQueue
@@ -35,9 +37,15 @@ class mySerialThread(threading.Thread):
 		#else:
 		#	errorSerialQueue.put('None')
 
+	def stop(self):
+		"""
+		call stop() then join() to ensure thread is done
+		"""
+		self._stop_event.set()
+
 	def run(self):
 		logger.debug('starting mySerialThread')
-		while True:
+		while not self._stop_event.is_set():
 			try:
 				# serialDict is {'type': command/dump, 'str': command/filePath}
 				serialDict = self.inSerialQueue.get(block=False, timeout=0)

@@ -367,5 +367,6 @@ if __name__ == '__main__':
 	#app.run(host='0.0.0.0', port=5010, debug=debug, threaded=True)
 	socketio.run(app, host='0.0.0.0', port=5010, debug=debug)
 
-	treadmill.trial.myPinThread.exiting()
+	#treadmill.trial.myPinThread.exiting()
+
 	print('treadmill_app.__main__ is exiting')

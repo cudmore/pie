@@ -457,21 +457,22 @@ Swarm Status
 	<th>conditionID</th>
 	<th>Trial Num</th>
 
-	<th>Auto lights</th>
+	<<!-- <th>Auto lights</th> -->
 	<th>Sunrise (h)</th>
 	<th>Sunset (h)</th>
-	<th>White</th>
-	<th>IR</th>
+	<<!-- <th>White</th> -->
+	<<!-- <th>IR</th> -->
 
 	<th>video resolution</th>
 	<th>fps</th>
 	<th>convert to mp4</th>
 
-	<th>Repeat Duration (s)</th>
+	<!-- <th>Repeat Duration (s)</th> -->
 	
-	<th>Repeat Forever</th>
-	<th>Number of Repeats</th>
+	<!-- <th>Repeat Forever</th> -->
+	<!-- <th>Number of Repeats</th> -->
 	</tr>
+	
 	<tr ng-repeat="server in serverList track by $index">
 		<!-- system -->
 		<td>{{ videoArray[$index].status.trial.systemInfo.ip }}</td>
@@ -544,20 +545,24 @@ Swarm Status
 		<td>{{ videoArray[$index].status.trial.config.trial.conditionID }}</td>
 		<td>{{ videoArray[$index].status.trial.runtime.trialNum }}</td> <!-- status -->
 
+		<!--
 		<td>{{ videoArray[$index].status.trial.config.lights.auto }}</td> <!-- config -->
+		-->
 		<td>{{ videoArray[$index].status.trial.config.lights.sunrise }}</td> <!-- config -->
 		<td>{{ videoArray[$index].status.trial.config.lights.sunset }}</td> 
-		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[1].state }}</td> <!-- ir -->
-		<td>{{ videoArray[$index].status.trial.config.hardware.eventOut[2].state }}</td> <!-- white -->
-
+		
+		<!-- <td>{{ videoArray[$index].status.trial.config.hardware.eventOut[1].state }}</td> --> <!-- ir -->
+		<!-- <td>{{ videoArray[$index].status.trial.config.hardware.eventOut[2].state }}</td> --><!-- white -->
+		
+		
 		<td>{{ videoArray[$index].status.trial.config.video.resolution }}</td>
 		<td>{{ videoArray[$index].status.trial.config.video.fps }}</td>
 		<td>{{ videoArray[$index].status.trial.config.video.converttomp4 }}</td>
 
-		<td>{{ videoArray[$index].status.trial.config.trial.repeatDuration }}</td>
+		<!-- <td>{{ videoArray[$index].status.trial.config.trial.repeatDuration }}</td> -->
 		
-		<td>{{ videoArray[$index].status.trial.config.trial.repeatInfinity }}</td>
-		<td>{{ videoArray[$index].status.trial.config.trial.numberOfRepeats }}</td>
+		<!-- <td>{{ videoArray[$index].status.trial.config.trial.repeatInfinity }}</td> -->
+		<!-- <td>{{ videoArray[$index].status.trial.config.trial.numberOfRepeats }}</td> -->
 	</tr>
 </table>
 

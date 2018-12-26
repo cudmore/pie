@@ -83,8 +83,7 @@ def myAfterRequest(response):
 	return response
 
 ##################################################################
-# commandersync
-# 20181223
+# CommanderSync
 ##################################################################
 # this has to be instantiated as a threaded commandersync and live in background
 # insert commands into a queue ['fetchfilelist', 'runsync']
@@ -96,6 +95,12 @@ cs.start()
 @app.route('/sync')
 def sync():
 	return send_file('templates/commander_sync.html')
+
+@app.route('/sync/deleteaftercopy/<int:onoff>')
+def delete_after_copy(onoff):
+	print('delete_after_copy:', onoff)
+	cs.setDeleteRemoteFiles(onoff)
+	return jsonify(cs.ipDict)
 
 @app.route('/sync/fetchfiles')
 def sync_fetchfiles():
@@ -111,8 +116,12 @@ def sync_run():
 
 @app.route('/sync/cancel')
 def sync_cancel():
+	# queue is not working because thread is busy during sync
 	global inQueue
 	inQueue.put('cancel')
+	
+	cs.cancel = True
+	
 	return jsonify(cs.mySyncList)
 
 @app.route('/sync/status')
@@ -123,7 +132,9 @@ def sync_status():
 		'syncIsBusy': cs.syncIsBusy,
 		'ipDict': cs.ipDict,
 		'myFileList': cs.myFileList,
-		'mySyncList': cs.mySyncList
+		'mySyncList': cs.mySyncList,
+		'localFolder': cs._localFolder,
+		'cancel': cs.cancel # if True then cancel is pending
 	}
 	return jsonify(status)
 
@@ -157,6 +168,10 @@ def saveconfig(iplist):
 		for line in iplist.split(','):
 			#print('line:', line)
 			outfile.write(line + ',' + '\n')
+	
+	# tell commandersync to reload new ip list
+	cs.loadConfig()
+	
 	return 'saved'
 	
 ##################################################################

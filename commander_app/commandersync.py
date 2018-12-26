@@ -6,7 +6,7 @@ Purpose: Copy files from any number of PiE servers to local.
 
 Important:
 	- Will remove from remote PiE server as follows
-	    if gDoRemove
+	    if self.deleteRemoteFiles
 	    and if we copy the file
 	    and the file we copied has same size as file on PiE server
 	- All files are copied into a folder 'mydata' that is always in the same folder as this script/code
@@ -14,35 +14,41 @@ Important:
 """
 
 import os, time, math, stat
-
 import threading, queue
-
 import socket, paramiko
-
-gDoRemove = True # if True then remove remote file after copy
-gCopyTheseExtensions = ['.mp4', '.txt']
-gTimeout = 5 # seconds # timeout when trying to establish ssh connection
 
 class CommanderSync(threading.Thread):
 
 	def __init__(self, inQueue):
 		threading.Thread.__init__(self)
 		
-		self.inQueue = inQueue # commands are ('fetchfiles', 'sync', 'cancel')
+		self.localFolder = '../../mydata' # all local files with be in this folder
 		
-		self.cancel = False
-		self.fetchIsBusy = False
-		self.syncIsBusy = False
-			
+		self._localFolder = os.path.abspath(self.localFolder)
+		print('Commander sync will save into:', self._localFolder)
+		
+		# to log in to remote servers
 		self.username = 'pi'
 		self.password = 'poetry7d'
 		
 		# this code will not work if remote PiE server does not have /home/pi/video
 		self.remoteFolder = 'video' # all files on remote PiE servers are in /home/pi/video
+				
+		# delete files on remote (i) when copied and (ii) when local size is same as remote size
+		self.deleteRemoteFiles = False
 		
-		self.localFolder = 'mydata' # all local files with be in this folder
+		self.copyTheseExtensions = ['.mp4', '.txt']
+
+
+		self.inQueue = inQueue # commands are ('fetchfiles', 'sync', 'cancel')
 		
-		# load ip list (same as commander) and assign (ipList, ipDict)
+		self.cancel = False
+		self.fetchIsBusy = False
+		self.syncIsBusy = False
+		
+		self.sshTimeout = 5 # seconds, timeout when trying to establish ssh connection
+		
+		# load ip list (same as commander) and assign (self.ipList, self.ipDict)
 		self.loadConfig()
 
 		self.numFilesToCopy = 0 # total number across all ip in ipList
@@ -52,8 +58,21 @@ class CommanderSync(threading.Thread):
 		
 		#self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
 		
+	def setDeleteRemoteFiles(self, onoff):
+		self.deleteRemoteFiles = onoff
+		print('commandersync.py setDeleteRemoteFiles() set self.deleteRemoteFiles:', self.deleteRemoteFiles)
+	
 	def loadConfig(self):
-		# taken from commander.py
+		"""
+		Sharing config file with main commander
+		This is an extremely simple list of IP, it is NOT json
+		When user changes/saves ip list in main commander page, this needs to be reloaded
+		
+		Assigns:
+			self.ipList
+			self.ipDict
+		"""
+		
 		thisFile = 'config/config_commander.txt'
 		if not os.path.isfile(thisFile):
 			#logger.info('defaulting to config/config_commander_factory.txt')
@@ -82,6 +101,9 @@ class CommanderSync(threading.Thread):
 		
 	############################################################################
 	def run(self):
+		"""
+		Continuosly process icoming commands in self.inQueue Queue
+		"""
 		while True:
 			try:
 				inDict = self.inQueue.get(block=False, timeout=0)
@@ -98,12 +120,37 @@ class CommanderSync(threading.Thread):
 					# need to spawn sync as new thread so we can cancel!!!
 					self.sync()
 				if inDict == 'cancel': # cancel a sync
+					print('commandersync.run() inDict == cancel')
 					if self.syncIsBusy:
+						print('commandersync setting self.cancel = True')
 						self.cancel = True
 					
 			# make sure not to remove this
 			time.sleep(0.1)
 				
+	############################################################################
+	def _humanReadableSize(self, bytes):
+		"""
+		Return a human readable string with unit ('bytes', 'KB', 'MB')
+		"""
+		
+		# todo: add GB
+
+		theStr = str(bytes)
+		if bytes < 1000:
+			# bytes
+			theStr = str(bytes) + ' bytes'
+		elif bytes < 1000000:
+			# KB, divide -> round -> int -> str
+			theStr = str(int(round(bytes/1000,0))) + ' KB'
+		elif bytes < 1000000000:
+			# MB
+			theStr = str(round(bytes/1000000,1)) + ' MB'
+		else:
+			# MB
+			theStr = str(round(bytes/1000000000,2)) + ' GB'
+		return theStr
+
 	############################################################################
 	def fetchFileList(self):
 		"""
@@ -132,7 +179,7 @@ class CommanderSync(threading.Thread):
 					sizeInBytes = attr.st_size
 					
 					tmpFileName, tmpExtension = os.path.splitext(remoteFile)
-					if not (tmpExtension in gCopyTheseExtensions):
+					if not (tmpExtension in self.copyTheseExtensions):
 						continue
 					
 					#
@@ -151,7 +198,11 @@ class CommanderSync(threading.Thread):
 						'remoteFile': remoteFile,
 						'progress': 0, # set in self.myCallback()
 						'size': sizeInBytes,
-						'localExists': localExists
+						'localExists': localExists,
+						'humanSize': self._humanReadableSize(sizeInBytes),
+						'humanProgress': '0', # set in self.myCallback(),
+						'startSeconds': 0,
+						'elapsedTime': 0
 					}
 					self.myFileList.append(myFile)
 					self.ipDict[ip]['numFiles'] += 1 # for one ip
@@ -183,7 +234,7 @@ class CommanderSync(threading.Thread):
 			
 			try:
 				print('fetchFileList() opening connection to ip:', ip)
-				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=gTimeout)
+				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('exception 1:', str(e))
 			except(paramiko.ssh_exception.AuthenticationException) as e:
@@ -228,9 +279,13 @@ class CommanderSync(threading.Thread):
 			idx: index into self.myFileList
 		"""
 		self.myFileList[idx]['progress'] = bytesDone
+		self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
+		
+		self.myFileList[idx]['elapsedTime'] = time.time() - self.myFileList[idx]['startSeconds']
 		
 		if bytesDone == bytesTotal:
-			print('        done:', file, bytesDone, 'of', bytesTotal, ',', bytesTotal*(10**-6), 'MB')
+			#print('        done:', file, bytesDone, 'of', bytesTotal, ',', bytesTotal*(10**-6), 'MB')
+			pass
 		else:
 			#print('        progress:', file, bytesDone, 'of', bytesTotal)
 			pass
@@ -263,7 +318,7 @@ class CommanderSync(threading.Thread):
 		ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		
 		try:
-			ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=gTimeout)
+			ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 		except (paramiko.ssh_exception.BadHostKeyException) as e:
 			print('exception copyThread() 1:', str(e))
 		except(paramiko.ssh_exception.AuthenticationException) as e:
@@ -309,6 +364,7 @@ class CommanderSync(threading.Thread):
 				print('    local file:', localFilePath)
 				"""
 				try:
+					self.myFileList[idx]['startSeconds'] = time.time()
 					lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
 					ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
 				except (IOError) as e:
@@ -333,11 +389,11 @@ class CommanderSync(threading.Thread):
 					#print('    remoteSize:', remoteSize, 'localSize:', localSize)
 	
 					if remoteSize == localSize:
-						if gDoRemove:
+						if self.deleteRemoteFiles:
 							print('    removing remote file:', remoteFilePath)
 							ftp.remove(remoteFilePath)
 						else:
-							print('    not removing from remote server, gDoRemove == False')
+							print('    not removing from remote server, self.deleteRemoteFiles == False')
 					else:
 						print('    ERROR: sizes did not match -->> did not remove from remote server')
 		

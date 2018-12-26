@@ -36,16 +36,6 @@ class PinThread(threading.Thread):
 		"""
 		self.pinNumberDict_ = {}
 		
-		# not working
-		# 3, 8, 24 (sometimes 25)
-		# working
-		# 4, 7, 25
-		if 0:
-			GPIO.setmode(GPIO.BCM)
-			GPIO.setwarnings(True)	
-			tmpPin = 25
-			GPIO.setup(tmpPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-			GPIO.add_event_detect(tmpPin, GPIO.RISING, callback=self.gpio_InputPinCallback, bouncetime=20)
 		
 	#########################################################################
 	# Initialize from config json
@@ -83,10 +73,12 @@ class PinThread(threading.Thread):
 			#self.config['hardware']['eventOut'][idx]['state'] = defaultValue # so javascript can read state
 			#self.config['hardware']['eventOut'][idx]['idx'] = idx # for reverse lookup
 	
+	"""
 	def exiting(self):
 		# if we do not cleanup then all pins will remain as is (set by user/software)
 		#GPIO.cleanup()
 		pass
+	"""
 		
 	#########################################################################
 	# Input pin callbacks
@@ -186,6 +178,40 @@ class PinThread(threading.Thread):
 	##########################################
 	# Output pins on/off
 	##########################################
+	def eventOutEnable(self, name, enable):
+		"""
+		Enable an output pin following its 'defaultValue'.
+		Enabling a pin with defaultValue of False will set it True
+		Enabling a pin with defaultValue of True will set it False
+		"""
+		#outPinIdx = self.outputPinIndexFromName(name)
+		pin = self.pinFromName(name)
+		if pin is not None:
+			
+			# make sure we have an output pin
+			if 'defaultValue' not in self.pinNumberDict_[pin]:
+				err = 'eventOutEnable() got bad output pin name: ' + name + ' number: ' + str(pin)
+				logger.error(err)
+				self.trial.lastResponse = err
+			else:
+				# intentionally expanding logic here to make logic readable
+				if self.pinNumberDict_[pin]['defaultValue']:
+					if enable:
+						onoff = False
+					else:
+						onoff = True
+				else:
+					if enable:
+						onoff = True
+					else:
+						onoff = False
+				self.eventOut(name, onoff)
+		else:
+			err = 'eventOutEnable() got bad output pin name: ' + name
+			logger.error(err)
+			self.trial.lastResponse = err
+		
+		
 	def eventOut(self, name, onoff):
 		""" Turn output pins on/off """
 		now = time.time()
@@ -361,9 +387,23 @@ class PinThread(threading.Thread):
 				ret = k
 				break
 		if ret is None:
-			print('error: pinFromName() did not find pin named "', name, '"')
+			logger.error('did not find pin named "' + name + '"')
 		return ret
-			
+	
+	'''
+	def outputPinIndexFromName(self, name):
+		"""
+		Get the indices into config dictionary
+		Output pins are a list, given a pin name, return index into this list
+		"""
+		pinIndex = None
+		for idx, eventOut in enumerate(configDict['hardware']['eventOut']):
+			if eventOut['name'] == name:
+				pinIndex = idx
+				break
+		return pinIndex
+	'''
+		
 	#########################################################################
 	# run
 	#########################################################################

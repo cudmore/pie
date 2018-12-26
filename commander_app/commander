@@ -13,6 +13,10 @@ function usage(){
 	echo "commander run         - run commander on command line"
 }
 
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
 unamestr=`uname`
 if [[ "$unamestr" == 'Linux' ]]; then
 	# linux
@@ -35,7 +39,7 @@ case "$1" in
 		sudo systemctl restart videowall.service
 		;;
 	status) 
-		sudo systemctl status videowall.service
+		sudo systemctl --no-pager -l status videowall.service
 		;;
 	enable)
 		sudo systemctl enable videowall.service
@@ -48,7 +52,18 @@ case "$1" in
 	debug) source commander_env/bin/activate
 		python commander.py debug
 		;;
-	run) source commander_env/bin/activate
+	run)
+		if [[ "$unamestr" == 'Linux' ]]; then
+			systemctl is-active --quiet videowall.service
+			if [ $? -eq 0 ]
+			then
+				echo -e "${RED}ERROR${NC}: background commander server is already running."
+				echo "Stop the background commander server with './commander stop' and try again."
+				#sudo systemctl stop videowall.service 
+				exit 0
+			fi
+		fi
+		source commander_env/bin/activate
 		python commander.py
 		;;
 	*) usage
