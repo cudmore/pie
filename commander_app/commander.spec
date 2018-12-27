@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['commander2.py'],
-             pathex=['/Users/cudmore/Sites/pie/commander_app'],
+             pathex=['/home/pi/pie/commander_app'],
              binaries=[],
              datas=[('templates', 'templates'), ('static', 'static'), ('config', 'config'), ('bin', 'bin')],
              hiddenimports=[],
