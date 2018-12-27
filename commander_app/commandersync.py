@@ -451,6 +451,16 @@ class CommanderSync(threading.Thread):
 							if self.deleteRemoteFiles:
 								print('    removing remote file:', remoteFilePath)
 								ftp.remove(remoteFilePath)
+								
+								#
+								# delete parent (date) dir if neccessary (empty)
+								# construct parentDirPath (e.g. date folder) and remove if empty
+								"""
+								parentDirPath = ???
+								attrList in ftp.listdir_attr(path=parentDirPath): # returns SFTPAttributes
+								if attrList is Empty:
+									delete parentDirPath
+								"""
 							else:
 								print('    not removing from remote server, self.deleteRemoteFiles == False')
 						else:
