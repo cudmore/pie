@@ -5,19 +5,20 @@
 #
 # Build a stand-alone app using pyinstaller
 
-"""
-  -D, --onedir          Create a one-folder bundle containing an executable
-                        (default)
-
-  -F, --onefile         Create a one-file bundled executable.
-
-  -w, --windowed, --noconsole
-                        Windows and Mac OS X: do not provide a console window
-                        for standard i/o. On Mac OS X this also triggers
-                        building an OS X .app bundle. This option is ignored
-                        in *NIX systems.
-"""
+#  -D, --onedir          Create a one-folder bundle containing an executable
+#                        (default)
+#
+#  -F, --onefile         Create a one-file bundled executable.
+#
+#  -w, --windowed, --noconsole
+#                        Windows and Mac OS X: do not provide a console window
+#                        for standard i/o. On Mac OS X this also triggers
+#                        building an OS X .app bundle. This option is ignored
+#                        in *NIX systems.
+#
 
 rm -rf build dist
+
+# need to use commander2 or else bundle dir (in python) is always user dir?
 #pyinstaller -w --onefile --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" commander.py
-pyinstaller -F --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" commander2.py
+pyinstaller -F --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" -n commander commander2.py

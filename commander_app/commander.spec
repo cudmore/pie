@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['commander.py'],
+a = Analysis(['commander2.py'],
              pathex=['/Users/cudmore/Sites/pie/commander_app'],
              binaries=[],
              datas=[('templates', 'templates'), ('static', 'static'), ('config', 'config'), ('bin', 'bin')],
@@ -29,8 +29,4 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False )
-app = BUNDLE(exe,
-             name='commander.app',
-             icon=None,
-             bundle_identifier=None)
+          console=True )

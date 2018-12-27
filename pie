@@ -113,7 +113,7 @@ case "$1" in
 		echo '=== Activating virtual environment pie_env/bin/activate'
 		source pie_env/bin/activate
 		cd pie_app
-		python version.py
+		python version_check.py
 		;;
 	debug)
 		# run PiE server on command line in debug mode

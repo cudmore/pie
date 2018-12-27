@@ -10,29 +10,11 @@ from flask import Flask, render_template, send_file, jsonify, abort, request#, r
 from flask_cors import CORS
 from subprocess import check_output
 
-import commandersync
 
 import logging
 
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
-
-###
-###
-if getattr(sys, 'freeze', False):
-	# running as bundle (aka frozen)
-	bundle_dir = sys._MEIPASS
-	#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
-else:
-	# running live
-	bundle_dir = os.path.dirname(os.path.abspath(__file__))
-print('commnder.py got')
-print("    getattr(sys, 'freeze', False)", getattr(sys, 'freeze', False))
-print('    bundle_dir:', bundle_dir)
-#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
-###
-###
-
 
 logFormat = "[%(asctime)s] {%(filename)s %(funcName)s:%(lineno)d} %(levelname)s - %(message)s"
 dictConfig({
@@ -64,14 +46,29 @@ logger.addHandler(logFileHandler)
 logger.setLevel(logging.DEBUG)
 logger.debug('commander initialized commander.log')
 
+import commandersync # this has to come after logger is initialized
 
 ###
-print('\n\n    CHANGE THIS BACK app=Flas()')
-app = Flask(__name__, static_url_path=bundle_dir, template_folder=bundle_dir)
+###
+if getattr(sys, 'freeze', False):
+	# running as bundle (aka frozen)
+	logger.info('running frozen')
+	bundle_dir = sys._MEIPASS
+	#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+else:
+	# running live
+	logger.info('running live')
+	bundle_dir = os.path.dirname(os.path.abspath(__file__))
+logger.info('bundle_dir is ' + bundle_dir)
+#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+###
 ###
 
-# was this 20181226
+###
 app = Flask(__name__)
+#app = Flask(__name__, static_url_path=bundle_dir, template_folder=bundle_dir)
+# was this before implementing pyinstaller/frozen
+#app = Flask(__name__)
 
 CORS(app)
 
@@ -160,7 +157,7 @@ def sync_status():
 		'ipDict': cs.ipDict,
 		'myFileList': cs.myFileList,
 		'mySyncList': cs.mySyncList,
-		'localFolder': cs._localFolder,
+		'localFolder': cs.localFolder,
 		'cancel': cs.cancel # if True then cancel is pending
 	}
 	return jsonify(status)
@@ -208,7 +205,7 @@ def saveconfig(iplist):
 ##################################################################
 def whatismyip():
 	platform = sys.platform
-	print('platform:', platform)
+	app.logger.info('platform is ' + platform)
 	if platform.startswith('linux'):
 		ip = check_output(['hostname', '--all-ip-addresses'])
 		ip = ip.decode('utf-8').strip()
@@ -217,7 +214,7 @@ def whatismyip():
 		ip = subprocess.check_output(whatismyip_cmd)
 		ip = ip.decode('utf-8').strip()
 	else:
-		print('unknown platform')
+		print('commander whatismyip() unknown platform:', platform)
 		ip = ''
 	return ip
 
@@ -234,7 +231,7 @@ if __name__ == '__main__':
 	app.logger.debug('Running flask server with debug = ' + str(debug))
 		
 	responseStr = 'Flask server is running at: ' + 'http://' + str(myip) + ':8000'
-	print(responseStr)
+	#print(responseStr)
 	app.logger.debug(responseStr)
 	
 	# 0.0.0.0 will run on external ip and needed to start at boot with systemctl

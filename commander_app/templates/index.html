@@ -443,14 +443,14 @@ Swarm Status
 	<th>Reboot Pi</th>
 	<th>Update Software</th>
 	<th>Revert To Stable</th>
-	<th>Debian Version</th>
-	<th>system uptime</th>
+	<th>PiE server version</th>
+	<th>PiE server uptime</th>
 	<th>GB Remaining</th>
 	<th>GB Size</th>
 	<!-- server -->
+	<th>Debian Version</th>
+	<th>system uptime</th>
 	<th>python version</th>
-	<th>server version</th>
-	<th>server uptime</th>
 
 	<th>state</th>
 	<th>animalID</th>
@@ -522,8 +522,8 @@ Swarm Status
 			<i class="fa fa-cloud-download fa-1x" aria-hidden="true"></i> Stable		
 		</td>
 
-		<td>{{ videoArray[$index].status.trial.systemInfo.debianVersion }}</td>
-		<td>{{ videoArray[$index].status.trial.systemInfo.systemUptime }}</td> <!-- needs updating -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.version }}</td> <!-- bTrial version -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.uptime }}</td> <!-- uptime of the treadmill server -->
 
 		<td>
 		{{ videoArray[$index].status.trial.systemInfo.gbRemaining }} <!-- needs updating -->
@@ -536,9 +536,9 @@ Swarm Status
 		
 		<td>{{ videoArray[$index].status.trial.systemInfo.gbSize }}</td> <!-- needs updating -->
 		<!-- server -->
+		<td>{{ videoArray[$index].status.trial.systemInfo.debianVersion }}</td>
+		<td>{{ videoArray[$index].status.trial.systemInfo.systemUptime }}</td> <!-- needs updating -->
 		<td>{{ videoArray[$index].status.trial.systemInfo.pythonVersion }}</td>
-		<td>{{ videoArray[$index].status.trial.systemInfo.version }}</td> <!-- bTrial version -->
-		<td>{{ videoArray[$index].status.trial.systemInfo.uptime }}</td> <!-- uptime of the treadmill server -->
 
 		<td>{{ videoArray[$index].status.trial.runtime.cameraState }}</td> <!-- status -->
 		<td>{{ videoArray[$index].status.trial.config.trial.animalID }}</td>

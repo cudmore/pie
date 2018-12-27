@@ -13,11 +13,13 @@ Important:
 	    Should be able to mount a server into /mydata (e.g. LindenNas)
 """
 
-import os, time, math, stat, sys
+import os, time, math, stat, sys, logging
 import threading, queue
 import socket, paramiko
 
 from concurrent.futures import ThreadPoolExecutor #ProcessPoolExecutor
+
+logger = logging.getLogger('commander')
 
 class CommanderSync(threading.Thread):
 
@@ -28,26 +30,23 @@ class CommanderSync(threading.Thread):
 		###
 		if getattr(sys, 'freeze', False):
 			# running as bundle (aka frozen)
-			print('commandersync running FROZEN')
+			logger.info('running frozen')
 			self.bundle_dir = sys._MEIPASS
 		else:
 			# running live
-			print('commandersync running NORMAL')
+			logger.info('running live')
 			self.bundle_dir = os.path.dirname(os.path.abspath(__file__))
-		print('commandersync.py got self.bundle_dir:', self.bundle_dir)
+		logger.info('bundle_dir is ' + self.bundle_dir)
 		###
 		###
 
-		##
-		##
-		# CHANGE THIS BACK FOR pyinstaller
-		##
-		##
-		#self.localFolder = '../../mydata' # all local files with be in this folder
-		self.localFolder = 'mydata' # all local files with be in this folder
+		# userPath will be /Users/<user> on macOS and /home/<user> on Debian/Raspbian
+		userPath = os.path.expanduser('~')
+		self.localFolder = os.path.join(userPath, 'commander_data') # all local files with be in this folder
+		logger.info('saving to ' +self.localFolder)
 		
-		self._localFolder = os.path.abspath(self.localFolder)
-		print('Commander sync will save into:', self._localFolder)
+		#self._localFolder = os.path.abspath(self.localFolder)
+		#print('Commander sync will save into:', self._localFolder)
 		
 		# to log in to remote servers
 		self.username = 'pi'
@@ -105,7 +104,7 @@ class CommanderSync(threading.Thread):
 			#logger.info('defaulting to config/config_commander_factory.txt')
 			#thisFile = 'config/config_commander_factory.txt'
 			thisFile = os.path.join(self.bundle_dir, 'config/config_commander_factory.txt')
-		#logger.info('Loading config file ' + thisFile)
+		logger.info('Loading config file ' + thisFile)
 		with open(thisFile, 'r') as f:
 			configfile = f.readlines()
 		# remove whitespace characters like ',' and `\n` from each line
@@ -151,7 +150,7 @@ class CommanderSync(threading.Thread):
 				pass
 			else:
 				# there was something in the queue
-				print('commandersync.run() inDict:', inDict)
+				#print('commandersync.run() inDict:', inDict)
 
 				if inDict == 'fetchfiles':
 					self.fetchFileList()
@@ -272,7 +271,7 @@ class CommanderSync(threading.Thread):
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			
 			try:
-				print('fetchFileList() opening connection to ip:', ip)
+				logger.info('opening ssh connection to ip: ' + ip)
 				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('exception 1:', str(e))
@@ -305,10 +304,13 @@ class CommanderSync(threading.Thread):
 			ssh.close()
 
 		print('fetchFileList() found', self.numFilesToCopy, 'files to copy from', len(self.myFileList), 'files across', len(self.ipList), 'PiE servers')
+		"""
 		for k, v in self.ipDict.items():
 			print('    ', k, v)
+		"""
 			
 		self.fetchIsBusy = False
+		
 	############################################################################
 	def myCallback(self, bytesDone, bytesTotal, file, idx):
 		"""
@@ -320,7 +322,7 @@ class CommanderSync(threading.Thread):
 		self.myFileList[idx]['progress'] = bytesDone
 		self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
-		self.myFileList[idx]['elapsedTime'] = time.time() - self.myFileList[idx]['startSeconds']
+		self.myFileList[idx]['elapsedTime'] = round(time.time() - self.myFileList[idx]['startSeconds'],1)
 		
 		if bytesDone == bytesTotal:
 			#print('        done:', file, bytesDone, 'of', bytesTotal, ',', bytesTotal*(10**-6), 'MB')
@@ -355,7 +357,7 @@ class CommanderSync(threading.Thread):
 		if self.cancel:
 			pass
 		else:
-			print('copyThread() is starting sftp copy remoteFilePath:', remoteFilePath)
+			logger.info('starting sftp copy of remote file: ' + remoteFilePath)
 			
 			# self.mySyncList
 			syncDict = {
@@ -568,12 +570,13 @@ class CommanderSync(threading.Thread):
 		#self.syncIsBusy = False
 		
 		# wait for background threads to stop
-		print('sync() self.pool.shutdown(wait=True)')
+		#print('sync() self.pool.shutdown(wait=True)')
 		#self.pool.shutdown(wait=True)
 		
 		#
 		# this will return immediately but we still need to wait for running tasks !!!!
 		#
+		print('self.pool.shutdown(wait=False)')
 		self.pool.shutdown(wait=False)
 		
 		#
@@ -581,7 +584,7 @@ class CommanderSync(threading.Thread):
 		# self.syncIsBusy needs to be updated to reflect that threads in pool are still running???
 		self.syncIsBusy = True
 		
-		print('sync() is exiting')
+		#print('sync() is exiting')
 		
 if __name__ == '__main__':
 	inQueue = queue.Queue()
