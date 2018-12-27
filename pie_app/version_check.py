@@ -13,7 +13,7 @@ def getVersion():
 
 	print('=== python:', sys.version.split('\n')[0], sys.version.split('\n')[1])
 
-	print('=== PiE:', __version__)
+	print('=== PiE:', version.__version__)
 
 	#import picamera
 	from pkg_resources import require
