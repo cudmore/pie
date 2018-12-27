@@ -240,7 +240,8 @@ class CommanderSync(threading.Thread):
 						'humanSize': self._humanReadableSize(sizeInBytes),
 						'humanProgress': '0', # set in self.myCallback(),
 						'startSeconds': 0,
-						'elapsedTime': 0
+						'elapsedTime': 0,
+						'percent': 0
 					}
 					self.myFileList.append(myFile)
 					self.ipDict[ip]['numFiles'] += 1 # for one ip
@@ -323,6 +324,7 @@ class CommanderSync(threading.Thread):
 		self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
 		self.myFileList[idx]['elapsedTime'] = round(time.time() - self.myFileList[idx]['startSeconds'],1)
+		self.myFileList[idx]['percent'] = round(bytesDone/bytesTotal*100,1)
 		
 		if bytesDone == bytesTotal:
 			#print('        done:', file, bytesDone, 'of', bytesTotal, ',', bytesTotal*(10**-6), 'MB')

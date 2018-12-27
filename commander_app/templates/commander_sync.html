@@ -144,7 +144,8 @@
 	<th>Remote File</th>
 	<th>Size</th>
 	<th>Progress</th>
-	<th>Elapsed</th>
+	<th>Elapsed (Sec)</th>
+	<th>%</th>
 	</tr>
 	<tr ng-repeat="(k,v) in status.myFileList | filter:{localExists:false}">	
 		<td>
@@ -165,14 +166,17 @@
 		<td>
 			{{ v.humanSize }}
 		</td>
-		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
-			{{ v.humanProgress }}
-		</td>
-		<td ng-if="v.size != v.progress">
+		<td>
 			{{ v.humanProgress }}
 		</td>
 		<td>
 			{{ v.elapsedTime }}
+		</td>
+		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
+			{{ v.percent }}
+		</td>
+		<td ng-if="v.size != v.progress">
+			{{ v.percent }}
 		</td>
 	</tr>
 	</table>
