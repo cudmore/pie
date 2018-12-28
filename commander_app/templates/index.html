@@ -408,7 +408,7 @@ Configure
 		</table>
 		</span>
 	</span>
-	</div> <!-- server status <div class="commander_indent">-->
+	</div> <!-- server status <div class="commander_indent"> -->
 	
 	</div>
 	</div>
@@ -440,7 +440,6 @@ Swarm Status
 	<th>Log</th>
 	<th>Load Homecage Config</th>
 	<th>Restart PiE Server</th>
-	<th>Reboot Pi</th>
 	<th>Update Software</th>
 	<th>Revert To Stable</th>
 	<th>PiE server version</th>
@@ -448,6 +447,7 @@ Swarm Status
 	<th>GB Remaining</th>
 	<th>GB Size</th>
 	<!-- server -->
+	<th>Reboot Pi</th>
 	<th>Debian Version</th>
 	<th>system uptime</th>
 	<th>python version</th>
@@ -457,11 +457,11 @@ Swarm Status
 	<th>conditionID</th>
 	<th>Trial Num</th>
 
-	<<!-- <th>Auto lights</th> -->
+	<!-- <th>Auto lights</th> -->
 	<th>Sunrise (h)</th>
 	<th>Sunset (h)</th>
-	<<!-- <th>White</th> -->
-	<<!-- <th>IR</th> -->
+	<!-- <th>White</th> -->
+	<!-- <th>IR</th> -->
 
 	<th>video resolution</th>
 	<th>fps</th>
@@ -497,15 +497,7 @@ Swarm Status
 				ng-disabled="! isState($index,'idle')">
 			<i class="fa fa-refresh fa-1x" aria-hidden="true"></i> Restart PiE
 		</td>
-		
-		<td>
-			<button type="button" 
-				class="btn btn-info btn-sm" 
-				ng-click="rebootmachine($index)" 
-				ng-disabled="! isState($index,'idle')">
-			<i class="fa fa-power-off fa-1x" aria-hidden="true"></i> Reboot
-		</td>
-		
+				
 		<td>
 			<button type="button" 
 				class="btn btn-info btn-sm" 
@@ -536,6 +528,13 @@ Swarm Status
 		
 		<td>{{ videoArray[$index].status.trial.systemInfo.gbSize }}</td> <!-- needs updating -->
 		<!-- server -->
+		<td>
+			<button type="button" 
+				class="btn btn-info btn-sm" 
+				ng-click="rebootmachine($index)" 
+				ng-disabled="! isState($index,'idle')">
+			<i class="fa fa-power-off fa-1x" aria-hidden="true"></i> Reboot
+		</td>
 		<td>{{ videoArray[$index].status.trial.systemInfo.debianVersion }}</td>
 		<td>{{ videoArray[$index].status.trial.systemInfo.systemUptime }}</td> <!-- needs updating -->
 		<td>{{ videoArray[$index].status.trial.systemInfo.pythonVersion }}</td>
@@ -545,9 +544,7 @@ Swarm Status
 		<td>{{ videoArray[$index].status.trial.config.trial.conditionID }}</td>
 		<td>{{ videoArray[$index].status.trial.runtime.trialNum }}</td> <!-- status -->
 
-		<!--
-		<td>{{ videoArray[$index].status.trial.config.lights.auto }}</td> <!-- config -->
-		-->
+		<!-- <td>{{ videoArray[$index].status.trial.config.lights.auto }}</td> --> <!-- config -->
 		<td>{{ videoArray[$index].status.trial.config.lights.sunrise }}</td> <!-- config -->
 		<td>{{ videoArray[$index].status.trial.config.lights.sunset }}</td> 
 		

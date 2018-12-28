@@ -63,19 +63,23 @@
 	<tr>
 	<th>Hostname</th>
 	<th>IP</th>
+	<th>Connected</th>
 	<th>Total Files</th>
 	<th>Files To Copy</th>
 	</tr>
 	<tr ng-repeat="(k,v) in status.ipDict">	
-		<td ng-if="v.madeConnection">
-			<A HREF="http://{{ v.ip }}:5010" target="_{{v.hostname}}">{{ v.hostname }}</a>
-		</td>
-		<td ng-if="! v.madeConnection" style="background-color:#FF0000">
-			<A HREF="http://{{ v.ip }}:5010" target="_{{v.hostname}}">{{ v.hostname }}</a>
+		<td>
+		<A HREF="http://{{ v.ip }}:5010" target="_{{v.hostname}}">{{ v.hostname }}</a>
 		</td>
 		<td>
 			{{ v.ip }}
 		</td>
+			<td ng-if="v.madeConnection">
+				OK
+			</td>
+			<td ng-if="! v.madeConnection" style="background-color:#FF0000">
+				No
+			</td>
 		<td>
 			{{ v.numFiles }}
 		</td>
@@ -113,8 +117,8 @@
 
 	<span ng-if="status.syncIsBusy">
 	Working
-		<span ng-if="status.cancel">
-		... Cancel Pending
+		<span ng-if="status.cancel" style="background-color:#EEEE00">
+		Cancel In Progress
 		</span>
 	</span>
 	<!--
@@ -175,7 +179,10 @@
 		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
 			{{ v.percent }}
 		</td>
-		<td ng-if="v.size != v.progress">
+		<td ng-if="v.percent == 'Cancelled'" style="background-color:#EEEE00">
+			{{ v.percent }}
+		</td>
+		<td ng-if="v.size != v.progress && v.percent != 'Cancelled'">
 			{{ v.percent }}
 		</td>
 	</tr>

@@ -154,6 +154,15 @@ class CommanderSync(threading.Thread):
 					if allDone:
 						if self.syncIsBusy:
 							print('run() determined all future(s) are done()')
+							# added 122818
+							print('run() setting self.myFutures = None')
+							
+							# ???
+							self.myFutures = None
+							
+							# ???
+							self.cancel = False
+							
 						self.syncIsBusy = False
 					
 				try:
@@ -364,10 +373,10 @@ class CommanderSync(threading.Thread):
 			#
 			#
 			#put this back in to actually raise
-			#raise UserCancelSync
+			raise UserCancelSync
 			#
 			#
-			pass
+			#pass
 			
 		self.myFileList[idx]['progress'] = bytesDone
 		self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
@@ -409,6 +418,7 @@ class CommanderSync(threading.Thread):
 
 		ftp_get_cancel = False
 		if self.cancel:
+			print('copyThread() is self.cancel')
 			pass
 		else:
 			logger.info('starting sftp copy of remote file: ' + remoteFilePath)
@@ -505,6 +515,8 @@ class CommanderSync(threading.Thread):
 	
 						if ftp_get_cancel:
 							print('        ****    ftp_get_cancel, remove file idx:', idx, 'file:', localFilePath)
+							os.remove(localFilePath)
+							self.myFileList[idx]['percent'] = 'Cancelled'
 						else:
 							print('    done copying from remote:', remoteFilePath)
 							syncDict['madeCopy'] = True

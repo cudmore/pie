@@ -598,7 +598,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 				if (buttonID == 'startStream') {
 					//callAtTimeout()
 					// give strem some time to refresh after rest call???
-					$timeout(callStreamAtTimeout, 1000);
+					$timeout(callStreamAtTimeout, 3000);
 				}
 
 				break;
