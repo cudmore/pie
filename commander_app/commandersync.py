@@ -17,9 +17,12 @@ import os, time, math, stat, sys, logging
 import threading, queue
 import socket, paramiko
 
-from concurrent.futures import ThreadPoolExecutor #ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed #ProcessPoolExecutor
 
 logger = logging.getLogger('commander')
+
+class UserCancelSync(Exception):
+	pass
 
 class CommanderSync(threading.Thread):
 
@@ -129,51 +132,69 @@ class CommanderSync(threading.Thread):
 	############################################################################
 	def run(self):
 		"""
-		Continuosly process icoming commands in self.inQueue Queue
+		Continuosly monitor and respond to incoming commands in self.inQueue Queue
 		"""
 		while True:
-			allDone = True
-			if self.myFutures is not None:
-				for future in self.myFutures:
-					if not future.done():
-						allDone = False
-						break
-				if allDone:
-					if self.syncIsBusy:
-						print('run() determined all future(s) are done()')
-					self.syncIsBusy = False
-					
 			try:
-				inDict = self.inQueue.get(block=False, timeout=0)
-			except (queue.Empty) as e:
-				# there was nothing in the queue
-				pass
-			else:
-				# there was something in the queue
-				#print('commandersync.run() inDict:', inDict)
-
-				if inDict == 'fetchfiles':
-					self.fetchFileList()
-				if inDict == 'sync':
-					# need to spawn sync as new thread so we can cancel!!!
-					self.sync()
-				if inDict == 'cancel': # cancel a sync
-					print('commandersync.run() inDict == cancel')
-					if self.syncIsBusy:
-						print('commandersync setting self.cancel = True')
-						self.cancel = True
+				# each time through the loop, determine if we have any more running futures
+				# if not then sync is no longer busy
+				allDone = True
+				if self.myFutures is not None:
+					for future in self.myFutures:
+						try:
+							if not future.done():
+								allDone = False
+								break
+						except (UserCancelSync) as e:
+							print('run() received UserCancelSync:', e, 'future:', future)
+						except (OSError) as e:
+							print('run() received OSError exception:', e)
+						except:
+							print('run() 1 unknown exception')
+					if allDone:
+						if self.syncIsBusy:
+							print('run() determined all future(s) are done()')
+						self.syncIsBusy = False
 					
-			# make sure not to remove this
-			time.sleep(0.1)
-				
+				try:
+					inDict = self.inQueue.get(block=False, timeout=0)
+				except (queue.Empty) as e:
+					# there was nothing in the queue
+					pass
+				else:
+					# there was something in the queue
+					#print('commandersync.run() inDict:', inDict)
+
+					if inDict == 'fetchfiles':
+						self.fetchFileList()
+					if inDict == 'sync':
+						# need to spawn sync as new thread so we can cancel!!!
+						try:
+							self.sync()
+						except:
+							print('run() received exception')
+						
+					if inDict == 'cancel': # cancel a sync
+						print('commandersync.run() inDict == cancel')
+						if self.syncIsBusy:
+							print('commandersync setting self.cancel = True')
+							self.cancel = True
+							"""
+							try:
+								raise UserCancelSync
+							except (UserCancelSync) as e:
+								pass
+							"""
+				# make sure not to remove this
+				time.sleep(0.1)
+			except:
+				print('run() 2 unknown exception')
+								
 	############################################################################
 	def _humanReadableSize(self, bytes):
 		"""
 		Return a human readable string with unit ('bytes', 'KB', 'MB')
 		"""
-		
-		# todo: add GB
-
 		theStr = str(bytes)
 		if bytes < 1000:
 			# bytes
@@ -189,6 +210,22 @@ class CommanderSync(threading.Thread):
 			theStr = str(round(bytes/1000000000,2)) + ' GB'
 		return theStr
 
+	############################################################################
+	def _humanReadableTime(self, seconds):
+		"""
+		Given seconds, return string with hours and minutes
+		"""
+		retStr = ''
+		theSeconds = round(seconds % 60,1)
+		if theSeconds > 1:
+			theSeconds = math.floor(theSeconds)
+		theMinutes = math.floor(seconds/60)
+		#print('seconds:', seconds, 'theMinutes:', theMinutes, 'theSeconds:', theSeconds)
+		if theMinutes > 0:
+			retStr += str(theMinutes) + ' min'
+		if theSeconds > 0:
+			retStr += ' ' + str(theSeconds) + ' sec'
+		return retStr
 	############################################################################
 	def fetchFileList(self):
 		"""
@@ -320,10 +357,23 @@ class CommanderSync(threading.Thread):
 		Parameters:
 			idx: index into self.myFileList
 		"""
+
+		#print('self.cancel:', self.cancel)
+		if self.cancel:
+			#print('myCallback raise UserCancelSync idx:', idx, 'file:', file)
+			#
+			#
+			#put this back in to actually raise
+			#raise UserCancelSync
+			#
+			#
+			pass
+			
 		self.myFileList[idx]['progress'] = bytesDone
 		self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
-		self.myFileList[idx]['elapsedTime'] = round(time.time() - self.myFileList[idx]['startSeconds'],1)
+		timeStr = self._humanReadableTime(time.time() - self.myFileList[idx]['startSeconds'])
+		self.myFileList[idx]['elapsedTime'] = timeStr
 		self.myFileList[idx]['percent'] = round(bytesDone/bytesTotal*100,1)
 		
 		if bytesDone == bytesTotal:
@@ -333,7 +383,8 @@ class CommanderSync(threading.Thread):
 			#print('        progress:', file, bytesDone, 'of', bytesTotal)
 			pass
 		#pass
-	
+
+		
 	def copyThread(self, idx, ip, hostname, remoteFilePath, localFilePath):
 		"""
 		Copy a single file from remote to local
@@ -356,6 +407,7 @@ class CommanderSync(threading.Thread):
 				if self.syncIsBusy:
 					self.cancel = True
 
+		ftp_get_cancel = False
 		if self.cancel:
 			pass
 		else:
@@ -403,8 +455,9 @@ class CommanderSync(threading.Thread):
 				except (IOError) as e:
 					# no .lock file
 					#print('    !!! no lock file:', lockFile)
+					#sprint('xxx IOError')
 					pass
-	
+					
 				if lockFileExists:
 					"""
 					print('    copyThread()')
@@ -424,8 +477,23 @@ class CommanderSync(threading.Thread):
 					"""
 					try:
 						self.myFileList[idx]['startSeconds'] = time.time()
-						lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
-						ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
+						
+						try:
+							lambdaFunction = lambda a, b, file=remoteFilePath, idx=idx: self.myCallback(a, b, file, idx)
+							ftp.get(remoteFilePath, localFilePath, callback=lambdaFunction)
+						except (UserCancelSync) as e:
+							print('    *** copyThread() got UserCancelSync exception idx:', idx, 'remoteFilePath:', remoteFilePath)
+							# CLEANUP PARTIAL FILE
+							ftp_get_cancel = True
+						except:
+							print('unknown exception in ftp.get()')
+						else: # else is only executed if no exceptions !!!
+							try:
+								pass
+								#ftp.close()
+							except:
+								print('ftp.close() exception')
+							
 					except (IOError) as e:
 						print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', file:', remoteFilePath)
 					except:
@@ -435,47 +503,62 @@ class CommanderSync(threading.Thread):
 						#
 						# once file is copied to local and we are 100% sure this is true, remove from remote
 	
-						print('    done copying from remote:', remoteFilePath)
-						syncDict['madeCopy'] = True
-					
-						# before we delete from remote, check the size of local is same as size of remote?
-						attr_remote = ftp.lstat(path=remoteFilePath)
-						remoteSize = attr_remote.st_size
-	
-						attr_local = os.stat(localFilePath)
-						localSize = attr_local.st_size # 1 Byte = 10**-6 MB
-	
-						#print('    remoteSize:', remoteSize, 'localSize:', localSize)
-	
-						if remoteSize == localSize:
-							if self.deleteRemoteFiles:
-								print('    removing remote file:', remoteFilePath)
-								ftp.remove(remoteFilePath)
-								
-								#
-								# delete parent (date) dir if neccessary (empty)
-								# construct parentDirPath (e.g. date folder) and remove if empty
-								"""
-								parentDirPath = ???
-								attrList in ftp.listdir_attr(path=parentDirPath): # returns SFTPAttributes
-								if attrList is Empty:
-									delete parentDirPath
-								"""
-							else:
-								print('    not removing from remote server, self.deleteRemoteFiles == False')
+						if ftp_get_cancel:
+							print('        ****    ftp_get_cancel, remove file idx:', idx, 'file:', localFilePath)
 						else:
-							print('    ERROR: sizes did not match -->> did not remove from remote server')
+							print('    done copying from remote:', remoteFilePath)
+							syncDict['madeCopy'] = True
+					
+							# before we delete from remote, check the size of local is same as size of remote?
+							attr_remote = ftp.lstat(path=remoteFilePath)
+							remoteSize = attr_remote.st_size
+	
+							attr_local = os.stat(localFilePath)
+							localSize = attr_local.st_size # 1 Byte = 10**-6 MB
+	
+							#print('    remoteSize:', remoteSize, 'localSize:', localSize)
+	
+							if remoteSize == localSize:
+								if self.deleteRemoteFiles:
+									print('    removing remote file:', remoteFilePath)
+									ftp.remove(remoteFilePath)
+								
+									#
+									# delete parent (date) dir if neccessary (empty)
+									# construct parentDirPath (e.g. date folder) and remove if empty
+									"""
+									parentDirPath = ???
+									attrList in ftp.listdir_attr(path=parentDirPath): # returns SFTPAttributes
+									if attrList is Empty:
+										delete parentDirPath
+									"""
+								else:
+									print('    not removing from remote server, self.deleteRemoteFiles == False')
+							else:
+								print('    ERROR: sizes did not match -->> did not remove from remote server')
 		
+				#print('1')
 				ftp.close()
 
-			ssh.close()
-
+			#print('2')
+			try:
+				ssh.close()
+			except:
+				print('ssh.close() exception')
+				
 			self.mySyncList.append(syncDict)
 		
 		stopTime = time.time()
 		elapsedSeconds = round(stopTime-startTime,2)
-		print('    copyThread() took', elapsedSeconds, 'remoteFilePath:', remoteFilePath)
+		if ftp_get_cancel:
+			pass
+		else:
+			print('    copyThread() took', elapsedSeconds, 'remoteFilePath:', remoteFilePath)
 		
+		try:
+			pass
+		except:
+			print('xxx unknown exception')
 	
 	def sync(self):
 		"""
@@ -565,9 +648,12 @@ class CommanderSync(threading.Thread):
 			#self.copyThread(idx, ip, hostname, fullRemoteFile, fullLocalPath)
 			
 			# ThreadPoolExecutor 20181226
-			future = self.pool.submit(self.copyThread, idx, ip, hostname, fullRemoteFile, fullLocalPath)
-			self.myFutures.append(future)
-			
+			try:
+				future = self.pool.submit(self.copyThread, idx, ip, hostname, fullRemoteFile, fullLocalPath)
+				self.myFutures.append(future)
+			except:
+				print('self.pool.submit() exception')
+				
 			# somehow, in main run(), go through this list of future(s)
 			# check is ALL are done()
 			# once all are done() then self.syncIsBusy = False
@@ -585,22 +671,38 @@ class CommanderSync(threading.Thread):
 		#print('sync() self.pool.shutdown(wait=True)')
 		#self.pool.shutdown(wait=True)
 		
+		print('zzz')
+		for future in sas_completed(self.myFutures):
+			print('yyy', future)
+		print('zzz2')
+		
 		#
 		# this will return immediately but we still need to wait for running tasks !!!!
 		#
-		print('self.pool.shutdown(wait=False)')
-		self.pool.shutdown(wait=False)
-		
+		try:
+			print('self.pool.shutdown(wait=False)')
+			self.pool.shutdown(wait=False)
+		except (UserCancelSync) as e:
+			print('sync() received exception UserCancelSync')
+		except (OSError) as e:
+			print('sync() received exception OSError')
+		except:
+			print('sync() received unknown exception')
+			
 		#
 		# i need to change the logic here
 		# self.syncIsBusy needs to be updated to reflect that threads in pool are still running???
 		self.syncIsBusy = True
 		
-		#print('sync() is exiting')
+		print('sync() is exiting')
 		
 if __name__ == '__main__':
 	inQueue = queue.Queue()
 	cs = CommanderSync(inQueue)
+	
+	print(cs._humanReadableTime(59))
+	
+	"""
 	cs.daemon = True
 	cs.start()
 	
@@ -619,4 +721,4 @@ if __name__ == '__main__':
 	
 	#for file in cs.myFileList:
 	#	print(file)
-		
+	"""

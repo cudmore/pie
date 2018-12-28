@@ -27,17 +27,41 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 	// commander_sync
 	//
 
+	// check for files to be copied from server
 	$scope.checkForNewFilesButton = function() {
 		console.log('checkForNewFilesButton()')
-		checkForNewFiles()
+		//checkForNewFiles()
+		url = $scope.myUrl + '/fetchfiles' // $scope.myUrl ends in /sync
+		//console.log('$scope.getStatus url:', url)
+		$http.get(url).
+        	then(function(response) {
+        	    //$scope.status = response.data;
+        	});
 	}
+	
+	// start copy/sync from remote server to local host
 	$scope.synchronizeButton = function() {
 		console.log('synchronizeButton()')
-		synchronize()
+		//synchronize()
+		url = $scope.myUrl + '/run' // $scope.myUrl ends in /sync
+		//console.log('$scope.getStatus url:', url)
+		$http.get(url).
+        	then(function(response) {
+        	    //$scope.status = response.data;
+        	});
+
 	}
+
+	// cancel a sync (will cancel after current file is finished)
 	$scope.cancelButton = function() {
 		console.log('cancelButton()')
-		mycancel()
+		//mycancel()
+		url = $scope.myUrl + '/cancel' // $scope.myUrl ends in /sync
+		//console.log('$scope.getStatus url:', url)
+		$http.get(url).
+        	then(function(response) {
+        	    //$scope.status = response.data;
+        	});
 	}
 
 	// when checkbox is clicked
@@ -52,6 +76,16 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	});
 	};
 	
+    $scope.getStatus = function () {
+		url = $scope.myUrl + '/status' // $scope.myUrl ends in /sync
+		//console.log('$scope.getStatus url:', url)
+		$http.get(url).
+        	then(function(response) {
+        	    $scope.status = response.data;
+        	});
+	};
+
+	/*
 	var checkForNewFiles = function () {
 		url = $scope.myUrl + '/fetchfiles' // $scope.myUrl ends in /sync
 		//console.log('$scope.getStatus url:', url)
@@ -60,7 +94,9 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	    //$scope.status = response.data;
         	});
 	};
-
+	*/
+	
+	/*
 	var synchronize = function () {
 		console.log('$scope.deleteAfterCopy', $scope.deleteAfterCopy)
 		url = $scope.myUrl + '/run' // $scope.myUrl ends in /sync
@@ -70,7 +106,9 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	    //$scope.status = response.data;
         	});
 	};
-
+	*/
+	
+	/*
 	// cancel a sync (will cancel after current file is finished)
 	var mycancel = function () {
 		url = $scope.myUrl + '/cancel' // $scope.myUrl ends in /sync
@@ -80,15 +118,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	    //$scope.status = response.data;
         	});
 	};
-
-    $scope.getStatus = function () {
-		url = $scope.myUrl + '/status' // $scope.myUrl ends in /sync
-		//console.log('$scope.getStatus url:', url)
-		$http.get(url).
-        	then(function(response) {
-        	    $scope.status = response.data;
-        	});
-	};
+	*/
+	
 
 // main
 var defaultInterval = 400; // 800

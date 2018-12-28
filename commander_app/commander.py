@@ -177,11 +177,13 @@ def loadconfig():
 		thisFile = os.path.join(bundle_dir, 'config/config_commander_factory.txt')
 	logger.info('Loading config file ' + thisFile)
 	with open(thisFile, 'r') as f:
+		#configfile = json.loads(f)
 		configfile = f.readlines()
 	# remove whitespace characters like ',' and `\n` from each line
 	returnConfigFile = [x.strip(',\n') for x in configfile] 
-	logger.info('Config file contains: ' + str(returnConfigFile))
+	#logger.info('Config file contains: ' + str(returnConfigFile))
 	return jsonify(returnConfigFile)
+	#return jsonify(configfile)
 
 @app.route('/saveconfig/<iplist>')
 def saveconfig(iplist):
