@@ -184,7 +184,7 @@ class CommanderSync(threading.Thread):
 							print('run() received exception')
 						
 					if inDict == 'cancel': # cancel a sync
-						print('commandersync.run() inDict == cancel')
+						print('\n    **** commandersync.run() inDict == cancel')
 						if self.syncIsBusy:
 							print('commandersync setting self.cancel = True')
 							self.cancel = True
@@ -232,7 +232,7 @@ class CommanderSync(threading.Thread):
 		#print('seconds:', seconds, 'theMinutes:', theMinutes, 'theSeconds:', theSeconds)
 		if theMinutes > 0:
 			retStr += str(theMinutes) + ' min'
-		if theSeconds > 0:
+		if theSeconds > 0 or ((not theMinutes>0) and theSeconds>=0):
 			retStr += ' ' + str(theSeconds) + ' sec'
 		return retStr
 	############################################################################
@@ -280,14 +280,14 @@ class CommanderSync(threading.Thread):
 						'hostname': hostname,
 						'remotePath': path,
 						'remoteFile': remoteFile,
-						'progress': 0, # set in self.myCallback()
+						'progress': '', # set in self.myCallback()
 						'size': sizeInBytes,
 						'localExists': localExists,
 						'humanSize': self._humanReadableSize(sizeInBytes),
-						'humanProgress': '0', # set in self.myCallback(),
-						'startSeconds': 0,
-						'elapsedTime': 0,
-						'percent': 0
+						'humanProgress': '', # initialized as string but assigned to int/float in myCallback
+						'startSeconds': 0, # leave this initialized to 0 (not str)
+						'elapsedTime': '', # initialized as string but assigned to int/float in myCallback
+						'percent': '' # initialized as string but assigned to int/float in myCallback
 					}
 					self.myFileList.append(myFile)
 					self.ipDict[ip]['numFiles'] += 1 # for one ip
@@ -321,16 +321,17 @@ class CommanderSync(threading.Thread):
 				logger.info('opening ssh connection to ip: ' + ip)
 				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
-				print('exception 1:', str(e))
+				print('fetchFileList() ssh.connect exception 1:', str(e))
 			except(paramiko.ssh_exception.AuthenticationException) as e:
-				print('exception 2:', str(e))
+				print('fetchFileList() ssh.connect exception 2:', str(e))
 			except (paramiko.ssh_exception.SSHException) as e:
-				print('exception 3:', str(e))
+				print('fetchFileList() ssh.connect exception 3:', str(e))
 			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
-				print('exception 4:', str(e))
+				print('fetchFileList() ssh.connect exception 4:', str(e))
 			except (socket.timeout) as e:
-				print('exception 5:', str(e))
+				print('*** fetchFileList() ssh.connect exception 5:', str(e))
 			else: # else is only executed if no exceptions !!!
+				print('fetchFileList() in else')
 				self.ipDict[ip]['madeConnection'] = True
 				
 				# todo: add error checking here
@@ -441,16 +442,24 @@ class CommanderSync(threading.Thread):
 			try:
 				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
-				print('exception copyThread() 1:', str(e))
+				print('\n*** exception copyThread() 1:', str(e), 'remoteFilePath:', remoteFilePath)
 			except(paramiko.ssh_exception.AuthenticationException) as e:
-				print('exception copyThread() 2:', str(e))
+				print('\n *** exception copyThread() 2:', str(e), 'remoteFilePath:', remoteFilePath)
 			except (paramiko.ssh_exception.SSHException) as e:
-				print('exception copyThread() 3:', str(e))
+				print('\n *** exception copyThread() 3:', str(e), 'remoteFilePath:', remoteFilePath)
+				
+				# need to take action here !!!
+				# getting exception e: Error reading SSH protocol banner[Errno 54] Connection reset by peer
+				#
+				# this exception is pretty random.
+				# one idea is to just force web interface to NOT allow sync twice in a row!!! Require user to 'fetch' again
+				# with this it seems to be fixed
+				
 			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
-				print('exception copyThread() 4:', str(e))
+				print('\n *** exception copyThread() 4:', str(e), 'remoteFilePath:', remoteFilePath)
 			except (socket.timeout) as e:
-				print('exception copyThread() 5:', str(e))
-			else:
+				print('\n *** exception copyThread() 5:', str(e), 'remoteFilePath:', remoteFilePath)
+			else: # else is only executed if no exceptions !!!
 				ftp = ssh.open_sftp()
 
 				#
@@ -496,18 +505,18 @@ class CommanderSync(threading.Thread):
 							# CLEANUP PARTIAL FILE
 							ftp_get_cancel = True
 						except:
-							print('unknown exception in ftp.get()')
+							print('unknown exception in ftp.get()', 'remoteFilePath:', remoteFilePath)
 						else: # else is only executed if no exceptions !!!
 							try:
 								pass
 								#ftp.close()
 							except:
-								print('ftp.close() exception')
+								print('ftp.close() exception', 'remoteFilePath:', remoteFilePath)
 							
 					except (IOError) as e:
-						print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', file:', remoteFilePath)
+						print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', remoteFilePath:', remoteFilePath)
 					except:
-						print('MY EXCEPTION: unknown exception in ftp.get(), file:', remoteFilePath)
+						print('MY EXCEPTION: unknown exception in ftp.get(), remoteFilePath:', remoteFilePath)
 						# should try and remove fullLocalPath
 					else: # else is only executed if no exceptions !!!
 						#
@@ -570,7 +579,7 @@ class CommanderSync(threading.Thread):
 		try:
 			pass
 		except:
-			print('xxx unknown exception')
+			print('copyThread() unknown exception')
 	
 	def sync(self):
 		"""
@@ -578,7 +587,7 @@ class CommanderSync(threading.Thread):
 		Do not copy files that already exist locally
 		"""
 		
-		print('=== commandersync.sync()')
+		print('\n    *** commandersync.sync()')
 		
 		self.syncIsBusy = True
 		
@@ -589,6 +598,9 @@ class CommanderSync(threading.Thread):
 		
 		self.myFutures = []
 
+		###
+		# insert all files into self.pool using self.pool.submit
+		###
 		startTime = time.time()
 		numCopied = 0
 		for idx, file in enumerate(self.myFileList):
@@ -631,7 +643,9 @@ class CommanderSync(threading.Thread):
 				#print('local already exists:', fullLocalPath)
 				continue
 		
-			# todo: put all 3 of these mkdir into copy thread
+			#
+			# todo: put all 3 of these mkdir into copyThread()
+			#
 			
 			# make local directory for all files (e.g. 'video')
 			if not os.path.isdir(self.localFolder):
@@ -664,6 +678,7 @@ class CommanderSync(threading.Thread):
 				future = self.pool.submit(self.copyThread, idx, ip, hostname, fullRemoteFile, fullLocalPath)
 				self.myFutures.append(future)
 			except:
+				# this never happens
 				print('self.pool.submit() exception')
 				
 			# somehow, in main run(), go through this list of future(s)
@@ -672,9 +687,12 @@ class CommanderSync(threading.Thread):
 			
 			numCopied += 1
 		
+		# old
+		"""
 		stopTime = time.time()
 		elapsedSeconds = round(stopTime - startTime,2)
 		print('finished, copied', numCopied, 'files in', elapsedSeconds, 'seconds, ', round(elapsedSeconds/60,2), 'minutes')
+		"""
 		
 		# was this before using pool
 		#self.syncIsBusy = False
@@ -683,10 +701,12 @@ class CommanderSync(threading.Thread):
 		#print('sync() self.pool.shutdown(wait=True)')
 		#self.pool.shutdown(wait=True)
 		
-		print('zzz')
-		for future in sas_completed(self.myFutures):
-			print('yyy', future)
-		print('zzz2')
+		print('*** sync() starting for future in as_completed(self.myFutures)')
+		for future in as_completed(self.myFutures):
+			# future.state
+			# future.returned
+			print('   yyy', future)
+		print('*** sync() finished for future in as_completed(self.myFutures)')
 		
 		#
 		# this will return immediately but we still need to wait for running tasks !!!!
