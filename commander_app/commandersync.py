@@ -102,11 +102,11 @@ class CommanderSync(threading.Thread):
 		
 		
 		#thisFile = 'config/config_commander.txt'
-		thisFile = os.path.join(self.bundle_dir, 'config/config_commander.txt')
+		thisFile = os.path.join(self.bundle_dir, 'config', 'config_commander.txt')
 		if not os.path.isfile(thisFile):
 			#logger.info('defaulting to config/config_commander_factory.txt')
 			#thisFile = 'config/config_commander_factory.txt'
-			thisFile = os.path.join(self.bundle_dir, 'config/config_commander_factory.txt')
+			thisFile = os.path.join(self.bundle_dir, 'config', 'config_commander_factory.txt')
 		logger.info('Loading config file ' + thisFile)
 		with open(thisFile, 'r') as f:
 			configfile = f.readlines()
