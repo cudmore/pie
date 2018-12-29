@@ -6,7 +6,7 @@ angular.module('commander', ['uiSwitch'])
 	
 	document.title = 'Commander'
 	
-	console.log('angular.version:', angular.version)
+	//console.log('angular.version:', angular.version)
 	
 	//url of page we loaded
 	$scope.myUrl = $location.absUrl(); //with port :8000
@@ -16,6 +16,8 @@ angular.module('commander', ['uiSwitch'])
 	
 	// these will be assigned on page load in $scope.loadServers()
 	$scope.numServers = 2;
+	// this is an array of dict {ip:'', 'username':'', password:''}
+	var defaultServerDict = {"ip":"", "username":"", "password":""}
 	$scope.serverList = ['192.168.1.2', '192.168.1.3']
 
 	//
@@ -50,15 +52,18 @@ angular.module('commander', ['uiSwitch'])
 		$scope.showSwarmStatus = ! $scope.showSwarmStatus
 	}
 	
+	//
+	// Manage server list
+	//
 	$scope.addServer = function() {
 		$scope.numServers += 1
-		$scope.serverList.push('')
+		$scope.serverList.push(defaultServerDict)
 		initVideoWall()
 		//$scope.$apply();
 	}
 
 	$scope.removeServer = function(idx) {
-		removeOK = $window.confirm('Are you sure you want to remove server "' + $scope.serverList[idx] + '"?');
+		removeOK = $window.confirm('Are you sure you want to remove server "' + $scope.serverList[idx].ip + '"?');
 		if (removeOK) {
 			$scope.numServers -= 1
 			$scope.serverList.splice(idx,1)
@@ -69,7 +74,7 @@ angular.module('commander', ['uiSwitch'])
 
 	$scope.setServer = function(idx, str) {
 		console.log('$scope.setServer():', idx, str)
-		$scope.serverList[idx] = str
+		$scope.serverList[idx].ip = str
 		initVideoWall();
 	}
 
@@ -87,32 +92,43 @@ angular.module('commander', ['uiSwitch'])
         	});
 	}
 	
-	// Load config_commander.txt
+	// Load config from commander, config_commander.txt
 	$scope.loadServers = function() {
 		var url = $scope.myUrl + 'loadconfig'
 		$http.get(url).
         	then(function(response) {
+        	    //commander.py loadconfig returns a list of dict
+        	    // {ip:'', username:'', password:''}
         	    console.log('loadconfig response.data:', response.data)
         	    //var array = JSON.parse(response.data)
         	    var array = response.data
-        	    //console.log('array:', array)
-        	    $scope.serverList = array
+        	    //20181229, was this
+        	    //$scope.serverList = array
         	    $scope.numServers = array.length
+        	    for (i=0; i<$scope.numServers; i+=1) {
+        	    	$scope.serverList[i] = response.data[i] // .ip
+				}
+				
         	    console.log('loadServers()')
         	    console.log('$scope.serverList:', $scope.serverList)
         	    console.log('$scope.numServers:', $scope.numServers)
+
         	    initVideoWall()
+
         	}, function errorCallback(response) {
         		console.log('loadServers() error')
         	});
 	}
 	
+	//removed 20181229
+	/*
 	$scope.changeDebug = function(doDebug) {
 		console.log('changeDebug()', doDebug)
 		//$scope.doDebug = ! $scope.doDebug
 		console.log('$scope.doDebug:', $scope.doDebug)
 		//initVideoWall()
 	}
+	*/
 	
 	//
 	// main interface
@@ -124,15 +140,15 @@ angular.module('commander', ['uiSwitch'])
 			$scope.videoArray[i] = {}
 			$scope.videoArray[i].myIdx = i
 			
-			$scope.videoArray[i].restUrl = "http://" + $scope.serverList[i] + ":" + restPort + "/"
-			$scope.videoArray[i].adminUrl = "http://" + $scope.serverList[i] + ":" + adminPort + "/"
+			$scope.videoArray[i].restUrl = "http://" + $scope.serverList[i].ip + ":" + restPort + "/"
+			$scope.videoArray[i].adminUrl = "http://" + $scope.serverList[i].ip + ":" + adminPort + "/"
 			
 			getStatus(i) // uses restUrl
 						
 			//$scope.videoArray[i].animalID = ''
 			//$scope.videoArray[i].conditionID = ''
 
-			myStreamUrl = "http://" + $scope.serverList[i] + ":8080/stream"
+			myStreamUrl = "http://" + $scope.serverList[i].ip + ":8080/stream"
 			$scope.videoArray[i].streamUrl = $sce.trustAsResourceUrl(myStreamUrl)
 			$scope.videoArray[i].myStreamUrl = $sce.trustAsResourceUrl(myStreamUrl);
 			
@@ -208,6 +224,7 @@ angular.module('commander', ['uiSwitch'])
 	};
 
     //read the state from homecage backend, do this at an interval
+    //also get bash status (black windows) from admin server
     function getStatus(i) {
 		// from main PiE server
 		url = $scope.videoArray[i].restUrl
@@ -229,7 +246,8 @@ angular.module('commander', ['uiSwitch'])
         		//console.log('getStatus() error', url, i)
         	    $scope.videoArray[i].isAlive = false;
         	});
-        // from admin server
+        	
+        // from admin server, get bash status
 		url = $scope.videoArray[i].adminUrl
 		$http.get(url + 'status').
         	then(function(response) {

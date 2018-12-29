@@ -107,12 +107,68 @@ def myAfterRequest(response):
 	return response
 
 ##################################################################
+# Config
+#	Config file is in 'config_commander.txt'
+#	It is a comma seperated list of IP addresses
+##################################################################
+def _loadConfig():
+	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
+	if not os.path.isfile(thisFile):
+		logger.info('defaulting to config/config_commander_factory.json')
+		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.txt')
+	logger.info('Loading config file ' + thisFile)
+	
+	serverList = []
+	with open(thisFile) as f:
+		try:
+			serverList = json.load(f)
+		except ValueError as e:
+			logger.error('loadconfig ValueError: ' + str(e))
+			# if there is an error in loading config file (json is wrong) we REALLY want to exit
+			#sys.exit(1)
+	
+	logger.info('Config file contains: ' + str(serverList))
+	return serverList
+	
+@app.route('/loadconfig')
+def loadconfig():
+	serverList = _loadConfig()
+	return jsonify(serverList)
+
+@app.route('/saveconfig/<serverList>')
+def saveconfig(serverList):
+	"""
+	serverList is a list of dict {ip, username, password}
+	"""
+	#thisFile = 'config/config_commander.txt'
+	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
+	
+	logger.info('saveconfig() configfile: ' + thisFile)
+	with open(thisFile, 'w') as outfile:
+		json.dump(serverList, outfile, indent=4)
+		"""
+		for line in iplist.split(','):
+			#print('line:', line)
+			outfile.write(line + ',' + '\n')
+		"""
+		
+	# tell commandersync to reload new ip list
+	#cs.loadConfig()
+	cs.setConfig(serverList)
+	
+	return 'saved'
+	
+
+##################################################################
 # CommanderSync
 ##################################################################
 # this has to be instantiated as a threaded commandersync and live in background
 # insert commands into a queue ['fetchfilelist', 'runsync']
+
+myConfig = _loadConfig()
+
 inQueue = queue.Queue()
-cs = commandersync.CommanderSync(inQueue)
+cs = commandersync.CommanderSync(inQueue, myConfig)
 cs.daemon = True
 cs.start()
 
@@ -162,48 +218,6 @@ def sync_status():
 	}
 	return jsonify(status)
 
-##################################################################
-# Config
-#	Config file is in 'config_commander.txt'
-#	It is a comma seperated list of IP addresses
-##################################################################
-@app.route('/loadconfig')
-def loadconfig():
-	#thisFile = 'config/config_commander.txt'
-	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.txt')
-	if not os.path.isfile(thisFile):
-		logger.info('defaulting to config/config_commander_factory.txt')
-		#thisFile = 'config/config_commander_factory.txt'
-		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.txt')
-	logger.info('Loading config file ' + thisFile)
-	with open(thisFile, 'r') as f:
-		#configfile = json.loads(f)
-		configfile = f.readlines()
-	# remove whitespace characters like ',' and `\n` from each line
-	returnConfigFile = [x.strip(',\n') for x in configfile] 
-	#logger.info('Config file contains: ' + str(returnConfigFile))
-	return jsonify(returnConfigFile)
-	#return jsonify(configfile)
-
-@app.route('/saveconfig/<iplist>')
-def saveconfig(iplist):
-	"""
-	iplist is string list of ip numbers
-	"""
-	#thisFile = 'config/config_commander.txt'
-	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.txt')
-	
-	logger.info('saveconfig() configfile: ' + thisFile)
-	with open(thisFile, 'w') as outfile:
-		for line in iplist.split(','):
-			#print('line:', line)
-			outfile.write(line + ',' + '\n')
-	
-	# tell commandersync to reload new ip list
-	cs.loadConfig()
-	
-	return 'saved'
-	
 ##################################################################
 def whatismyip():
 	platform = sys.platform

@@ -74,7 +74,7 @@
 
 		<tr ng-repeat="server in serverList track by $index">
 		<td ng-show="editIPList">
-			<form class="form-inline" ng-submit="setServer($index,server)">
+			<form class="form-inline" ng-submit="setServer($index,server.ip)">
 				<span ng-show="editIPList">
 				<button type="button" class="btn btn-danger btn-sm" ng-click="removeServer($index)">
 				<i class="fa fa-minus fa-1x" aria-hidden="true"></i>
@@ -83,7 +83,7 @@
 				
 				<input style="width: 9em" 
 		   		type="string" 
-		   		ng-model="server"
+		   		ng-model="server.ip"
 		   		/>
 			</form>
 		</td>

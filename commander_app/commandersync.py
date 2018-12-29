@@ -26,7 +26,7 @@ class UserCancelSync(Exception):
 
 class CommanderSync(threading.Thread):
 
-	def __init__(self, inQueue):
+	def __init__(self, inQueue, myConfig):
 		threading.Thread.__init__(self)
 		
 		###
@@ -72,8 +72,8 @@ class CommanderSync(threading.Thread):
 		
 		self.sshTimeout = 5 # seconds, timeout when trying to establish ssh connection
 		
-		# load ip list (same as commander) and assign (self.ipList, self.ipDict)
-		self.loadConfig()
+		# load ip list (same as commander) and assign (self.serverList, self.ipDict)
+		self.setConfig(myConfig)
 
 		self.numFilesToCopy = 0 # total number across all ip in ipList
 		self.myFileList = []
@@ -89,18 +89,23 @@ class CommanderSync(threading.Thread):
 		self.deleteRemoteFiles = onoff
 		print('commandersync.py setDeleteRemoteFiles() set self.deleteRemoteFiles:', self.deleteRemoteFiles)
 	
-	def loadConfig(self):
+	# 20181229, was this
+	#def loadConfig(self):
+	def setConfig(self, serverList):
 		"""
 		Sharing config file with main commander
 		This is an extremely simple list of IP, it is NOT json
 		When user changes/saves ip list in main commander page, this needs to be reloaded
 		
+		Parameters:
+			serverList: List of dict {ip, username, password}
 		Assigns:
-			self.ipList
+			self.serverList
 			self.ipDict
 		"""
 		
 		
+		"""
 		#thisFile = 'config/config_commander.txt'
 		thisFile = os.path.join(self.bundle_dir, 'config', 'config_commander.txt')
 		if not os.path.isfile(thisFile):
@@ -116,18 +121,23 @@ class CommanderSync(threading.Thread):
 		#
 		# assign
 		self.ipList = returnConfigFile
+		"""
+		
+		print('commandersync.serverList serverList:', serverList)
+		
+		self.serverList = serverList
 		
 		self.ipDict = {}
-		for ip in self.ipList:
-			self.ipDict[ip] = {
-				'ip': ip,
+		for server in self.serverList:
+			self.ipDict[server['ip']] = {
+				'ip': server['ip'],
 				'hostname': '',
 				'madeConnection': False,
 				'numFiles': 0,
 				'numFilesToCopy': 0,
 			}
 
-		return returnConfigFile
+		#return returnConfigFile
 		
 	############################################################################
 	def run(self):
@@ -135,7 +145,8 @@ class CommanderSync(threading.Thread):
 		Continuosly monitor and respond to incoming commands in self.inQueue Queue
 		"""
 		while True:
-			try:
+			#try:
+			if 1:
 				# each time through the loop, determine if we have any more running futures
 				# if not then sync is no longer busy
 				allDone = True
@@ -196,8 +207,10 @@ class CommanderSync(threading.Thread):
 							"""
 				# make sure not to remove this
 				time.sleep(0.1)
+			"""
 			except (Exception) as e:
-				print('run() 2 unknown exception:', e)
+				print('commandersync.run() 2 unknown exception:', e)
+			"""
 								
 	############################################################################
 	def _humanReadableSize(self, bytes):
@@ -238,7 +251,7 @@ class CommanderSync(threading.Thread):
 	############################################################################
 	def fetchFileList(self):
 		"""
-		fetch all files to be copied from each ip in self.ipList
+		fetch all files to be copied from each ip in self.serverList
 		"""
 		
 		def _fetchFileList(ip, path, depth):
@@ -284,7 +297,7 @@ class CommanderSync(threading.Thread):
 					localExists = os.path.isfile(fullLocalPath)
 
 					if not localExists:
-						self.numFilesToCopy += 1 # across all ip in self.ipList
+						self.numFilesToCopy += 1 # across all ip in self.serverList
 						
 					myFile = {
 						'ip': ip,
@@ -307,19 +320,24 @@ class CommanderSync(threading.Thread):
 					
 		# fetch ip from file, may have configured in main interface
 		#self.ipList = self.loadConfig()
-		self.loadConfig()
+		#self.loadConfig() # now called self.setConfig
+		
+		print('commandersync.fetchfilelist self.serverList:', self.serverList)
 		
 		self.fetchIsBusy = True
 		self.numFilesToCopy = 0
 		self.myFileList = []
-		for ip in self.ipList:
+		for server in self.serverList:
+			
+			print('fetchFileList server:', server)
+			current_ip = server['ip']
 			
 			# initialize internal dictionary
-			self.ipDict[ip]['ip'] = ip
-			self.ipDict[ip]['hostname'] = '' # assigned below
-			self.ipDict[ip]['numFiles'] = 0
-			self.ipDict[ip]['numFilesToCopy'] = 0
-			self.ipDict[ip]['madeConnection'] = False
+			self.ipDict[current_ip]['ip'] = current_ip
+			self.ipDict[current_ip]['hostname'] = '' # assigned below
+			self.ipDict[current_ip]['numFiles'] = 0
+			self.ipDict[current_ip]['numFilesToCopy'] = 0
+			self.ipDict[current_ip]['madeConnection'] = False
 			
 			# connect with ssh
 			ssh = paramiko.SSHClient()
@@ -329,8 +347,8 @@ class CommanderSync(threading.Thread):
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			
 			try:
-				logger.info('opening ssh connection to ip: ' + ip)
-				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
+				logger.info('opening ssh connection to ip: ' + current_ip)
+				ssh.connect(current_ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('fetchFileList() ssh.connect exception 1:', str(e))
 			except(paramiko.ssh_exception.AuthenticationException) as e:
@@ -343,7 +361,7 @@ class CommanderSync(threading.Thread):
 				print('*** fetchFileList() ssh.connect exception 5:', str(e))
 			else: # else is only executed if no exceptions !!!
 				print('fetchFileList() in else')
-				self.ipDict[ip]['madeConnection'] = True
+				self.ipDict[server['ip']]['madeConnection'] = True
 				
 				# todo: add error checking here
 				
@@ -352,17 +370,17 @@ class CommanderSync(threading.Thread):
 				hostname = stdout.read().strip().decode("utf-8")
 				#print('hostname:', hostname, type(hostname))
 			
-				self.ipDict[ip]['hostname'] = hostname
+				self.ipDict[current_ip]['hostname'] = hostname
 				
 				ftp = ssh.open_sftp()
 					
-				_fetchFileList(ip, '', depth='')
+				_fetchFileList(current_ip, '', depth='')
 					
 				ftp.close()
 
 			ssh.close()
 
-		print('fetchFileList() found', self.numFilesToCopy, 'files to copy from', len(self.myFileList), 'files across', len(self.ipList), 'PiE servers')
+		print('fetchFileList() found', self.numFilesToCopy, 'files to copy from', len(self.myFileList), 'files across', len(self.serverList), 'PiE servers')
 		"""
 		for k, v in self.ipDict.items():
 			print('    ', k, v)
