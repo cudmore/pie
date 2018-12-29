@@ -196,8 +196,8 @@ class CommanderSync(threading.Thread):
 							"""
 				# make sure not to remove this
 				time.sleep(0.1)
-			except:
-				print('run() 2 unknown exception')
+			except (Exception) as e:
+				print('run() 2 unknown exception:', e)
 								
 	############################################################################
 	def _humanReadableSize(self, bytes):
