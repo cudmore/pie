@@ -46,7 +46,7 @@ class CommanderSync(threading.Thread):
 		# userPath will be /Users/<user> on macOS and /home/<user> on Debian/Raspbian
 		userPath = os.path.expanduser('~')
 		self.localFolder = os.path.join(userPath, 'commander_data') # all local files with be in this folder
-		logger.info('saving to ' +self.localFolder)
+		logger.info('saving to ' + self.localFolder)
 		
 		#self._localFolder = os.path.abspath(self.localFolder)
 		#print('Commander sync will save into:', self._localFolder)
@@ -180,8 +180,8 @@ class CommanderSync(threading.Thread):
 						# need to spawn sync as new thread so we can cancel!!!
 						try:
 							self.sync()
-						except:
-							print('run() received exception')
+						except (Exception) as e:
+							print('run() received exception:', str(e))
 						
 					if inDict == 'cancel': # cancel a sync
 						print('\n    **** commandersync.run() inDict == cancel')
@@ -245,16 +245,27 @@ class CommanderSync(threading.Thread):
 			#print(depth, '=== fetchFileList() path:', path)
 
 			# ftp.listdir_attr will fail if remote does not have folder self.remoteFolder
-			actualPath = os.path.join(self.remoteFolder, path) # we are always looking in remote /home/pi/video
+			
+			# actualPath will be used on remote linux system, do not use os.path.join
+			#actualPath = os.path.join(self.remoteFolder, path) # we are always looking in remote /home/pi/video
+			actualPath = self.remoteFolder + '/' + path # we are always looking in remote /home/pi/video
 			
 			for attr in ftp.listdir_attr(path=actualPath): # returns SFTPAttributes
 
+				# todo: remove this, paramiko will never return ('.', '..')
 				if attr.filename.startswith('.'):
 					continue
 
 				if stat.S_ISDIR(attr.st_mode):
 					# if attr is a folder/dir -->> recursively traverse into it
-					newPath = os.path.join(path, attr.filename)
+					# newPath will be used on remote linux system, do not use os.path.join
+					#newPath = os.path.join(path, attr.filename)
+					#print('kkk newPath:', newPath)
+					if path:
+						newPath = path + '/' + attr.filename
+					else:
+						newPath = attr.filename
+						
 					_fetchFileList(ip, newPath, depth + '    ')
 				else:
 					# assuming attr is a file -->> append to self.myFileList
@@ -633,8 +644,12 @@ class CommanderSync(threading.Thread):
 			# todo: use this
 			localExists = file['localExists']
 			
+			print('self.localFolder:', self.localFolder)
+			print('hostname:', hostname)
+			print('remotePath:', remotePath)
 			localFolder = os.path.join(self.localFolder, hostname, remotePath)
-
+			print('localFolder:', localFolder)
+			
 			#
 			# check if local file already exists
 			# todo: use localExists
@@ -649,16 +664,19 @@ class CommanderSync(threading.Thread):
 			
 			# make local directory for all files (e.g. 'video')
 			if not os.path.isdir(self.localFolder):
-				os.mkdir(self.localFolder) # will make in same dir as *this file
+				print('mkdir self.localFolder:', self.localFolder)
+				os.mkdir(self.localFolder) # 
 
 			# make local directory for 'hostname'
 			hostNameFolder = os.path.join(self.localFolder, hostname)
 			if not os.path.isdir(hostNameFolder):
-				os.mkdir(hostNameFolder) # will make in same dir as *this file
+				print('mkdir hostNameFolder:', hostNameFolder)
+				os.mkdir(hostNameFolder) # 
 
 			#
 			# make local directory (usually date folder 'yyyymmdd')
 			if not os.path.isdir(localFolder):
+				print('mkdir localFolder:', localFolder)
 				os.mkdir(localFolder) # assumes we are only going one dir deep, e.g. /home/pi/video/20181220
 
 			# all our remote files are always in /home/pi/video
