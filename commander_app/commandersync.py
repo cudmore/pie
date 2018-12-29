@@ -681,8 +681,14 @@ class CommanderSync(threading.Thread):
 
 			# all our remote files are always in /home/pi/video
 			# todo: fix this
-			fullRemoteFile = os.path.join(self.remoteFolder, remotePath, remoteFile)
-	
+			# can't use join, this is always a linux path and needs to be linux path evn on window
+			#fullRemoteFile = os.path.join(self.remoteFolder, remotePath, remoteFile)
+			# todo: make sure this works when remotePath == ''
+			if remotePath:
+				fullRemoteFile = self.remoteFolder + '/' + remotePath + '/' + remoteFile
+			else:
+				fullRemoteFile = self.remoteFolder + '/' + remoteFile
+				
 			#
 			# todo: get this into a thread
 			#
