@@ -84,7 +84,7 @@ werkzeugLogger.setLevel(logging.ERROR)
 @app.route('/')
 @app.route('/commander')
 def hello_world():
-	indexPath = os.path.join(bundle_dir, 'templates/index.html')
+	indexPath = os.path.join(bundle_dir, 'templates', 'index.html')
 	return send_file(indexPath)
 	#return send_file('templates/index.html')
 
@@ -170,11 +170,11 @@ def sync_status():
 @app.route('/loadconfig')
 def loadconfig():
 	#thisFile = 'config/config_commander.txt'
-	thisFile = os.path.join(bundle_dir, 'config/config_commander.txt')
+	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.txt')
 	if not os.path.isfile(thisFile):
 		logger.info('defaulting to config/config_commander_factory.txt')
 		#thisFile = 'config/config_commander_factory.txt'
-		thisFile = os.path.join(bundle_dir, 'config/config_commander_factory.txt')
+		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.txt')
 	logger.info('Loading config file ' + thisFile)
 	with open(thisFile, 'r') as f:
 		#configfile = json.loads(f)
@@ -191,7 +191,7 @@ def saveconfig(iplist):
 	iplist is string list of ip numbers
 	"""
 	#thisFile = 'config/config_commander.txt'
-	thisFile = os.path.join(bundle_dir, 'config/config_commander.txt')
+	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.txt')
 	
 	logger.info('saveconfig() configfile: ' + thisFile)
 	with open(thisFile, 'w') as outfile:
@@ -212,7 +212,7 @@ def whatismyip():
 		ip = check_output(['hostname', '--all-ip-addresses'])
 		ip = ip.decode('utf-8').strip()
 	elif platform == 'darwin':
-		whatismyip_cmd = os.path.join(bundle_dir,'bin/whatismyip')
+		whatismyip_cmd = os.path.join(bundle_dir,'bin', 'whatismyip')
 		ip = subprocess.check_output(whatismyip_cmd)
 		ip = ip.decode('utf-8').strip()
 	else:
