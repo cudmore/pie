@@ -214,7 +214,11 @@ def sync_status():
 		'myFileList': cs.myFileList,
 		'mySyncList': cs.mySyncList,
 		'localFolder': cs.localFolder,
-		'cancel': cs.cancel # if True then cancel is pending
+		'cancel': cs.cancel, # if True then cancel is pending
+		'syncStartStr': cs.syncStartStr,
+		'syncElapsedStr': cs.syncElapsedStr,
+		'syncNumToCopy': cs.syncNumToCopy,
+		'syncNumTotalToCopy': cs.syncNumTotalToCopy
 	}
 	return jsonify(status)
 

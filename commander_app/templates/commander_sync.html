@@ -26,6 +26,9 @@
 			h4, h5 {
 			margin-left: 30px; /* change this as you like */
 			}
+
+			.fa-check {color: green;}
+
 		</style>
 	</head>
 
@@ -138,7 +141,12 @@
 		<span style="float:right">
 		Saving files to {{ status.localFolder }}
 		</span>
-		
+	
+	<BR>
+	Started: {{ status.syncStartStr }}
+	Elapsed: {{ status.syncElapsedStr }}
+	Number remaining: {{ status.syncNumToCopy }} of {{ status.syncNumTotalToCopy }}
+	
 	<table class="myTable myTable-short">
 	<tr>
 	<th></th> <!-- index -->
@@ -176,13 +184,17 @@
 		<td>
 			{{ v.elapsedTime }}
 		</td>
-		<td ng-if="v.size == v.progress" style="background-color:#00FF00">
+		<!-- <td ng-if="v.size == v.progress" style="background-color:#00FF00"> -->
+		<td ng-if="v.size == v.progress" style="color:#00AA00">
+			{{ v.percent }} <i class="fa fa-check" aria-hidden="true"></i>
+		</td>
+		<td ng-if="v.percent == 'Busy Error'" style="background-color:#FF5555">
 			{{ v.percent }}
 		</td>
 		<td ng-if="v.percent == 'Cancelled'" style="background-color:#EEEE00">
 			{{ v.percent }}
 		</td>
-		<td ng-if="v.size != v.progress && v.percent != 'Cancelled'">
+		<td ng-if="v.size != v.progress && v.percent != 'Cancelled' && v.percent != 'Busy Error'">
 			{{ v.percent }}
 		</td>
 	</tr>
