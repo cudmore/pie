@@ -217,8 +217,11 @@ def sync_status():
 		'cancel': cs.cancel, # if True then cancel is pending
 		'syncStartStr': cs.syncStartStr,
 		'syncElapsedStr': cs.syncElapsedStr,
-		'syncNumToCopy': cs.syncNumToCopy,
-		'syncNumTotalToCopy': cs.syncNumTotalToCopy
+		'syncNumCopied': cs.syncNumCopied,
+		'syncNumTotalToCopy': cs.syncNumTotalToCopy,
+		'syncBytesCopied': cs._humanReadableSize(cs.syncBytesCopied),
+		'syncTotalBytesToCopy': cs._humanReadableSize(cs.syncTotalBytesToCopy),
+		'syncEstimatedTimeArrival': cs._humanReadableTime(cs.syncEstimatedTimeArrival)
 	}
 	return jsonify(status)
 

@@ -88,8 +88,12 @@ class CommanderSync(threading.Thread):
 		self.syncStartStr = ''
 		self.syncElapsedSeconds = None
 		self.syncElapsedStr = ''
-		self.syncNumToCopy = 0 # number remaining
-		self.syncNumTotalToCopy = 0 # 
+		#self.syncNumToCopy = 0 # number remaining
+		self.syncNumCopied = 0 # number actually copied
+		self.syncNumTotalToCopy = 0 # total number to copy
+		self.syncTotalBytesToCopy = 0
+		self.syncBytesCopied = 0
+		self.syncEstimatedTimeArrival = None # estimated time remaining
 		
 		#self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
 		
@@ -156,7 +160,7 @@ class CommanderSync(threading.Thread):
 			#try:
 			if 1:
 				#
-				# STOP TRYIN TO USE THIS DURING SYNC AND SYNC CANCEL ... IT DOES NOT GET EXECUTED
+				# STOP TRYING TO USE THIS DURING SYNC AND SYNC CANCEL ... IT DOES NOT GET EXECUTED
 				#
 				"""
 				if self.syncStartedSeconds is not None:
@@ -169,8 +173,6 @@ class CommanderSync(threading.Thread):
 				# if not then sync is no longer busy
 				allDone = True
 				if self.myFutures is not None:
-
-
 					for future in self.myFutures:
 						try:
 							if not future.done():
@@ -194,9 +196,11 @@ class CommanderSync(threading.Thread):
 							# ???
 							self.cancel = False
 
+							"""
 							self.syncStartedSeconds = None
 							self.syncStartStr = ''
 							self.syncElapsedSeconds = ''
+							"""
 							
 						self.syncIsBusy = False
 					"""
@@ -211,6 +215,20 @@ class CommanderSync(threading.Thread):
 						self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
 						self.syncElapsedStr = _humanReadableTime(self.syncElapsedSeconds)
 					"""
+				if self.syncIsBusy:
+					self.syncBytesCopied = 0
+					self.syncEstimatedTimeArrival = 0
+					tmpFileCount = 0
+					for idx, file in enumerate(self.myFileList):
+						self.syncBytesCopied += file['bytesCopied']
+						if file['etaSeconds'] is not None:
+							self.syncEstimatedTimeArrival += file['etaSeconds']
+							tmpFileCount += 1
+					if tmpFileCount > 0:
+						self.syncEstimatedTimeArrival /= tmpFileCount
+					else:
+						self.syncEstimatedTimeArrival = None
+					#print('self.syncEstimatedTimeArrival:', self.syncEstimatedTimeArrival)
 					
 				try:
 					inDict = self.inQueue.get(block=False, timeout=0)
@@ -254,55 +272,25 @@ class CommanderSync(threading.Thread):
 			"""
 								
 	############################################################################
-	def _humanReadableSize(self, bytes):
-		"""
-		Return a human readable string with unit ('bytes', 'KB', 'MB')
-		"""
-		theStr = str(bytes)
-		if bytes < 1000:
-			# bytes
-			theStr = str(bytes) + ' bytes'
-		elif bytes < 1000000:
-			# KB, divide -> round -> int -> str
-			theStr = str(int(round(bytes/1000,0))) + ' KB'
-		elif bytes < 1000000000:
-			# MB
-			theStr = str(round(bytes/1000000,1)) + ' MB'
-		else:
-			# MB
-			theStr = str(round(bytes/1000000000,2)) + ' GB'
-		return theStr
-
-	############################################################################
-	def _humanReadableTime(self, seconds):
-		"""
-		Given seconds, return string with hours and minutes
-		"""
-		retStr = ''
-		theSeconds = round(seconds % 60,1)
-		if theSeconds > 1:
-			theSeconds = math.floor(theSeconds)
-		theMinutes = math.floor(seconds/60)
-		#print('seconds:', seconds, 'theMinutes:', theMinutes, 'theSeconds:', theSeconds)
-		if theMinutes > 0:
-			retStr += str(theMinutes) + ' min'
-		if theSeconds > 0 or ((not theMinutes>0) and theSeconds>=0):
-			retStr += ' ' + str(theSeconds) + ' sec'
-		return retStr
 	############################################################################
 	def fetchFileList(self):
 		"""
-		fetch all files to be copied from each ip in self.serverList
+		Fetch all files to be copied from each ip in self.serverList
+		
+		Detalails:
+			Will only add files with extensions self.copyTheseExtensions
 		"""
 		
 		def _fetchFileList(ip, path, depth):
+			"""
+			recursively build list of files starting at path 'path'
+			"""
 			#print(depth, '=== fetchFileList() path:', path)
 
 			# ftp.listdir_attr will fail if remote does not have folder self.remoteFolder
 			
 			# actualPath will be used on remote linux system, do not use os.path.join
-			#actualPath = os.path.join(self.remoteFolder, path) # we are always looking in remote /home/pi/video
-			actualPath = self.remoteFolder + '/' + path # we are always looking in remote /home/pi/video
+			actualPath = self.remoteFolder + '/' + path # we are always looking in self.remoteFolder = /home/pi/video
 			
 			for attr in ftp.listdir_attr(path=actualPath): # returns SFTPAttributes
 
@@ -311,10 +299,8 @@ class CommanderSync(threading.Thread):
 					continue
 
 				if stat.S_ISDIR(attr.st_mode):
-					# if attr is a folder/dir -->> recursively traverse into it
+					# attr is a folder/dir -->> recursively traverse into it
 					# newPath will be used on remote linux system, do not use os.path.join
-					#newPath = os.path.join(path, attr.filename)
-					#print('kkk newPath:', newPath)
 					if path:
 						newPath = path + '/' + attr.filename
 					else:
@@ -347,12 +333,16 @@ class CommanderSync(threading.Thread):
 						'remoteFile': remoteFile,
 						'progress': '', # set in self.myCallback()
 						'size': sizeInBytes,
+						'bytesCopied': 0,
 						'localExists': localExists,
 						'humanSize': self._humanReadableSize(sizeInBytes),
 						'humanProgress': '', # initialized as string but assigned to int/float in myCallback
 						'startSeconds': 0, # leave this initialized to 0 (not str)
 						'elapsedTime': '', # initialized as string but assigned to int/float in myCallback
-						'percent': '' # initialized as string but assigned to int/float in myCallback
+						'percent': '', # initialized as string but assigned to int/float in myCallback
+						'lastCallbackSeconds': None,
+						'lastCallbackBytes': None,
+						'etaSeconds': None,
 					}
 					self.myFileList.append(myFile)
 					self.ipDict[ip]['numFiles'] += 1 # for one ip
@@ -383,7 +373,6 @@ class CommanderSync(threading.Thread):
 			# connect with ssh
 			ssh = paramiko.SSHClient()
 			#ssh.load_host_keys(self.known_hosts)
-
 			#ssh.load_system_host_keys()
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			
@@ -402,6 +391,7 @@ class CommanderSync(threading.Thread):
 				print('*** fetchFileList() ssh.connect exception 5:', str(e))
 			else: # else is only executed if no exceptions !!!
 				print('fetchFileList() in else')
+
 				self.ipDict[server['ip']]['madeConnection'] = True
 				
 				# todo: add error checking here
@@ -409,7 +399,6 @@ class CommanderSync(threading.Thread):
 				# get remote hostname, we will make a local folder 'hostname'
 				stdin, stdout, stderror = ssh.exec_command('hostname')
 				hostname = stdout.read().strip().decode("utf-8")
-				#print('hostname:', hostname, type(hostname))
 			
 				self.ipDict[current_ip]['hostname'] = hostname
 				
@@ -422,11 +411,7 @@ class CommanderSync(threading.Thread):
 			ssh.close()
 
 		print('fetchFileList() found', self.numFilesToCopy, 'files to copy from', len(self.myFileList), 'files across', len(self.serverList), 'PiE servers')
-		"""
-		for k, v in self.ipDict.items():
-			print('    ', k, v)
-		"""
-			
+
 		self.fetchIsBusy = False
 		
 	############################################################################
@@ -435,43 +420,55 @@ class CommanderSync(threading.Thread):
 		Track the progress of a network file copy
 		
 		Parameters:
+			file:
 			idx: index into self.myFileList
+			lock: a global lock shared across all copyThread threads
 		"""
 
 		try:
 			#print('self.cancel:', self.cancel)
 			if self.cancel:
-				#print('myCallback raise UserCancelSync idx:', idx, 'file:', file)
 				#
-				#
-				#put this back in to actually raise
 				print('!!! myCallback() raise UserCancelSync idx:', idx, 'file:', file)
 				raise UserCancelSync
 				#
-				#
-				#pass
 			
 			self.myFileList[idx]['progress'] = bytesDone
 			self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
-			timeStr = self._humanReadableTime(time.time() - self.myFileList[idx]['startSeconds'])
-			self.myFileList[idx]['elapsedTime'] = timeStr
+			elapsedTime = time.time() - self.myFileList[idx]['startSeconds']
+			elapsedTimeStr = self._humanReadableTime(elapsedTime)
+			self.myFileList[idx]['elapsedTime'] = elapsedTimeStr
 			self.myFileList[idx]['percent'] = round(bytesDone/bytesTotal*100,1)
 		
-			# do not do this here, to do this we would need a lock
+			self.myFileList[idx]['bytesCopied'] = bytesDone
+			
+			#
+			# calculate eta seconds
+			if self.myFileList[idx]['lastCallbackSeconds'] is not None:
+				
+				#totalBytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
+				totalBytesRemaining = bytesTotal - bytesDone
+				
+				secondsElapsed = time.time() - self.myFileList[idx]['lastCallbackSeconds']
+				elapsedBytes = bytesDone - self.myFileList[idx]['lastCallbackBytes'] # since last callback
+				etaSeconds = secondsElapsed * totalBytesRemaining / elapsedBytes
+				self.myFileList[idx]['etaSeconds'] = etaSeconds
+				
+				# when we are done, there is no more ETA
+				if bytesDone == bytesTotal:
+					self.myFileList[idx]['etaSeconds'] = None
+					
+			self.myFileList[idx]['lastCallbackSeconds'] = time.time()
+			self.myFileList[idx]['lastCallbackBytes'] = bytesDone
+				
+			
 			with lock:
 				self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
 				self.syncElapsedStr = self._humanReadableTime(self.syncElapsedSeconds)
 		
-			if bytesDone == bytesTotal:
-				#print('        done:', file, bytesDone, 'of', bytesTotal, ',', bytesTotal*(10**-6), 'MB')
-				pass
-			else:
-				#print('        progress:', file, bytesDone, 'of', bytesTotal)
-				pass
-			#pass
 		except (UserCancelSync) as e:
-			print('!!! myCallback() RE RAISE UserCancelSync idx:', idx, 'file:', file)
+			#print('!!! myCallback() RE RAISE UserCancelSync idx:', idx, 'file:', file)
 			raise
 		except (Exception) as e:
 			print('!!! myCallback() Exception:', e, 'idx:', idx, 'file:', file)
@@ -545,14 +542,15 @@ class CommanderSync(threading.Thread):
 				# one idea is to just force web interface to NOT allow sync twice in a row!!! Require user to 'fetch' again
 				# with this it seems to be fixed
 				self.myFileList[idx]['percent'] = 'Busy Error'
+
+				with lock:
+					self.syncNumTotalToCopy -= 1
 				
 			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
 				print('\n *** exception copyThread() 4:', str(e), 'remoteFilePath:', remoteFilePath)
 			except (socket.timeout) as e:
 				print('\n *** exception copyThread() 5:', str(e), 'remoteFilePath:', remoteFilePath)
 			else: # else is only executed if no exceptions !!!
-				with lock:
-					self.syncNumToCopy += 1
 				
 				ftp = ssh.open_sftp()
 
@@ -574,8 +572,7 @@ class CommanderSync(threading.Thread):
 				if lockFileExists:
 					"""
 					print('    copyThread()')
-					print('    ip:', ip, 'hostname:', hostname)
-					print('    remote file:', remoteFilePath)
+					print('    ip:', ip, 'hostname:', hostname, 'remoteFilePath:', remoteFilePath)
 					print('    FOUND LOCK FILE ON REMOTE -->> did not copy')
 					"""
 					syncDict['lockFile'] = True
@@ -584,10 +581,15 @@ class CommanderSync(threading.Thread):
 					# copy the file from remote to local
 					"""
 					print('    copyThread()')
-					print('    ip:', ip, 'hostname:', hostname)
-					print('    remote file:', remoteFilePath)
+					print('    ip:', ip, 'hostname:', hostname, 'remoteFilePath:', remoteFilePath)
 					print('    local file:', localFilePath)
 					"""
+					
+					"""
+					with lock:
+						self.syncNumToCopy += 1
+					"""
+					
 					try:
 						self.myFileList[idx]['startSeconds'] = time.time()
 						
@@ -626,8 +628,9 @@ class CommanderSync(threading.Thread):
 						else:
 							print('    done copying from remote:', remoteFilePath)
 							with lock:
-								self.syncNumToCopy -= 1
-
+								#self.syncNumToCopy -= 1
+								self.syncNumCopied += 1
+								
 							syncDict['madeCopy'] = True
 					
 							# before we delete from remote, check the size of local is same as size of remote?
@@ -692,8 +695,13 @@ class CommanderSync(threading.Thread):
 		self.syncIsBusy = True
 		
 		self.mySyncList = [] # keep track of what we actually sync
+
+		self.syncNumTotalToCopy = 0
+		#self.syncNumToCopy = 0
+		self.syncNumCopied = 0 # number actually copied
 		
-		#self.pool = ThreadPoolExecutor(max_workers=5) #max_workers
+		#
+		# create a pool of workers
 		max_workers= None # when None = cpu cores * 5
 		thread_name_prefix= 'myThreadPoolExecutor'
 		self.pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix=thread_name_prefix) #max_workers
@@ -706,44 +714,21 @@ class CommanderSync(threading.Thread):
 		self.syncElapsedSeconds = 0
 		"""
 		
-		# so copy_thread can use a global lock (and set self.xxx
+		# copy_thread needs to use a lock to set any self.xxx member variables
 		self.myManager = multiprocessing.Manager()
 		self.myLock = self.myManager.Lock()
 		
-		###
+		#
 		# insert all files into self.pool using self.pool.submit
-		###
 		startTime = time.time()
 		numCopied = 0
 		for idx, file in enumerate(self.myFileList):
 
-			# check if we were cancelled
-			"""
-			try:
-				inDict = self.inQueue.get(block=False, timeout=0)
-			except (queue.Empty) as e:
-				# there was nothing in the queue
-				pass
-			else:
-				if inDict == 'cancel': # cancel a sync
-					if self.syncIsBusy:
-						self.cancel = True
-					
-
-			# respond to cancel
-			if self.cancel:
-				print('commandersync.sync() is cancelling')
-				self.cancel = False
-				break
-			"""
-			
-			#print(file)
 			ip = file['ip']
 			hostname = file['hostname']
 			remotePath = file['remotePath']
 			remoteFile = file['remoteFile']
-			# todo: use this
-			localExists = file['localExists']
+			localExists = file['localExists'] # todo: use this
 			
 			print('self.localFolder:', self.localFolder)
 			print('hostname:', hostname)
@@ -763,41 +748,31 @@ class CommanderSync(threading.Thread):
 			# todo: put all 3 of these mkdir into copyThread()
 			#
 			
-			# make local directory for all files (e.g. 'video')
+			# 1) make local directory for all files (e.g. 'video')
 			if not os.path.isdir(self.localFolder):
 				print('mkdir self.localFolder:', self.localFolder)
 				os.mkdir(self.localFolder) # 
 
-			# make local directory for 'hostname'
+			# 2) make local directory for 'hostname'
 			hostNameFolder = os.path.join(self.localFolder, hostname)
 			if not os.path.isdir(hostNameFolder):
 				print('mkdir hostNameFolder:', hostNameFolder)
 				os.mkdir(hostNameFolder) # 
 
 			#
-			# make local directory (usually date folder 'yyyymmdd')
+			# 3) make local directory (usually date folder 'yyyymmdd')
 			if not os.path.isdir(localFolder):
 				print('mkdir localFolder:', localFolder)
 				os.mkdir(localFolder) # assumes we are only going one dir deep, e.g. /home/pi/video/20181220
 
 			# all our remote files are always in /home/pi/video
-			# todo: fix this
-			# can't use join, this is always a linux path and needs to be linux path evn on window
-			#fullRemoteFile = os.path.join(self.remoteFolder, remotePath, remoteFile)
+			# can't use join, this is always a linux path and needs to be linux path even on window
 			# todo: make sure this works when remotePath == ''
 			if remotePath:
 				fullRemoteFile = self.remoteFolder + '/' + remotePath + '/' + remoteFile
 			else:
 				fullRemoteFile = self.remoteFolder + '/' + remoteFile
 				
-			#
-			# todo: get this into a thread
-			#
-			
-			# was working, trying ThreadPoolExecutor
-			#print('copying file', numCopied+1, 'of', self.numFilesToCopy, 'idx:', idx, 'of', len(self.myFileList))
-			#self.copyThread(idx, ip, hostname, fullRemoteFile, fullLocalPath)
-			
 			##
 			# self.pool.submit
 			##
@@ -808,27 +783,16 @@ class CommanderSync(threading.Thread):
 				# this never happens
 				print('self.pool.submit() exception')
 				
-			# somehow, in main run(), go through this list of future(s)
+			# in main run(), go through this list of future(s)
 			# check is ALL are done()
 			# once all are done() then self.syncIsBusy = False
 			
+			with self.myLock:
+				self.syncNumTotalToCopy += 1
+				#self.syncNumToCopy += 1 # decremented when done in copyThread
+				self.syncTotalBytesToCopy += file['size']
 			numCopied += 1
-		
-		self.syncNumTotalToCopy = self.syncNumToCopy
-		# old
-		"""
-		stopTime = time.time()
-		elapsedSeconds = round(stopTime - startTime,2)
-		print('finished, copied', numCopied, 'files in', elapsedSeconds, 'seconds, ', round(elapsedSeconds/60,2), 'minutes')
-		"""
-		
-		# was this before using pool
-		#self.syncIsBusy = False
-		
-		# wait for background threads to stop
-		#print('sync() self.pool.shutdown(wait=True)')
-		#self.pool.shutdown(wait=True)
-		
+
 		"""
 		# this blocks
 		print('*** sync() starting for future in as_completed(self.myFutures)')
@@ -839,25 +803,69 @@ class CommanderSync(threading.Thread):
 		print('*** sync() finished for future in as_completed(self.myFutures)')
 		"""
 		
-		#
+		# wait for background threads to stop
+		#print('sync() self.pool.shutdown(wait=True)')
+		#self.pool.shutdown(wait=True)
+		
 		# this will return immediately but we still need to wait for running tasks !!!!
-		#
 		try:
 			print('self.pool.shutdown(wait=False)')
 			self.pool.shutdown(wait=False)
 		except (UserCancelSync) as e:
-			print('sync() received exception UserCancelSync')
+			print('sync() received exception UserCancelSync:', e)
 		except (OSError) as e:
-			print('sync() received exception OSError')
-		except:
-			print('sync() received unknown exception')
+			print('sync() received exception OSError:', e)
+		except (Exception) as e:
+			print('sync() received unknown exception:', e)
 			
 		#
 		# i need to change the logic here
 		# self.syncIsBusy needs to be updated to reflect that threads in pool are still running???
 		self.syncIsBusy = True
 		
-		print('sync() is exiting')
+		#print('sync() is exiting')
+
+
+	################################################################################
+	# Utilities
+	################################################################################
+	def _humanReadableSize(self, bytes):
+		"""
+		Return a human readable string with unit ('bytes', 'KB', 'MB')
+		"""
+		theStr = str(bytes)
+		if bytes < 1000:
+			# bytes
+			theStr = str(bytes) + ' bytes'
+		elif bytes < 1000000:
+			# KB, divide -> round -> int -> str
+			theStr = str(int(round(bytes/1000,0))) + ' KB'
+		elif bytes < 1000000000:
+			# MB
+			theStr = str(round(bytes/1000000,1)) + ' MB'
+		else:
+			# MB
+			theStr = str(round(bytes/1000000000,2)) + ' GB'
+		return theStr
+
+	################################################################################
+	def _humanReadableTime(self, seconds):
+		"""
+		Given seconds, return string with hours and minutes
+		"""
+		retStr = ''
+		if seconds is not None:
+			theSeconds = round(seconds % 60,1)
+			if theSeconds > 1:
+				theSeconds = math.floor(theSeconds)
+			theMinutes = math.floor(seconds/60)
+			#print('seconds:', seconds, 'theMinutes:', theMinutes, 'theSeconds:', theSeconds)
+			if theMinutes > 0:
+				retStr += str(theMinutes) + ' min'
+			if theSeconds > 0 or ((not theMinutes>0) and theSeconds>=0):
+				retStr += ' ' + str(theSeconds) + ' sec'
+		return retStr
+
 		
 if __name__ == '__main__':
 	inQueue = queue.Queue()

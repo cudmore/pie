@@ -143,9 +143,32 @@
 		</span>
 	
 	<BR>
-	Started: {{ status.syncStartStr }}
-	Elapsed: {{ status.syncElapsedStr }}
-	Number remaining: {{ status.syncNumToCopy }} of {{ status.syncNumTotalToCopy }}
+	
+	<table class="myTable myTable-short">
+	<tr>
+		<td>
+		Started: {{ status.syncStartStr }}
+		</td>
+
+		<td>
+		Elapsed: {{ status.syncElapsedStr }}
+		</td>
+
+		<td>
+		{{ status.syncNumCopied }} of {{ status.syncNumTotalToCopy }} Files
+		</td>
+
+		<td>
+		{{ status.syncBytesCopied }} of {{ status.syncTotalBytesToCopy }}
+		</td>
+		
+		<td>
+		ETA: {{ status.syncEstimatedTimeArrival }}
+		</td>
+		
+		
+	</tr>
+	</table>
 	
 	<table class="myTable myTable-short">
 	<tr>
