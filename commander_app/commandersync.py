@@ -217,18 +217,22 @@ class CommanderSync(threading.Thread):
 					"""
 				if self.syncIsBusy:
 					self.syncBytesCopied = 0
-					self.syncEstimatedTimeArrival = 0
+					sumBytesPerSecond = 0
 					tmpFileCount = 0
 					for idx, file in enumerate(self.myFileList):
 						self.syncBytesCopied += file['bytesCopied']
-						if file['etaSeconds'] is not None:
-							self.syncEstimatedTimeArrival += file['etaSeconds']
+						if file['bytesPerSecond'] is not None:
+							sumBytesPerSecond += file['bytesPerSecond']
 							tmpFileCount += 1
 					if tmpFileCount > 0:
-						self.syncEstimatedTimeArrival /= tmpFileCount
+						avgBytesPerSecond = sumBytesPerSecond / tmpFileCount
+						print('avgBytesPerSecond:', avgBytesPerSecond)
+						print('self.syncTotalBytesToCopy:', self.syncTotalBytesToCopy)
+						self.syncEstimatedTimeArrival = (1/avgBytesPerSecond) / self.syncTotalBytesToCopy
+						
 					else:
 						self.syncEstimatedTimeArrival = None
-					#print('self.syncEstimatedTimeArrival:', self.syncEstimatedTimeArrival)
+					print('self.syncEstimatedTimeArrival:', syncEstimatedTimeArrival)
 					
 				try:
 					inDict = self.inQueue.get(block=False, timeout=0)
@@ -340,6 +344,7 @@ class CommanderSync(threading.Thread):
 						'startSeconds': 0, # leave this initialized to 0 (not str)
 						'elapsedTime': '', # initialized as string but assigned to int/float in myCallback
 						'percent': '', # initialized as string but assigned to int/float in myCallback
+						'bytesPerSecond': None,
 						'lastCallbackSeconds': None,
 						'lastCallbackBytes': None,
 						'etaSeconds': None,
@@ -450,14 +455,21 @@ class CommanderSync(threading.Thread):
 				#totalBytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
 				totalBytesRemaining = bytesTotal - bytesDone
 				
-				secondsElapsed = time.time() - self.myFileList[idx]['lastCallbackSeconds']
+				elapsedSeconds = time.time() - self.myFileList[idx]['lastCallbackSeconds']
 				elapsedBytes = bytesDone - self.myFileList[idx]['lastCallbackBytes'] # since last callback
-				etaSeconds = secondsElapsed * totalBytesRemaining / elapsedBytes
+				bytesPerSecond = elapsedBytes / elapsedSeconds
+				
+				print('elapsedSeconds:', elapsedSeconds, 'elapsedBytes:', elapsedBytes, 'bytesPerSecond:', bytesPerSecond)
+				self.myFileList[idx]['bytesPerSecond'] = bytesPerSecond
+				
+				"""
+				etaSeconds = elapsedSeconds * totalBytesRemaining / elapsedBytes
 				self.myFileList[idx]['etaSeconds'] = etaSeconds
+				"""
 				
 				# when we are done, there is no more ETA
 				if bytesDone == bytesTotal:
-					self.myFileList[idx]['etaSeconds'] = None
+					self.myFileList[idx]['bytesPerSecond'] = None
 					
 			self.myFileList[idx]['lastCallbackSeconds'] = time.time()
 			self.myFileList[idx]['lastCallbackBytes'] = bytesDone
