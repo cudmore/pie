@@ -459,9 +459,10 @@ angular.module('commander', ['uiSwitch'])
         //refresh stream
 		if (startstop==1) {
 			//callAtTimeout()
-			$timeout(callAtTimeout(idx), 2000);
+			$timeout(callAtTimeout(idx), 3000);
 		}
 	};
+
 
 	//
 	//change led status
@@ -504,6 +505,7 @@ angular.module('commander', ['uiSwitch'])
 		} else {
 			//myStreamUrl = streamList[idx] + '?' + new Date().getTime() //'http://' + $location.host() + ':8080/stream' + '?' + new Date().getTime()
 			myStreamUrl = $scope.videoArray[idx].streamUrl + '?' + new Date().getTime()
+			console.log('myStreamUrl:', myStreamUrl)
 			$scope.videoArray[idx].myStreamUrl = $sce.trustAsResourceUrl(myStreamUrl);
 		}
 	}

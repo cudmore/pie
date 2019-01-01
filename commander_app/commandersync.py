@@ -14,6 +14,7 @@ Important:
 """
 
 import os, time, math, stat, sys, logging
+from datetime import datetime
 import threading, queue
 import socket, paramiko
 
@@ -22,9 +23,75 @@ from concurrent.futures import ThreadPoolExecutor, as_completed #ProcessPoolExec
 
 logger = logging.getLogger('commander')
 
+logging.getLogger("paramiko").setLevel(logging.WARNING)
+
+
+######################################################################
+class myAlarm:
+	def __init__(self, hour, minute, alarmCallback, alarmsPerDay=2):
+		"""
+		Class to call a function at a certain time of day. Will call function
+		a number of times per day.
+		
+		Parameters:
+			hour: 24 hour clock
+			minute: 
+			alarmCallback: fn() that returns True if task was run, o.w. False
+				True/False is used to count alarmsPerDay
+			alarmsPerDay: Number of times per day to trigger alarm
+		"""
+		self.setAlarmTime(hour, minute)
+
+		self.alarmCallback = alarmCallback #syncAlarm
+		self.alarmsPerDay = alarmsPerDay
+		
+		now = datetime.now()
+		self.last_secondsSinceMidnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+
+	def setAlarmTime(self, hour, minute):
+		self.hour = hour
+		self.minute = minute
+		self.alarmStartSeconds = self.hour * 60 * 60 + self.minute * 60
+		self.numAlarmsToday = 0
+
+	def update(self):
+		"""
+		Determine if we need to sound the alarm
+		"""
+		
+		now = datetime.now()
+		seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+
+		# we just arrived at a new day
+		if seconds_since_midnight < self.last_secondsSinceMidnight:
+			# newday
+			self.numAlarmsToday = 0
+			
+		# if we still have some alarms for today
+		if self.numAlarmsToday < self.alarmsPerDay:
+			#print('seconds_since_midnight:', seconds_since_midnight, 'self.alarmStartSeconds:', self.alarmStartSeconds)
+			# if the current time is past our alarm time
+			
+			# put this in to only sound alarm as we pass alarm time
+			#if self.last_secondsSinceMidnight<alarmStartSeconds and seconds_since_midnight >= self.alarmStartSeconds:
+			
+			# put this in to sound alarm if we are just past alarm time
+			if seconds_since_midnight >= self.alarmStartSeconds:
+				# call the alarmCallback
+				alarmWasTriggered = self.alarmCallback() # alarmCallback needs to return True if it completed
+				if alarmWasTriggered:
+					self.numAlarmsToday += 1
+		
+		# update so we know when we have a new day
+		self.last_secondsSinceMidnight = seconds_since_midnight
+		
+
+######################################################################
 class UserCancelSync(Exception):
 	pass
 
+
+######################################################################
 class CommanderSync(threading.Thread):
 
 	def __init__(self, inQueue, myConfig):
@@ -95,18 +162,19 @@ class CommanderSync(threading.Thread):
 		self.syncBytesCopied = 0
 		self.syncEstimatedTimeArrival = None # estimated time remaining
 		
-		#self.known_hosts = os.path.join(os.path.dirname(__file__), 'known_hosts')
+		self.myAlarm = myAlarm(0, 15, self.syncAlarm)
+				
 		
 	def setDeleteRemoteFiles(self, onoff):
+		"""
+		if self.deleteRemoteFiles then we remove files from remote server after they are copied to local
+		"""
 		self.deleteRemoteFiles = onoff
 		print('commandersync.py setDeleteRemoteFiles() set self.deleteRemoteFiles:', self.deleteRemoteFiles)
 	
-	# 20181229, was this
-	#def loadConfig(self):
 	def setConfig(self, serverList):
 		"""
 		Sharing config file with main commander
-		This is an extremely simple list of IP, it is NOT json
 		When user changes/saves ip list in main commander page, this needs to be reloaded
 		
 		Parameters:
@@ -114,25 +182,6 @@ class CommanderSync(threading.Thread):
 		Assigns:
 			self.serverList
 			self.ipDict
-		"""
-		
-		
-		"""
-		#thisFile = 'config/config_commander.txt'
-		thisFile = os.path.join(self.bundle_dir, 'config', 'config_commander.txt')
-		if not os.path.isfile(thisFile):
-			#logger.info('defaulting to config/config_commander_factory.txt')
-			#thisFile = 'config/config_commander_factory.txt'
-			thisFile = os.path.join(self.bundle_dir, 'config', 'config_commander_factory.txt')
-		logger.info('Loading config file ' + thisFile)
-		with open(thisFile, 'r') as f:
-			configfile = f.readlines()
-		# remove whitespace characters like ',' and `\n` from each line
-		returnConfigFile = [x.strip(',\n') for x in configfile] 
-
-		#
-		# assign
-		self.ipList = returnConfigFile
 		"""
 		
 		print('commandersync.serverList serverList:', serverList)
@@ -149,13 +198,16 @@ class CommanderSync(threading.Thread):
 				'numFilesToCopy': 0,
 			}
 
-		#return returnConfigFile
 		
 	############################################################################
 	def run(self):
 		"""
 		Continuosly monitor and respond to incoming commands in self.inQueue Queue
 		"""
+		
+		ranSync1Today = False
+		ranSync2Today = False
+		
 		while True:
 			#try:
 			if 1:
@@ -215,24 +267,40 @@ class CommanderSync(threading.Thread):
 						self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
 						self.syncElapsedStr = _humanReadableTime(self.syncElapsedSeconds)
 					"""
+				
+				#
+				# update feedback on sync progress
 				if self.syncIsBusy:
 					self.syncBytesCopied = 0
 					sumBytesPerSecond = 0
 					tmpFileCount = 0
+					# sum all transfer bytes/sec to get throughput
 					for idx, file in enumerate(self.myFileList):
 						self.syncBytesCopied += file['bytesCopied']
 						if file['bytesPerSecond'] is not None:
 							sumBytesPerSecond += file['bytesPerSecond']
 							tmpFileCount += 1
 					if tmpFileCount > 0:
-						avgBytesPerSecond = sumBytesPerSecond / tmpFileCount
-						print('avgBytesPerSecond:', avgBytesPerSecond)
-						print('self.syncTotalBytesToCopy:', self.syncTotalBytesToCopy)
-						self.syncEstimatedTimeArrival = (1/avgBytesPerSecond) / self.syncTotalBytesToCopy
+						#print('self.syncTotalBytesToCopy:', self.syncTotalBytesToCopy)
+						bytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
+						self.syncEstimatedTimeArrival =  bytesRemaining / sumBytesPerSecond
 						
 					else:
 						self.syncEstimatedTimeArrival = None
-					print('self.syncEstimatedTimeArrival:', syncEstimatedTimeArrival)
+					#print('self.syncEstimatedTimeArrival:', self.syncEstimatedTimeArrival)
+				
+				#
+				# check if it is time to sync
+				self.myAlarm.update()
+				"""
+				now = datetime.now()
+				seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
+				#print('seconds_since_midnight:', seconds_since_midnight, 'syncStartSeconds1:', self.syncStartSeconds1)
+				#if not ranSync1Today and (seconds_since_midnight >= self.syncStartSeconds1):
+				if seconds_since_midnight >= self.syncStartSeconds1:
+					#ranSync1Today = True
+					self.syncAlarm()
+				"""
 					
 				try:
 					inDict = self.inQueue.get(block=False, timeout=0)
@@ -248,10 +316,12 @@ class CommanderSync(threading.Thread):
 					if inDict == 'sync':
 						# need to spawn sync as new thread so we can cancel!!!
 
+						"""
 						self.syncStartedSeconds = time.time()
 						self.syncStartStr = time.strftime('%Y%m%d %H:%M:%S', time.localtime(math.floor(self.syncStartedSeconds))) 
 						self.syncElapsedSeconds = 0
-
+						"""
+						
 						try:
 							self.sync()
 						except (Exception) as e:
@@ -276,6 +346,28 @@ class CommanderSync(threading.Thread):
 			"""
 								
 	############################################################################
+	def syncAlarm(self):
+		if self.fetchIsBusy or self.syncIsBusy:
+			return False
+			
+		"""
+		# run twice per alarm
+		if self.ranNumSyncToday > 2:
+			return 0
+			
+		self.ranNumSyncToday += 1
+		"""
+		
+		self.fetchFileList()
+		
+		# todo: add safety check here, ow we enter infinite loop
+		while self.fetchIsBusy:
+			pass
+		
+		self.sync()
+		
+		return True
+		
 	############################################################################
 	def fetchFileList(self):
 		"""
@@ -441,6 +533,8 @@ class CommanderSync(threading.Thread):
 			self.myFileList[idx]['progress'] = bytesDone
 			self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
+			if self.myFileList[idx]['startSeconds'] is None:
+				print('XXXXXXXXXXXXXXX')
 			elapsedTime = time.time() - self.myFileList[idx]['startSeconds']
 			elapsedTimeStr = self._humanReadableTime(elapsedTime)
 			self.myFileList[idx]['elapsedTime'] = elapsedTimeStr
@@ -455,11 +549,18 @@ class CommanderSync(threading.Thread):
 				#totalBytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
 				totalBytesRemaining = bytesTotal - bytesDone
 				
+				if self.myFileList[idx]['lastCallbackSeconds'] is None:
+					print('YYYYYYYYYYYYYYYYY')
 				elapsedSeconds = time.time() - self.myFileList[idx]['lastCallbackSeconds']
+
+				if self.myFileList[idx]['lastCallbackBytes'] is None:
+					print('ZZZZZZZZZZZZZZZZZZZZZZZ')
+					
 				elapsedBytes = bytesDone - self.myFileList[idx]['lastCallbackBytes'] # since last callback
+
 				bytesPerSecond = elapsedBytes / elapsedSeconds
 				
-				print('elapsedSeconds:', elapsedSeconds, 'elapsedBytes:', elapsedBytes, 'bytesPerSecond:', bytesPerSecond)
+				#print('elapsedSeconds:', elapsedSeconds, 'elapsedBytes:', elapsedBytes, 'bytesPerSecond:', bytesPerSecond)
 				self.myFileList[idx]['bytesPerSecond'] = bytesPerSecond
 				
 				"""
@@ -476,6 +577,8 @@ class CommanderSync(threading.Thread):
 				
 			
 			with lock:
+				if self.syncStartedSeconds is None:
+					print('AAAAAAAAAAAAAAA')
 				self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
 				self.syncElapsedStr = self._humanReadableTime(self.syncElapsedSeconds)
 		
@@ -673,10 +776,8 @@ class CommanderSync(threading.Thread):
 							else:
 								print('    ERROR: sizes did not match -->> did not remove from remote server')
 		
-				#print('1')
 				ftp.close()
 
-			#print('2')
 			try:
 				ssh.close()
 			except:
@@ -706,11 +807,16 @@ class CommanderSync(threading.Thread):
 		
 		self.syncIsBusy = True
 		
+		self.syncStartedSeconds = time.time()
+		self.syncStartStr = time.strftime('%Y%m%d %H:%M:%S', time.localtime(math.floor(self.syncStartedSeconds))) 
+		self.syncElapsedSeconds = 0
+
 		self.mySyncList = [] # keep track of what we actually sync
 
 		self.syncNumTotalToCopy = 0
 		#self.syncNumToCopy = 0
 		self.syncNumCopied = 0 # number actually copied
+		self.syncTotalBytesToCopy = 0
 		
 		#
 		# create a pool of workers
@@ -742,11 +848,15 @@ class CommanderSync(threading.Thread):
 			remoteFile = file['remoteFile']
 			localExists = file['localExists'] # todo: use this
 			
-			print('self.localFolder:', self.localFolder)
+			localFolder = os.path.join(self.localFolder, hostname, remotePath)
+
+			"""
+			print('=== idx:', idx)
+			print('sself.localFolder:', self.localFolder)
 			print('hostname:', hostname)
 			print('remotePath:', remotePath)
-			localFolder = os.path.join(self.localFolder, hostname, remotePath)
 			print('localFolder:', localFolder)
+			"""
 			
 			#
 			# check if local file already exists
