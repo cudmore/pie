@@ -28,7 +28,7 @@ logging.getLogger("paramiko").setLevel(logging.WARNING)
 
 ######################################################################
 class myAlarm:
-	def __init__(self, hour, minute, alarmCallback, alarmsPerDay=2):
+	def __init__(self, hour, minute, alarmCallback, alarmsPerDay=4):
 		"""
 		Class to call a function at a certain time of day. Will call function
 		a number of times per day.
@@ -434,6 +434,9 @@ class CommanderSync(threading.Thread):
 					self.ipDict[ip]['numFiles'] += 1 # for one ip
 					if not localExists:
 						self.ipDict[ip]['numFilesToCopy'] += 1 # for one ip
+						# todo: organize this
+						self.syncNumTotalToCopy += 1 # across all ip
+						self.syncTotalBytesToCopy += sizeInBytes
 					
 		# fetch ip from file, may have configured in main interface
 		#self.ipList = self.loadConfig()
@@ -443,6 +446,13 @@ class CommanderSync(threading.Thread):
 		logger.info('self.serverList: ' + str(self.serverList))
 		
 		self.fetchIsBusy = True
+		
+		# todo: make this more organized, used by both fetch and sync and shown in html
+		self.syncNumTotalToCopy = 0 # across all ip
+		self.syncTotalBytesToCopy = 0
+		self.syncNumCopied = 0
+		self.syncBytesCopied = 0
+		
 		self.numFilesToCopy = 0
 		self.myFileList = []
 		for server in self.serverList:
@@ -622,11 +632,17 @@ class CommanderSync(threading.Thread):
 			except(paramiko.ssh_exception.AuthenticationException) as e:
 				print('\n *** exception copyThread() 2:', str(e), 'remoteFilePath:', remoteFilePath)
 			except (paramiko.ssh_exception.SSHException) as e:
+				
+				"""
 				print('\n *** exception copyThread() 3 paramiko.ssh_exception.SSHException:')
 				print('   ', str(e))
 				print('   remoteFilePath:', remoteFilePath)
 				print('   ip:', ip)
 				print('   hostname:', hostname)
+				"""
+				
+				logger.error('*** paramiko.ssh_exception.SSHException: ' + str(e))
+				logger.error('    *** ip:' + ip + ' hostname:' + hostname + ' idx:' + str(idx) + ' remoteFilePath:' + remoteFilePath)
 				
 				# see: https://stackoverflow.com/questions/25609153/paramiko-error-reading-ssh-protocol-banner
 				# need to take action here !!!
