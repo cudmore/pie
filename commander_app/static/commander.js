@@ -14,6 +14,8 @@ angular.module('commander', ['uiSwitch'])
 	var restPort = 5010; //the port that PiE server is running on
 	var adminPort = 5011; //the port that PiE server is running on
 	
+	$scope.myConfig = ''
+	
 	// these will be assigned on page load in $scope.loadServers()
 	$scope.numServers = 2;
 	// this is an array of dict {ip:'', 'username':'', password:''}
@@ -81,8 +83,11 @@ angular.module('commander', ['uiSwitch'])
 	// Save config_commander.txt
 	$scope.saveServers = function() {
 		console.log('saveServers()')
-		//var str = JSON.stringify($scope.serverList, null, 4);
-		var str = $scope.serverList
+		console.log('$scope.myConfig:', $scope.myConfig)
+		
+		// convert config dictionary to string
+		var str = JSON.stringify($scope.myConfig, null, 4);
+		
 		var url = $scope.myUrl + 'saveconfig/' + str
 		$http.get(url).
         	then(function(response) {
@@ -100,17 +105,17 @@ angular.module('commander', ['uiSwitch'])
         	    //commander.py loadconfig returns a list of dict
         	    // {ip:'', username:'', password:''}
         	    console.log('loadconfig response.data:', response.data)
-        	    //var array = JSON.parse(response.data)
-        	    var array = response.data
+        	    $scope.myConfig = response.data
+        	    var array = response.data.serverList
         	    //20181229, was this
         	    //$scope.serverList = array
         	    $scope.numServers = array.length
         	    for (i=0; i<$scope.numServers; i+=1) {
-        	    	$scope.serverList[i] = response.data[i] // .ip
+        	    	$scope.serverList[i] = response.data.serverList[i] // .ip
 				}
 				
         	    console.log('loadServers()')
-        	    console.log('$scope.serverList:', $scope.serverList)
+        	    //console.log('$scope.serverList:', $scope.serverList)
         	    console.log('$scope.numServers:', $scope.numServers)
 
         	    initVideoWall()

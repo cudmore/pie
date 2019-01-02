@@ -115,37 +115,43 @@ def _loadConfig():
 	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
 	if not os.path.isfile(thisFile):
 		logger.info('defaulting to config/config_commander_factory.json')
-		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.txt')
+		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.json')
 	logger.info('Loading config file ' + thisFile)
 	
 	serverList = []
 	with open(thisFile) as f:
 		try:
-			serverList = json.load(f)
+			myConfig = json.load(f)
+			#serverList = my_json['serverList']
 		except ValueError as e:
 			logger.error('loadconfig ValueError: ' + str(e))
 			# if there is an error in loading config file (json is wrong) we REALLY want to exit
 			#sys.exit(1)
 	
-	logger.info('Config file contains: ' + str(serverList))
-	return serverList
+	logger.info('Config file contains: ' + str(myConfig))
+	return myConfig
 	
 @app.route('/loadconfig')
 def loadconfig():
-	serverList = _loadConfig()
-	return jsonify(serverList)
+	myConfig = _loadConfig()
+	return jsonify(myConfig)
 
-@app.route('/saveconfig/<serverList>')
-def saveconfig(serverList):
+@app.route('/saveconfig/<myConfig>')
+def saveconfig(myConfig):
 	"""
 	serverList is a list of dict {ip, username, password}
 	"""
+	
+	# convert string to json
+	myConfig = json.loads(myConfig)
+	print('saveconfig() myConfig:', myConfig)
+	
 	#thisFile = 'config/config_commander.txt'
 	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
 	
 	logger.info('saveconfig() configfile: ' + thisFile)
 	with open(thisFile, 'w') as outfile:
-		json.dump(serverList, outfile, indent=4)
+		json.dump(myConfig, outfile, indent=4)
 		"""
 		for line in iplist.split(','):
 			#print('line:', line)
@@ -154,7 +160,7 @@ def saveconfig(serverList):
 		
 	# tell commandersync to reload new ip list
 	#cs.loadConfig()
-	cs.setConfig(serverList)
+	cs.setConfig(myConfig)
 	
 	return 'saved'
 	
@@ -166,6 +172,8 @@ def saveconfig(serverList):
 # insert commands into a queue ['fetchfilelist', 'runsync']
 
 myConfig = _loadConfig()
+
+print('myConfig:', myConfig)
 
 inQueue = queue.Queue()
 cs = commandersync.CommanderSync(inQueue, myConfig)

@@ -1,41 +1,20 @@
-[
-	{
-	"ip":"10.16.81.33",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.34",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.35",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.36",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.37",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.38",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"10.16.81.41",
-	"username": "",
-	"password": ""
-	},
-	{"ip":"10.16.81.39",
-	"username": "",
-	"password": ""
-	}
-]
+{
+    "localFolder": "",
+    "serverList": [
+        {
+            "ip": "192.168.1.22",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "192.168.1.4",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "192.168.1.15",
+            "password": "",
+            "username": ""
+        }
+    ]
+}

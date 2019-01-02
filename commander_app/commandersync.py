@@ -97,6 +97,10 @@ class UserCancelSync(Exception):
 class CommanderSync(threading.Thread):
 
 	def __init__(self, inQueue, myConfig):
+		"""
+		Parameters:
+			myConfig: dictionary of {'localFOlder':'', 'serverList':[]}
+		"""
 		threading.Thread.__init__(self)
 		
 		###
@@ -175,7 +179,7 @@ class CommanderSync(threading.Thread):
 		self.deleteRemoteFiles = onoff
 		print('commandersync.py setDeleteRemoteFiles() set self.deleteRemoteFiles:', self.deleteRemoteFiles)
 	
-	def setConfig(self, serverList):
+	def setConfig(self, myConfig):
 		"""
 		Sharing config file with main commander
 		When user changes/saves ip list in main commander page, this needs to be reloaded
@@ -189,7 +193,13 @@ class CommanderSync(threading.Thread):
 		
 		#print('commandersync.serverList serverList:', serverList)
 		
-		self.serverList = serverList
+		"""
+		userPath = os.path.expanduser('~')
+		self.localFolder = os.path.join(userPath, 'commander_data') # all local files with be in this folder
+		logger.info('saving to ' + self.localFolder)
+		"""
+		
+		self.serverList = myConfig['serverList']
 		
 		self.ipDict = {}
 		for server in self.serverList:
@@ -530,10 +540,12 @@ class CommanderSync(threading.Thread):
 				raise UserCancelSync
 				#
 			
+			now = time.time()
+			
 			self.myFileList[idx]['progress'] = bytesDone
 			self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
-			elapsedTime = time.time() - self.myFileList[idx]['startSeconds']
+			elapsedTime = now - self.myFileList[idx]['startSeconds']
 			elapsedTimeStr = self._humanReadableTime(elapsedTime)
 			self.myFileList[idx]['elapsedTime'] = elapsedTimeStr
 			self.myFileList[idx]['percent'] = round(bytesDone/bytesTotal*100,1)
@@ -547,12 +559,15 @@ class CommanderSync(threading.Thread):
 				#totalBytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
 				totalBytesRemaining = bytesTotal - bytesDone
 				
-				elapsedSeconds = time.time() - self.myFileList[idx]['lastCallbackSeconds']
+				elapsedSeconds = now - self.myFileList[idx]['lastCallbackSeconds']
 
 				elapsedBytes = bytesDone - self.myFileList[idx]['lastCallbackBytes'] # since last callback
 
-				bytesPerSecond = elapsedBytes / elapsedSeconds
-				
+				if elapsedSeconds> 0:
+					bytesPerSecond = elapsedBytes / elapsedSeconds
+				else:
+					bytesPerSecond = None
+					
 				#print('elapsedSeconds:', elapsedSeconds, 'elapsedBytes:', elapsedBytes, 'bytesPerSecond:', bytesPerSecond)
 				self.myFileList[idx]['bytesPerSecond'] = bytesPerSecond
 				
@@ -565,11 +580,11 @@ class CommanderSync(threading.Thread):
 				if bytesDone == bytesTotal:
 					self.myFileList[idx]['bytesPerSecond'] = None
 					
-			self.myFileList[idx]['lastCallbackSeconds'] = time.time()
+			self.myFileList[idx]['lastCallbackSeconds'] = now
 			self.myFileList[idx]['lastCallbackBytes'] = bytesDone
 
 			with lock:
-				self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
+				self.syncElapsedSeconds = now - self.syncStartedSeconds
 				self.syncElapsedStr = self._humanReadableTime(self.syncElapsedSeconds)
 		
 		except (UserCancelSync) as e:
@@ -587,7 +602,7 @@ class CommanderSync(threading.Thread):
 			idx: index into self.myFileList
 		"""
 
-		startTime = time.time()
+		#startTime = time.time()
 		
 		# don't start work if there is a pending cancel
 		try:
@@ -781,8 +796,9 @@ class CommanderSync(threading.Thread):
 				
 			self.mySyncList.append(syncDict)
 		
-		stopTime = time.time()
-		elapsedSeconds = round(stopTime-startTime,2)
+		#stopTime = time.time()
+		#elapsedSeconds = round(stopTime-startTime,2)
+		
 		if ftp_get_cancel or cancelledBefore_get:
 			pass
 		else:

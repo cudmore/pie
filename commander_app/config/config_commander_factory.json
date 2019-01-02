@@ -1,17 +1,21 @@
-[
-	{
-	"ip":"192.168.1.3",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"192.168.1.4",
-	"username": "",
-	"password": ""
-	},
-	{
-	"ip":"192.168.1.15",
-	"username": "",
-	"password": ""
-	}
-]
+{
+"localFolder": "",
+"serverList":
+	[
+		{
+		"ip":"192.168.1.3",
+		"username": "",
+		"password": ""
+		},
+		{
+		"ip":"192.168.1.4",
+		"username": "",
+		"password": ""
+		},
+		{
+		"ip":"192.168.1.15",
+		"username": "",
+		"password": ""
+		}
+	]
+}
