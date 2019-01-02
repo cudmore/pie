@@ -73,10 +73,12 @@ class myAlarm:
 			# if the current time is past our alarm time
 			
 			# put this in to only sound alarm as we pass alarm time
-			#if self.last_secondsSinceMidnight<alarmStartSeconds and seconds_since_midnight >= self.alarmStartSeconds:
+			# if (a or b), alarm will trigger on 'b', then will trigger up to alarmsPerDay
+			if (self.numAlarmsToday > 0) or (self.last_secondsSinceMidnight < self.alarmStartSeconds and seconds_since_midnight >= self.alarmStartSeconds):
 			
-			# put this in to sound alarm if we are just past alarm time
-			if seconds_since_midnight >= self.alarmStartSeconds:
+				# put this in to sound alarm if we are just past alarm time
+				#if seconds_since_midnight >= self.alarmStartSeconds:
+			
 				# call the alarmCallback
 				alarmWasTriggered = self.alarmCallback() # alarmCallback needs to return True if it completed
 				if alarmWasTriggered:
@@ -162,7 +164,8 @@ class CommanderSync(threading.Thread):
 		self.syncBytesCopied = 0
 		self.syncEstimatedTimeArrival = None # estimated time remaining
 		
-		self.myAlarm = myAlarm(0, 15, self.syncAlarm)
+		#self.myAlarm = myAlarm(0, 15, self.syncAlarm) # set alarm for 12:15 AM (every day)
+		self.myAlarm = myAlarm(9, 28, self.syncAlarm) # set alarm for 12:15 AM (every day)
 				
 		
 	def setDeleteRemoteFiles(self, onoff):
@@ -184,7 +187,7 @@ class CommanderSync(threading.Thread):
 			self.ipDict
 		"""
 		
-		print('commandersync.serverList serverList:', serverList)
+		#print('commandersync.serverList serverList:', serverList)
 		
 		self.serverList = serverList
 		
@@ -238,21 +241,12 @@ class CommanderSync(threading.Thread):
 							print('run() received unknown exception:', e)
 					if allDone:
 						if self.syncIsBusy:
-							print('run() determined all future(s) are done()')
-							# added 122818
-							print('run() setting self.myFutures = None')
+							logger.info('*** all future(s) are done ***')
 							
-							# ???
+							#print('run() setting self.myFutures = None')
 							self.myFutures = None
 							
-							# ???
 							self.cancel = False
-
-							"""
-							self.syncStartedSeconds = None
-							self.syncStartStr = ''
-							self.syncElapsedSeconds = ''
-							"""
 							
 						self.syncIsBusy = False
 					"""
@@ -292,15 +286,6 @@ class CommanderSync(threading.Thread):
 				#
 				# check if it is time to sync
 				self.myAlarm.update()
-				"""
-				now = datetime.now()
-				seconds_since_midnight = (now - now.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-				#print('seconds_since_midnight:', seconds_since_midnight, 'syncStartSeconds1:', self.syncStartSeconds1)
-				#if not ranSync1Today and (seconds_since_midnight >= self.syncStartSeconds1):
-				if seconds_since_midnight >= self.syncStartSeconds1:
-					#ranSync1Today = True
-					self.syncAlarm()
-				"""
 					
 				try:
 					inDict = self.inQueue.get(block=False, timeout=0)
@@ -358,12 +343,16 @@ class CommanderSync(threading.Thread):
 		self.ranNumSyncToday += 1
 		"""
 		
+		logger.info('alarm starting fetchFileList')
+		
 		self.fetchFileList()
 		
 		# todo: add safety check here, ow we enter infinite loop
+		logger.info('alarm waiting until fetchFileList is done')
 		while self.fetchIsBusy:
 			pass
 		
+		logger.info('alarm starting sync')
 		self.sync()
 		
 		return True
@@ -450,14 +439,15 @@ class CommanderSync(threading.Thread):
 		#self.ipList = self.loadConfig()
 		#self.loadConfig() # now called self.setConfig
 		
-		print('commandersync.fetchfilelist self.serverList:', self.serverList)
+		logger.info('*** fetchFileList ***')
+		logger.info('self.serverList: ' + str(self.serverList))
 		
 		self.fetchIsBusy = True
 		self.numFilesToCopy = 0
 		self.myFileList = []
 		for server in self.serverList:
 			
-			print('fetchFileList server:', server)
+			logger.info('fetchFileList server: ' + str(server))
 			current_ip = server['ip']
 			
 			# initialize internal dictionary
@@ -487,7 +477,7 @@ class CommanderSync(threading.Thread):
 			except (socket.timeout) as e:
 				print('*** fetchFileList() ssh.connect exception 5:', str(e))
 			else: # else is only executed if no exceptions !!!
-				print('fetchFileList() in else')
+				#print('fetchFileList() in else')
 
 				self.ipDict[server['ip']]['madeConnection'] = True
 				
@@ -507,7 +497,7 @@ class CommanderSync(threading.Thread):
 
 			ssh.close()
 
-		print('fetchFileList() found', self.numFilesToCopy, 'files to copy from', len(self.myFileList), 'files across', len(self.serverList), 'PiE servers')
+		logger.info('fetchFileList() found ' + str(self.numFilesToCopy) + '/' + str(len(self.myFileList)) + ' files to copy across ' + str(len(self.serverList)) + ' PiE servers')
 
 		self.fetchIsBusy = False
 		
@@ -533,8 +523,6 @@ class CommanderSync(threading.Thread):
 			self.myFileList[idx]['progress'] = bytesDone
 			self.myFileList[idx]['humanProgress'] = self._humanReadableSize(bytesDone)
 		
-			if self.myFileList[idx]['startSeconds'] is None:
-				print('XXXXXXXXXXXXXXX')
 			elapsedTime = time.time() - self.myFileList[idx]['startSeconds']
 			elapsedTimeStr = self._humanReadableTime(elapsedTime)
 			self.myFileList[idx]['elapsedTime'] = elapsedTimeStr
@@ -549,13 +537,8 @@ class CommanderSync(threading.Thread):
 				#totalBytesRemaining = self.syncTotalBytesToCopy - self.syncBytesCopied
 				totalBytesRemaining = bytesTotal - bytesDone
 				
-				if self.myFileList[idx]['lastCallbackSeconds'] is None:
-					print('YYYYYYYYYYYYYYYYY')
 				elapsedSeconds = time.time() - self.myFileList[idx]['lastCallbackSeconds']
 
-				if self.myFileList[idx]['lastCallbackBytes'] is None:
-					print('ZZZZZZZZZZZZZZZZZZZZZZZ')
-					
 				elapsedBytes = bytesDone - self.myFileList[idx]['lastCallbackBytes'] # since last callback
 
 				bytesPerSecond = elapsedBytes / elapsedSeconds
@@ -574,11 +557,8 @@ class CommanderSync(threading.Thread):
 					
 			self.myFileList[idx]['lastCallbackSeconds'] = time.time()
 			self.myFileList[idx]['lastCallbackBytes'] = bytesDone
-				
-			
+
 			with lock:
-				if self.syncStartedSeconds is None:
-					print('AAAAAAAAAAAAAAA')
 				self.syncElapsedSeconds = time.time() - self.syncStartedSeconds
 				self.syncElapsedStr = self._humanReadableTime(self.syncElapsedSeconds)
 		
@@ -656,7 +636,7 @@ class CommanderSync(threading.Thread):
 				# this exception is pretty random.
 				# one idea is to just force web interface to NOT allow sync twice in a row!!! Require user to 'fetch' again
 				# with this it seems to be fixed
-				self.myFileList[idx]['percent'] = 'Busy Error'
+				self.myFileList[idx]['percent'] = 'Busy - Try Again'
 
 				with lock:
 					self.syncNumTotalToCopy -= 1
@@ -741,7 +721,7 @@ class CommanderSync(threading.Thread):
 							os.remove(localFilePath)
 							self.myFileList[idx]['percent'] = 'Cancelled'
 						else:
-							print('    done copying from remote:', remoteFilePath)
+							logger.info('    done copying from remote: ' + remoteFilePath)
 							with lock:
 								#self.syncNumToCopy -= 1
 								self.syncNumCopied += 1
@@ -759,7 +739,7 @@ class CommanderSync(threading.Thread):
 	
 							if remoteSize == localSize:
 								if self.deleteRemoteFiles:
-									print('    removing remote file:', remoteFilePath)
+									logger.info('    removing remote file: ' + remoteFilePath)
 									ftp.remove(remoteFilePath)
 								
 									#
@@ -772,9 +752,9 @@ class CommanderSync(threading.Thread):
 										delete parentDirPath
 									"""
 								else:
-									print('    not removing from remote server, self.deleteRemoteFiles == False')
+									logger.info('    not removing from remote server: ' + remoteFilePath)
 							else:
-								print('    ERROR: sizes did not match -->> did not remove from remote server')
+								logger.error('file size did not match: ' + localFilePath)
 		
 				ftp.close()
 
@@ -790,8 +770,9 @@ class CommanderSync(threading.Thread):
 		if ftp_get_cancel or cancelledBefore_get:
 			pass
 		else:
-			print('    copyThread() took', elapsedSeconds, 'remoteFilePath:', remoteFilePath)
-		
+			#print('    copyThread() took', elapsedSeconds, 'remoteFilePath:', remoteFilePath)
+			pass
+			
 		try:
 			pass
 		except (Exception) as e:
@@ -803,7 +784,7 @@ class CommanderSync(threading.Thread):
 		Do not copy files that already exist locally
 		"""
 		
-		print('\n    *** commandersync.sync()')
+		logger.info('*** sync ***')
 		
 		self.syncIsBusy = True
 		
@@ -872,19 +853,19 @@ class CommanderSync(threading.Thread):
 			
 			# 1) make local directory for all files (e.g. 'video')
 			if not os.path.isdir(self.localFolder):
-				print('mkdir self.localFolder:', self.localFolder)
+				#print('mkdir self.localFolder:', self.localFolder)
 				os.mkdir(self.localFolder) # 
 
 			# 2) make local directory for 'hostname'
 			hostNameFolder = os.path.join(self.localFolder, hostname)
 			if not os.path.isdir(hostNameFolder):
-				print('mkdir hostNameFolder:', hostNameFolder)
+				#print('mkdir hostNameFolder:', hostNameFolder)
 				os.mkdir(hostNameFolder) # 
 
 			#
 			# 3) make local directory (usually date folder 'yyyymmdd')
 			if not os.path.isdir(localFolder):
-				print('mkdir localFolder:', localFolder)
+				#print('mkdir localFolder:', localFolder)
 				os.mkdir(localFolder) # assumes we are only going one dir deep, e.g. /home/pi/video/20181220
 
 			# all our remote files are always in /home/pi/video
@@ -931,7 +912,7 @@ class CommanderSync(threading.Thread):
 		
 		# this will return immediately but we still need to wait for running tasks !!!!
 		try:
-			print('self.pool.shutdown(wait=False)')
+			#print('self.pool.shutdown(wait=False)')
 			self.pool.shutdown(wait=False)
 		except (UserCancelSync) as e:
 			print('sync() received exception UserCancelSync:', e)

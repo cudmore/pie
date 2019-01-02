@@ -248,16 +248,18 @@ angular.module('commander', ['uiSwitch'])
         	});
         	
         // from admin server, get bash status
-		url = $scope.videoArray[i].adminUrl
-		$http.get(url + 'status').
-        	then(function(response) {
-        	    $scope.videoArray[i].adminStatus = response.data;
-        	}, function errorCallback(response) {
-        		//console.log('getStatus() error', url, i)
-        	    //$scope.videoArray[i].isAlive = false;
-        	    $scope.videoArray[i].adminStatus = ["http error in commander.js"]
-        	});
-        
+		// added if 20190102
+		if ($scope.showSwarmStatus) {
+			url = $scope.videoArray[i].adminUrl
+			$http.get(url + 'status').
+				then(function(response) {
+					$scope.videoArray[i].adminStatus = response.data;
+				}, function errorCallback(response) {
+					//console.log('getStatus() error', url, i)
+					//$scope.videoArray[i].isAlive = false;
+					$scope.videoArray[i].adminStatus = ["http error in commander.js"]
+				});
+		}        
 	};
 
 //get rid of .config in general, use .status
@@ -438,11 +440,12 @@ angular.module('commander', ['uiSwitch'])
 	//
 	//STREAMING
 	$scope.startstopstream = function (idx, startstop) {
-		console.log("startstopstream()", idx, startstop);		
+		console.log("startstopstream() idx:", idx, 'startstop:', startstop);		
 		// if we are stopping, we need to force close the live stream
 		if (startstop==1) {
 			$scope.videoArray[idx].hardCloseStream = 0
 			url = $scope.videoArray[idx].restUrl + 'api/action/startStream'
+			callAtTimeout(idx)
 		} else {
 			//startstop == 0
 			$scope.videoArray[idx].hardCloseStream = 1
@@ -453,14 +456,17 @@ angular.module('commander', ['uiSwitch'])
 		$http.get(url).
         	then(function(response) {
         	    $scope.videoArray[idx].status = response.data;
+        	    callAtTimeout(idx)
         	}, function errorCallback(response) {
         		console.log('startstopstream() error url:', url)
         	});
         //refresh stream
+		/*
 		if (startstop==1) {
 			//callAtTimeout()
-			$timeout(callAtTimeout(idx), 3000);
+			$timeout(callAtTimeout(idx), 2000);
 		}
+		*/
 	};
 
 
@@ -498,9 +504,8 @@ angular.module('commander', ['uiSwitch'])
 
 
 	function callAtTimeout(idx) {
-		console.log("callAtTimeout()", idx);
+		console.log("callAtTimeout() idx:", idx, '$scope.videoArray[idx].hardCloseStream', $scope.videoArray[idx].hardCloseStream);
 		if ($scope.videoArray[idx].hardCloseStream) {
-			console.log('hardCloseStream', idx)
 			$scope.videoArray[idx].myStreamUrl = ''
 		} else {
 			//myStreamUrl = streamList[idx] + '?' + new Date().getTime() //'http://' + $location.host() + ':8080/stream' + '?' + new Date().getTime()

@@ -213,13 +213,16 @@
 		<td ng-if="v.size == v.progress" style="color:#00AA00">
 			{{ v.percent }} <i class="fa fa-check" aria-hidden="true"></i>
 		</td>
-		<td ng-if="v.percent == 'Busy Error'" style="background-color:#FF5555">
+		<td ng-if="v.percent == 'Busy - Try Again'" style="background-color:#FF5555">
 			{{ v.percent }}
 		</td>
 		<td ng-if="v.percent == 'Cancelled'" style="background-color:#EEEE00">
 			{{ v.percent }}
 		</td>
-		<td ng-if="v.size != v.progress && v.percent != 'Cancelled' && v.percent != 'Busy Error'">
+		<td ng-if="v.size != v.progress && v.percent != 'Cancelled' && v.percent != 'Busy - Try Again'">
+			<span ng-if="status.syncIsBusy">
+				<i class="fa fa-cloud-download" aria-hidden="true"></i>
+			</span>
 			{{ v.percent }}
 		</td>
 	</tr>
