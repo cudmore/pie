@@ -13,7 +13,7 @@ Important:
 	    Should be able to mount a server into /mydata (e.g. LindenNas)
 """
 
-import os, time, math, stat, sys, logging
+import os, time, math, stat, sys, logging, subprocess, platform
 from datetime import datetime
 import threading, queue
 import socket, paramiko
@@ -396,7 +396,15 @@ class CommanderSync(threading.Thread):
 			# actualPath will be used on remote linux system, do not use os.path.join
 			actualPath = self.remoteFolder + '/' + path # we are always looking in self.remoteFolder = /home/pi/video
 			
-			for attr in ftp.listdir_attr(path=actualPath): # returns SFTPAttributes
+			try:
+				attributeList = ftp.listdir_attr(path=actualPath) # returns SFTPAttributes
+			except (FileNotFoundError) as e:
+				attributeList = None
+				logger.error('did not find path ' + actualPath + ' on ip ' + ip)
+				return 0
+				
+			#for attr in ftp.listdir_attr(path=actualPath): # returns SFTPAttributes
+			for attr in attributeList:
 
 				# todo: remove this, paramiko will never return ('.', '..')
 				if attr.filename.startswith('.'):
@@ -488,6 +496,17 @@ class CommanderSync(threading.Thread):
 			if not current_password:
 				current_password = 'poetry7d'
 			sshTimeout = self.myConfig['sshTimeout']
+			
+			"""
+			print(self.check_ping(current_ip))
+			if self.check_ping(current_ip):
+				# ok
+				pass
+			else:
+				# error
+				self.ipDict[server['ip']]['madeConnection'] = 'Ping Error'
+				continue
+			"""
 			
 			# initialize internal dictionary
 			self.ipDict[current_ip]['ip'] = current_ip
@@ -991,6 +1010,26 @@ class CommanderSync(threading.Thread):
 	################################################################################
 	# Utilities
 	################################################################################
+	def check_ping(self, ip):
+		
+		"""
+		response = os.system("ping -c 1 " + ip)
+		# and then check the response...
+		if response == 0:
+			#pingstatus = "Network Active"
+			return True
+		else:
+			#pingstatus = "Network Error"
+			return False
+		"""
+		
+		try:
+			output = subprocess.check_output("ping -i 0.2 -{} 1 {}".format('n' if platform.system().lower()=="windows" else 'c', ip), shell=True)
+		except (Exception) as e:
+			logger.error('check_ping exception:' + str(e))
+			return False
+		return True
+        
 	def _humanReadableSize(self, bytes):
 		"""
 		Return a human readable string with unit ('bytes', 'KB', 'MB')
