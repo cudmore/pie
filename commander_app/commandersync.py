@@ -117,6 +117,8 @@ class CommanderSync(threading.Thread):
 		###
 		###
 
+		self.myConfig = myConfig
+		
 		# userPath will be /Users/<user> on macOS and /home/<user> on Debian/Raspbian
 		"""
 		userPath = os.path.expanduser('~')
@@ -202,6 +204,8 @@ class CommanderSync(threading.Thread):
 		logger.info('saving to ' + self.localFolder)
 		"""
 		
+		self.myConfig = myConfig
+		
 		self.serverList = myConfig['serverList']
 		
 		self.ipDict = {}
@@ -209,7 +213,7 @@ class CommanderSync(threading.Thread):
 			self.ipDict[server['ip']] = {
 				'ip': server['ip'],
 				'hostname': '',
-				'madeConnection': False,
+				'madeConnection': 'No',
 				'numFiles': 0,
 				'numFilesToCopy': 0,
 			}
@@ -473,6 +477,7 @@ class CommanderSync(threading.Thread):
 		for server in self.serverList:
 			
 			logger.info('fetchFileList server: ' + str(server))
+			
 			current_ip = server['ip']
 			current_username = server['username']
 			if not current_username:
@@ -480,13 +485,14 @@ class CommanderSync(threading.Thread):
 			current_password = server['password']
 			if not current_password:
 				current_password = 'poetry7d'
-				
+			sshTimeout = self.myConfig['sshTimeout']
+			
 			# initialize internal dictionary
 			self.ipDict[current_ip]['ip'] = current_ip
 			self.ipDict[current_ip]['hostname'] = '' # assigned below
 			self.ipDict[current_ip]['numFiles'] = 0
 			self.ipDict[current_ip]['numFilesToCopy'] = 0
-			self.ipDict[current_ip]['madeConnection'] = False
+			self.ipDict[current_ip]['madeConnection'] = 'No'
 			
 			# connect with ssh
 			ssh = paramiko.SSHClient()
@@ -496,11 +502,13 @@ class CommanderSync(threading.Thread):
 			
 			try:
 				logger.info('opening ssh connection to ip: ' + current_ip)
-				ssh.connect(current_ip, port=22, username=current_username, password=current_password, timeout=self.sshTimeout)
+				ssh.connect(current_ip, port=22, username=current_username, password=current_password, timeout=sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('fetchFileList() ssh.connect exception 1:', str(e))
 			except(paramiko.ssh_exception.AuthenticationException) as e:
-				print('fetchFileList() ssh.connect exception 2:', str(e))
+				#print('fetchFileList() ssh.connect exception 2:', str(e))
+				logger.error('*** AuthenticationException bad username: ' + current_username + ' password: ' + current_password)
+				self.ipDict[server['ip']]['madeConnection'] = 'Authentication Error'
 			except (paramiko.ssh_exception.SSHException) as e:
 				print('fetchFileList() ssh.connect exception 3:', str(e))
 			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
@@ -510,7 +518,7 @@ class CommanderSync(threading.Thread):
 			else: # else is only executed if no exceptions !!!
 				#print('fetchFileList() in else')
 
-				self.ipDict[server['ip']]['madeConnection'] = True
+				self.ipDict[server['ip']]['madeConnection'] = 'Yes'
 				
 				# todo: add error checking here
 				

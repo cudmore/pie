@@ -59,6 +59,8 @@ angular.module('commander', ['uiSwitch'])
 	//
 	$scope.addServer = function() {
 		$scope.numServers += 1
+		$scope.myConfig.serverList.push(defaultServerDict)
+		// was just this
 		$scope.serverList.push(defaultServerDict)
 		initVideoWall()
 		//$scope.$apply();
@@ -68,6 +70,8 @@ angular.module('commander', ['uiSwitch'])
 		removeOK = $window.confirm('Are you sure you want to remove server "' + $scope.serverList[idx].ip + '"?');
 		if (removeOK) {
 			$scope.numServers -= 1
+			$scope.myConfig.serverList.splice(idx,1)
+			//wad just this
 			$scope.serverList.splice(idx,1)
 			initVideoWall()
 			$scope.$apply();
@@ -76,6 +80,8 @@ angular.module('commander', ['uiSwitch'])
 
 	$scope.setServer = function(idx, str) {
 		console.log('$scope.setServer():', idx, str)
+		$scope.myConfig.serverList[idx].ip = str
+		//was just this
 		$scope.serverList[idx].ip = str
 		initVideoWall();
 	}

@@ -76,11 +76,11 @@
 		<td>
 			{{ v.ip }}
 		</td>
-			<td ng-if="v.madeConnection">
-				OK
+			<td ng-if="v.madeConnection == 'Yes'">
+				{{ v.madeConnection }}
 			</td>
-			<td ng-if="! v.madeConnection" style="background-color:#FF0000">
-				No
+			<td ng-if="v.madeConnection != 'Yes'" style="background-color:#FF5555">
+				{{ v.madeConnection }}
 			</td>
 		<td>
 			{{ v.numFiles }}
@@ -140,7 +140,11 @@
 		</label>
 
 		<span style="float:right">
-		Saving files to {{ status.localFolder }}
+		
+			<!-- EXPERIMENTAL -->
+			<!-- <input ng-disabled="! weAreLocalhost" type="file" multiple webkitdirectory id="fileURL"/> -->
+			
+			Saving files to {{ status.localFolder }}
 		</span>
 	
 	<BR>

@@ -24,8 +24,31 @@ app.directive('fdInput', ['$timeout', function ($timeout) {
 */
 
 
+
 app.controller('environmentController', function($scope, $rootScope, $http, $interval, $route, $location) {
 
+	// this is experimental code to allow user to specify download folder
+	//should only by active when $scope.myUrl contains 'localhost'
+	input = document.getElementById("fileURL")
+
+	input.addEventListener("change", function (e) {
+		files = e.target.files;
+		//output.innerHTML = "";
+
+		//for (var i = 0, len = files.length; i < len; i++) {
+		for (var i = 0, len = 1; i < len; i++) {
+			file = files[i];
+			console.log('file.webkitRelativePath:', file.webkitRelativePath)
+			//extension = file.name.split(".").pop();
+			//output.innerHTML += "<li class='type-" + extension + "'>" + file.name + " (" +  Math.floor(file.size/1024 * 100)/100 + "KB)</li>";
+		}
+	}, false);
+
+
+	//
+	// ANGULARJS
+	//
+	
 	// will have /sync
 	$scope.myUrl = $location.absUrl(); //with port :5000
 	
@@ -33,6 +56,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 	var myUrl = $location.absUrl(); //with port :5000
 	console.log('myUrl:', myUrl)
 
+	$scope.weAreLocalhost = myUrl.includes('localhost')
+	
 	document.title = "Commander Sync";
 
     //

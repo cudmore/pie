@@ -1,5 +1,6 @@
 {
 "localFolder": "",
+"sshTimeout": 2,
 "serverList":
 	[
 		{

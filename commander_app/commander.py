@@ -204,10 +204,6 @@ def saveconfig(myConfig):
 ##################################################################
 # this has to be instantiated as a threaded commandersync and live in background
 # insert commands into a queue ['fetchfilelist', 'runsync']
-
-
-#print('myConfig:', myConfig)
-
 inQueue = queue.Queue()
 cs = commandersync.CommanderSync(inQueue, myConfig)
 cs.daemon = True
