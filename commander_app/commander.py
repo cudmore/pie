@@ -16,6 +16,69 @@ import logging
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
 
+###
+###
+if getattr(sys, 'freeze', False):
+	# running as bundle (aka frozen)
+	#logger.info('running frozen')
+	bundle_dir = sys._MEIPASS
+	#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+else:
+	# running live
+	#logger.info('running live')
+	bundle_dir = os.path.dirname(os.path.abspath(__file__))
+#logger.info('bundle_dir is ' + bundle_dir)
+#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+###
+###
+
+#
+# save config.json and commander.log here
+userPath = os.path.expanduser('~')
+globalCommanderConfigPath = os.path.join(userPath, 'commander_config') # all local files with be in this folder
+if not os.path.isdir(globalCommanderConfigPath):
+	os.mkdir(globalCommanderConfigPath)
+
+def _saveConfig(myConfig):
+	thisFile = os.path.join(globalCommanderConfigPath, 'config_commander.json')
+	
+	logger.info('saveconfig() configfile: ' + thisFile)
+	with open(thisFile, 'w') as outfile:
+		json.dump(myConfig, outfile, indent=4)
+		"""
+		for line in iplist.split(','):
+			#print('line:', line)
+			outfile.write(line + ',' + '\n')
+		"""
+
+def _loadConfig():
+	#thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
+	thisFile = os.path.join(globalCommanderConfigPath, 'config_commander.json')
+	saveFirstTime = False
+	if not os.path.isfile(thisFile):
+		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.json')
+		saveFirstTime = True
+		logger.info('defaulting to config file: ' + thisFile)
+	logger.info('Loading config file ' + thisFile)
+	
+	serverList = []
+	with open(thisFile) as f:
+		try:
+			myConfig = json.load(f)
+			#serverList = my_json['serverList']
+		except ValueError as e:
+			logger.error('_loadConfig ValueError: ' + str(e))
+			# if there is an error in loading config file (json is wrong) we REALLY want to exit
+			print('please fix config file:', thisFile)
+			sys.exit(1)
+	
+	if saveFirstTime:
+		_saveConfig(myConfig)
+		
+	#logger.info('Config file contains: ' + str(myConfig))
+	return myConfig
+	
+
 logFormat = "[%(asctime)s] {%(filename)s %(funcName)s:%(lineno)d} %(levelname)s - %(message)s"
 dictConfig({
 	'version': 1,
@@ -37,32 +100,33 @@ myFormatter = logging.Formatter(logFormat)
 
 logger = logging.getLogger('commander')
 
-logFileHandler = FileHandler('commander.log', mode='w')
+#logFileHandler = FileHandler('commander.log', mode='w')
+myLoggerPath = os.path.join(globalCommanderConfigPath, 'commander.log')
+logFileHandler = FileHandler(myLoggerPath, mode='w')
 logFileHandler.setLevel(logging.DEBUG)
 logFileHandler.setFormatter(myFormatter)
 
 logger = logging.getLogger('commander')
 logger.addHandler(logFileHandler)
 logger.setLevel(logging.DEBUG)
-logger.debug('commander initialized commander.log')
+logger.debug('logging to: ' + myLoggerPath)
 
 import commandersync # this has to come after logger is initialized
 
-###
-###
-if getattr(sys, 'freeze', False):
-	# running as bundle (aka frozen)
-	logger.info('running frozen')
-	bundle_dir = sys._MEIPASS
-	#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
+# load config file
+myConfig = _loadConfig()
+
+# check that 'localFolder' is valid
+if myConfig['localFolder']:
+	if not os.path.isdir(myConfig['localFolder']):
+		# error
+		logger.error('config localFolder does not exist: "' + myConfig['localFolder'] + '"')
+		print('please make sure folder specified in commander_config.json "localFolder" exists')
+		sys.exit(1)
 else:
-	# running live
-	logger.info('running live')
-	bundle_dir = os.path.dirname(os.path.abspath(__file__))
-logger.info('bundle_dir is ' + bundle_dir)
-#bundle_dir = '/Users/cudmore/Sites/pie/commander_app/dist/commander'
-###
-###
+	myConfig['localFolder'] = os.path.join(userPath, 'commander_data')
+logger.info('saving download/sync data to: ' + myConfig['localFolder'])
+
 
 ###
 app = Flask(__name__)
@@ -111,26 +175,6 @@ def myAfterRequest(response):
 #	Config file is in 'config_commander.txt'
 #	It is a comma seperated list of IP addresses
 ##################################################################
-def _loadConfig():
-	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
-	if not os.path.isfile(thisFile):
-		logger.info('defaulting to config/config_commander_factory.json')
-		thisFile = os.path.join(bundle_dir, 'config', 'config_commander_factory.json')
-	logger.info('Loading config file ' + thisFile)
-	
-	serverList = []
-	with open(thisFile) as f:
-		try:
-			myConfig = json.load(f)
-			#serverList = my_json['serverList']
-		except ValueError as e:
-			logger.error('loadconfig ValueError: ' + str(e))
-			# if there is an error in loading config file (json is wrong) we REALLY want to exit
-			#sys.exit(1)
-	
-	logger.info('Config file contains: ' + str(myConfig))
-	return myConfig
-	
 @app.route('/loadconfig')
 def loadconfig():
 	myConfig = _loadConfig()
@@ -146,18 +190,8 @@ def saveconfig(myConfig):
 	myConfig = json.loads(myConfig)
 	print('saveconfig() myConfig:', myConfig)
 	
-	#thisFile = 'config/config_commander.txt'
-	thisFile = os.path.join(bundle_dir, 'config', 'config_commander.json')
-	
-	logger.info('saveconfig() configfile: ' + thisFile)
-	with open(thisFile, 'w') as outfile:
-		json.dump(myConfig, outfile, indent=4)
-		"""
-		for line in iplist.split(','):
-			#print('line:', line)
-			outfile.write(line + ',' + '\n')
-		"""
-		
+	_saveConfig(myConfig)
+			
 	# tell commandersync to reload new ip list
 	#cs.loadConfig()
 	cs.setConfig(myConfig)
@@ -171,9 +205,8 @@ def saveconfig(myConfig):
 # this has to be instantiated as a threaded commandersync and live in background
 # insert commands into a queue ['fetchfilelist', 'runsync']
 
-myConfig = _loadConfig()
 
-print('myConfig:', myConfig)
+#print('myConfig:', myConfig)
 
 inQueue = queue.Queue()
 cs = commandersync.CommanderSync(inQueue, myConfig)

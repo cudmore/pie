@@ -118,16 +118,19 @@ class CommanderSync(threading.Thread):
 		###
 
 		# userPath will be /Users/<user> on macOS and /home/<user> on Debian/Raspbian
+		"""
 		userPath = os.path.expanduser('~')
 		self.localFolder = os.path.join(userPath, 'commander_data') # all local files with be in this folder
+		"""
+		self.localFolder = myConfig['localFolder']
 		logger.info('saving to ' + self.localFolder)
 		
 		#self._localFolder = os.path.abspath(self.localFolder)
 		#print('Commander sync will save into:', self._localFolder)
 		
 		# to log in to remote servers
-		self.username = 'pi'
-		self.password = 'poetry7d'
+		#self.username = 'pi'
+		#self.password = 'poetry7d'
 		
 		# this code will not work if remote PiE server does not have /home/pi/video
 		self.remoteFolder = 'video' # all files on remote PiE servers are in /home/pi/video
@@ -376,7 +379,7 @@ class CommanderSync(threading.Thread):
 			Will only add files with extensions self.copyTheseExtensions
 		"""
 		
-		def _fetchFileList(ip, path, depth):
+		def _fetchFileList(ip, username, password, path, depth):
 			"""
 			recursively build list of files starting at path 'path'
 			"""
@@ -401,7 +404,7 @@ class CommanderSync(threading.Thread):
 					else:
 						newPath = attr.filename
 						
-					_fetchFileList(ip, newPath, depth + '    ')
+					_fetchFileList(ip, username, password, newPath, depth + '    ')
 				else:
 					# assuming attr is a file -->> append to self.myFileList
 
@@ -423,6 +426,8 @@ class CommanderSync(threading.Thread):
 						
 					myFile = {
 						'ip': ip,
+						'username': username,
+						'password': password,
 						'hostname': hostname,
 						'remotePath': path,
 						'remoteFile': remoteFile,
@@ -469,7 +474,13 @@ class CommanderSync(threading.Thread):
 			
 			logger.info('fetchFileList server: ' + str(server))
 			current_ip = server['ip']
-			
+			current_username = server['username']
+			if not current_username:
+				current_username = 'pi'
+			current_password = server['password']
+			if not current_password:
+				current_password = 'poetry7d'
+				
 			# initialize internal dictionary
 			self.ipDict[current_ip]['ip'] = current_ip
 			self.ipDict[current_ip]['hostname'] = '' # assigned below
@@ -485,7 +496,7 @@ class CommanderSync(threading.Thread):
 			
 			try:
 				logger.info('opening ssh connection to ip: ' + current_ip)
-				ssh.connect(current_ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
+				ssh.connect(current_ip, port=22, username=current_username, password=current_password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('fetchFileList() ssh.connect exception 1:', str(e))
 			except(paramiko.ssh_exception.AuthenticationException) as e:
@@ -511,7 +522,7 @@ class CommanderSync(threading.Thread):
 				
 				ftp = ssh.open_sftp()
 					
-				_fetchFileList(current_ip, '', depth='')
+				_fetchFileList(current_ip, current_username, current_password, '', depth='')
 					
 				ftp.close()
 
@@ -593,7 +604,7 @@ class CommanderSync(threading.Thread):
 		except (Exception) as e:
 			print('!!! myCallback() Exception:', e, 'idx:', idx, 'file:', file)
 		
-	def copyThread(self, idx, ip, hostname, remoteFilePath, localFilePath, lock):
+	def copyThread(self, idx, ip, username, password, hostname, remoteFilePath, localFilePath, lock):
 		"""
 		Copy a single file from remote to local
 		Don't copy if .lock file exists
@@ -641,7 +652,7 @@ class CommanderSync(threading.Thread):
 			ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 		
 			try:
-				ssh.connect(ip, port=22, username=self.username, password=self.password, timeout=self.sshTimeout)
+				ssh.connect(ip, port=22, username=username, password=password, timeout=self.sshTimeout)
 			except (paramiko.ssh_exception.BadHostKeyException) as e:
 				print('\n*** exception copyThread() 1:', str(e), 'remoteFilePath:', remoteFilePath)
 			except(paramiko.ssh_exception.AuthenticationException) as e:
@@ -856,6 +867,8 @@ class CommanderSync(threading.Thread):
 		for idx, file in enumerate(self.myFileList):
 
 			ip = file['ip']
+			username = file['username']
+			password = file['password']
 			hostname = file['hostname']
 			remotePath = file['remotePath']
 			remoteFile = file['remoteFile']
@@ -912,7 +925,7 @@ class CommanderSync(threading.Thread):
 			# self.pool.submit
 			##
 			try:
-				future = self.pool.submit(self.copyThread, idx, ip, hostname, fullRemoteFile, fullLocalPath, self.myLock)
+				future = self.pool.submit(self.copyThread, idx, ip, username, password, hostname, fullRemoteFile, fullLocalPath, self.myLock)
 				self.myFutures.append(future)
 			except:
 				# this never happens

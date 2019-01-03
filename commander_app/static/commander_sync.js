@@ -8,6 +8,22 @@
 
 var app = angular.module('environment_app', ['ngRoute']);
 
+/*
+app.directive('fdInput', ['$timeout', function ($timeout) {
+    console.log('fdinput')
+    return {
+        link: function (scope, element, attrs) {
+            element.on('change', function  (evt) {
+                var files = evt.target.files;
+                console.log(files[0].name);
+                console.log(files[0].size);
+            });
+        }
+    }
+}]);
+*/
+
+
 app.controller('environmentController', function($scope, $rootScope, $http, $interval, $route, $location) {
 
 	// will have /sync
@@ -27,6 +43,10 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 	// commander_sync
 	//
 
+	$scope.selectFolder = function(event) {
+		console.log('selectFolder() event:', events)
+	}
+	
 	// check for files to be copied from server
 	$scope.checkForNewFilesButton = function() {
 		console.log('checkForNewFilesButton()')
