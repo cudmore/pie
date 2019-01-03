@@ -29,6 +29,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 
 	// this is experimental code to allow user to specify download folder
 	//should only by active when $scope.myUrl contains 'localhost'
+	/*
 	input = document.getElementById("fileURL")
 
 	input.addEventListener("change", function (e) {
@@ -43,7 +44,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 			//output.innerHTML += "<li class='type-" + extension + "'>" + file.name + " (" +  Math.floor(file.size/1024 * 100)/100 + "KB)</li>";
 		}
 	}, false);
-
+	*/
+	
 
 	//
 	// ANGULARJS
