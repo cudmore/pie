@@ -109,7 +109,7 @@ logFileHandler.setFormatter(myFormatter)
 logger = logging.getLogger('commander')
 logger.addHandler(logFileHandler)
 logger.setLevel(logging.DEBUG)
-logger.debug('logging to: ' + myLoggerPath)
+logger.info('logging to: ' + myLoggerPath)
 
 import commandersync # this has to come after logger is initialized
 
@@ -125,7 +125,7 @@ if myConfig['localFolder']:
 		sys.exit(1)
 else:
 	myConfig['localFolder'] = os.path.join(userPath, 'commander_data')
-logger.info('saving download/sync data to: ' + myConfig['localFolder'])
+logger.info('Will save download/sync data to: ' + myConfig['localFolder'])
 
 
 ###
@@ -288,14 +288,17 @@ if __name__ == '__main__':
 	if len(sys.argv) == 2:
 		if sys.argv[1] == 'debug':
 			debug = True
-	app.logger.debug('Running flask server with debug = ' + str(debug))
+	#app.logger.info('Running flask server with debug = ' + str(debug))
 		
-	responseStr = 'Flask server is running at: ' + 'http://' + str(myip) + ':8000'
+	responseStr = 'Starting Flask web server at: ' + 'http://' + str(myip) + ':8000'
 	#print(responseStr)
-	app.logger.debug(responseStr)
+	app.logger.info(responseStr)
 	
 	# 0.0.0.0 will run on external ip and needed to start at boot with systemctl
 	# before we get a valid ip from whatismyip()
 	
-	app.run(host='0.0.0.0', port=8000, debug=debug, threaded=True)
-
+	try:
+		app.run(host='0.0.0.0', port=8000, debug=debug, threaded=True)
+	except (OSError) as e:
+		logger.error('OSError: ' + str(e) + ' ' + myip)
+		logger.error('Is the commander already running on this machine?')

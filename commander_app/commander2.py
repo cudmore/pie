@@ -18,4 +18,10 @@ if __name__ == '__main__':
 	# 0.0.0.0 will run on external ip and needed to start at boot with systemctl
 	# before we get a valid ip from whatismyip()
 	
-	commander.app.run(host='0.0.0.0', port=8000, debug=debug, threaded=True)
+	#commander.app.run(host='0.0.0.0', port=8000, debug=debug, threaded=True)
+
+	try:
+		app.run(host='0.0.0.0', port=8000, debug=debug, threaded=True)
+	except (OSError) as e:
+		logger.error('OSError: ' + str(e) + ' ' + myip)
+		logger.error('Is the commander already running on this machine?')

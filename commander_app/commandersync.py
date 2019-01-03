@@ -107,11 +107,11 @@ class CommanderSync(threading.Thread):
 		###
 		if getattr(sys, 'freeze', False):
 			# running as bundle (aka frozen)
-			logger.info('running frozen')
+			#logger.info('running frozen')
 			self.bundle_dir = sys._MEIPASS
 		else:
 			# running live
-			logger.info('running live')
+			#logger.info('running live')
 			self.bundle_dir = os.path.dirname(os.path.abspath(__file__))
 		logger.info('bundle_dir is ' + self.bundle_dir)
 		###
@@ -125,7 +125,7 @@ class CommanderSync(threading.Thread):
 		self.localFolder = os.path.join(userPath, 'commander_data') # all local files with be in this folder
 		"""
 		self.localFolder = myConfig['localFolder']
-		logger.info('saving to ' + self.localFolder)
+		#logger.info('saving to ' + self.localFolder)
 		
 		#self._localFolder = os.path.abspath(self.localFolder)
 		#print('Commander sync will save into:', self._localFolder)
@@ -247,6 +247,8 @@ class CommanderSync(threading.Thread):
 				if self.myFutures is not None:
 					for future in self.myFutures:
 						try:
+							if future.cancelled():
+								print('!!! run() found cancelled future')
 							if not future.done():
 								allDone = False
 								break
@@ -514,7 +516,7 @@ class CommanderSync(threading.Thread):
 			except (paramiko.ssh_exception.NoValidConnectionsError) as e:
 				print('fetchFileList() ssh.connect exception 4:', str(e))
 			except (socket.timeout) as e:
-				print('*** fetchFileList() ssh.connect exception 5:', str(e))
+				logger.error('*** fetchFileList() ssh.connect socket.timeout exception 5: ' + str(e))
 			else: # else is only executed if no exceptions !!!
 				#print('fetchFileList() in else')
 
@@ -748,14 +750,18 @@ class CommanderSync(threading.Thread):
 							print('    *** copyThread() got UserCancelSync exception idx:', idx, 'remoteFilePath:', remoteFilePath)
 							# CLEANUP PARTIAL FILE
 							ftp_get_cancel = True
+						except (paramiko.ssh_exception.SSHException) as e:
+							print('ftp.get() paramiko.ssh_exception.SSHException:', str(e))
+							ftp_get_cancel = True
 						except (Exception) as e:
-							print('unknown exception in ftp.get():', e, 'remoteFilePath:', remoteFilePath)
+							print('ftp.get() unknown exception:', e, 'remoteFilePath:', remoteFilePath)
+							ftp_get_cancel = True
 						else: # else is only executed if no exceptions !!!
 							try:
 								pass
 								#ftp.close()
-							except:
-								print('ftp.close() exception', 'remoteFilePath:', remoteFilePath)
+							except (Exception) as e:
+								print('ftp.close() exception e:', str(e), 'remoteFilePath:', remoteFilePath)
 							
 					except (IOError) as e:
 						print('MY EXCEPTION: IOError exception in ftp.get() e:', str(e), ', remoteFilePath:', remoteFilePath)
