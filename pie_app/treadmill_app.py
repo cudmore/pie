@@ -268,7 +268,7 @@ def simulate_starttrigger():
 """
 
 @app.route('version')
-def versioncheck()
+def versioncheck():
 	cmd = [python version_check.py]
 	out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
 	return jsonify(out)
