@@ -24,4 +24,4 @@ dt=$(date '+%Y%m%d_%H%M%S');
 
 # need to use commander2 or else bundle dir (in python) is always user dir?
 #pyinstaller -w --onefile --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" commander.py
-commander_env/bin/pyinstaller -F --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" -n commander_$dt commander2.py
+commander_env/bin/pyinstaller -F --add-data "templates:templates" --add-data "static:static" --add-data "config:config" --add-data "bin:bin" -n commander_$dt commander.py

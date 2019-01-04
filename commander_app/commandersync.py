@@ -792,7 +792,7 @@ class CommanderSync(threading.Thread):
 						# once file is copied to local and we are 100% sure this is true, remove from remote
 	
 						if ftp_get_cancel:
-							print('        ****    ftp_get_cancel, remove file idx:', idx, 'file:', localFilePath)
+							print('        ****    ftp_get_cancel, removing local file idx:', idx, 'file:', localFilePath)
 							os.remove(localFilePath)
 							self.myFileList[idx]['percent'] = 'Cancelled'
 						else:
@@ -820,14 +820,21 @@ class CommanderSync(threading.Thread):
 									#
 									# delete parent (date) dir if neccessary (empty)
 									# construct parentDirPath (e.g. date folder) and remove if empty
-									"""
-									parentDirPath = ???
-									attrList in ftp.listdir_attr(path=parentDirPath): # returns SFTPAttributes
-									if attrList is Empty:
-										delete parentDirPath
-									"""
+									# tricky because we want to use linux path with '/' on windows
+									# does not seem to be a way to force os.path to use linux seperators when 
+									# running on windows
+									lastIndex = remoteFilePath.rfind('/')
+									parentDirPath = remoteFilePath[:lastIndex]
+									# does not work
+									# os.path.dirname(remoteFilePath) # basename would be name of file
+									attrList = ftp.listdir_attr(path=parentDirPath) # returns SFTPAttributes
+									print('\n\n    parentDirPath:', parentDirPath, 'attrList:', attrList, '\n\n')
+									if not attrList: # empty
+										logger.info('removing remote folder ' + parentDirPath)
+										ftp.remove(parentDirPath)
 								else:
 									logger.info('    not removing from remote server: ' + remoteFilePath)
+									
 							else:
 								logger.error('file size did not match: ' + localFilePath)
 		

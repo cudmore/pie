@@ -38,7 +38,10 @@
 <!-- full commander sync status -->
 <!-- {{ status }} -->
 
-
+	<span style="float:right">
+	{{ status.serverTime }}
+	</span>
+	
 		<button type="button"
 			class="btn btn-success btn-sm"
 			ng-click="checkForNewFilesButton()"

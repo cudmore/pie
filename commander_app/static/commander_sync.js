@@ -24,7 +24,6 @@ app.directive('fdInput', ['$timeout', function ($timeout) {
 */
 
 
-
 app.controller('environmentController', function($scope, $rootScope, $http, $interval, $route, $location) {
 
 	// this is experimental code to allow user to specify download folder
@@ -111,7 +110,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	});
 	}
 
-	// when checkbox is clicked
+	// when delete after copy checkbox is clicked
 	$scope.deleteAfterCopyChange = function(isValid) {
 		console.log('$scope.deleteAfterCopy', $scope.deleteAfterCopy)
 		onoff = $scope.deleteAfterCopy ? 1 : 0
@@ -123,6 +122,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
         	});
 	};
 	
+    // get server status, called at an interval
     $scope.getStatus = function () {
 		url = $scope.myUrl + '/status' // $scope.myUrl ends in /sync
 		//console.log('$scope.getStatus url:', url)

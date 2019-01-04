@@ -3,7 +3,7 @@
 
 from __future__ import print_function    # (at top of module)
 
-import os, sys, subprocess
+import os, sys, time, subprocess
 import json, queue
 
 from flask import Flask, render_template, send_file, jsonify, abort, request#, redirect, make_response
@@ -243,8 +243,10 @@ def sync_cancel():
 
 @app.route('/sync/status')
 def sync_status():
+	now = time.time()
 	global cs
 	status = {
+		'serverTime': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now)),
 		'fetchIsBusy': cs.fetchIsBusy,
 		'syncIsBusy': cs.syncIsBusy,
 		'ipDict': cs.ipDict,
