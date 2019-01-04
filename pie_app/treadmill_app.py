@@ -267,6 +267,12 @@ def simulate_starttrigger():
 	return jsonify(treadmill.getStatus())
 """
 
+@app.route('version')
+def versioncheck()
+	cmd = [python version_check.py]
+	out = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+	return jsonify(out)
+	
 #########################################################################
 #  display list of files in video/
 #########################################################################

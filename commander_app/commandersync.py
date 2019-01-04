@@ -825,13 +825,19 @@ class CommanderSync(threading.Thread):
 									# running on windows
 									lastIndex = remoteFilePath.rfind('/')
 									parentDirPath = remoteFilePath[:lastIndex]
-									# does not work
-									# os.path.dirname(remoteFilePath) # basename would be name of file
-									attrList = ftp.listdir_attr(path=parentDirPath) # returns SFTPAttributes
-									print('\n\n    parentDirPath:', parentDirPath, 'attrList:', attrList, '\n\n')
-									if not attrList: # empty
-										logger.info('removing remote folder ' + parentDirPath)
-										ftp.remove(parentDirPath)
+									
+									# never remove /home/pi/video
+									if parentDirPath == 'video':
+										#print('not removing root video folder')
+										pass
+									else:									
+										# does not work
+										# os.path.dirname(remoteFilePath) # basename would be name of file
+										attrList = ftp.listdir_attr(path=parentDirPath) # returns SFTPAttributes
+										#print('\n\n    parentDirPath:', parentDirPath, 'attrList:', attrList, '\n\n')
+										if not attrList: # empty
+											logger.info('removing remote folder ' + parentDirPath)
+											ftp.remove(parentDirPath)
 								else:
 									logger.info('    not removing from remote server: ' + remoteFilePath)
 									

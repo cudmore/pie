@@ -112,7 +112,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 
 	// when delete after copy checkbox is clicked
 	$scope.deleteAfterCopyChange = function(isValid) {
-		console.log('$scope.deleteAfterCopy', $scope.deleteAfterCopy)
+		//console.log('$scope.deleteAfterCopyChange() $scope.deleteAfterCopy', $scope.deleteAfterCopy)
+		// convert true/false to 1/0
 		onoff = $scope.deleteAfterCopy ? 1 : 0
 		url = $scope.myUrl + '/deleteaftercopy' + '/' + onoff // $scope.myUrl ends in /sync
 		//console.log('$scope.getStatus url:', url)
@@ -129,6 +130,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 		$http.get(url).
         	then(function(response) {
         	    $scope.status = response.data;
+        	    console.log('response.data.deleteRemoteFiles:', response.data.deleteRemoteFiles)
+        	    $scope.deleteAfterCopy = response.data.deleteRemoteFiles
         	});
 	};
 

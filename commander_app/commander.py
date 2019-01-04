@@ -216,7 +216,10 @@ def sync():
 @app.route('/sync/deleteaftercopy/<int:onoff>')
 def delete_after_copy(onoff):
 	print('delete_after_copy:', onoff)
-	cs.setDeleteRemoteFiles(onoff)
+	if onoff == 0:
+		cs.setDeleteRemoteFiles(False)
+	else:
+		cs.setDeleteRemoteFiles(True)
 	return jsonify(cs.ipDict)
 
 @app.route('/sync/fetchfiles')
@@ -260,8 +263,12 @@ def sync_status():
 		'syncNumTotalToCopy': cs.syncNumTotalToCopy,
 		'syncBytesCopied': cs._humanReadableSize(cs.syncBytesCopied),
 		'syncTotalBytesToCopy': cs._humanReadableSize(cs.syncTotalBytesToCopy),
-		'syncEstimatedTimeArrival': cs._humanReadableTime(cs.syncEstimatedTimeArrival)
+		'syncEstimatedTimeArrival': cs._humanReadableTime(cs.syncEstimatedTimeArrival),
+		'deleteRemoteFiles': cs.deleteRemoteFiles
 	}
+	
+	#print('cs.deleteRemoteFiles:', cs.deleteRemoteFiles)
+	
 	return jsonify(status)
 
 ##################################################################
