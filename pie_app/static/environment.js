@@ -17,7 +17,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 	// set the browser tab title
 	var myUrl2 = myUrl.replace("http://", "");
 	myUrl2 = myUrl2.replace(":5010/environment", "");
-	document.title = myUrl2 + " Environment";
+	document.title = myUrl2 + " Env";
 
     //
     // global variables
@@ -272,6 +272,20 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 //
 //
 
+    //get status ONCE so we can get hostname
+    $scope.getStatus = function () {
+		var tmpURl = myUrl.replace("environment", "status");
+
+		$http.get(tmpURl).
+        	then(function(response) {
+        	    $scope.status = response.data;
+				console.log('$scope.status:', $scope.status)
+				
+				//set title once
+				document.title = $scope.status.trial.systemInfo.hostname + ' Env'
+        	});
+	};
+
 window.onresize = function() {
     //buildPlotly(doRedraw=true)
     /*
@@ -290,6 +304,7 @@ window.onresize = function() {
 };
 	
 // main
+$scope.getStatus()
 loadData()
 buildPlotly()
 

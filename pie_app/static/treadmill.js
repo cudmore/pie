@@ -483,6 +483,7 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 	$scope.myUrl = $location.absUrl(); //with port :5000
 	console.log('$scope.myUrl:', $scope.myUrl)
 	
+	console.log('$location.host():', $location.host())
 	document.title = 'PiE ' + $location.host()
 	
     myStreamUrl = 'http://' + $location.host() + ':8080/stream';
@@ -531,6 +532,8 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
 				// turn of interval updates that call REST
 				$scope.setInterval($scope.status.trial.runtime.cameraState)
 				
+				// set tab title based on host
+				document.title = $scope.status.trial.systemInfo.hostname + ' PiE'
         	});
 	};
 
