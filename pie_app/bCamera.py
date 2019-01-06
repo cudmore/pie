@@ -228,9 +228,25 @@ class bCamera:
 
 			self.startRecordSeconds = time.time()
 				
+			# debug camera errors
+			"""
+			debugStartTime = time.time()
+			"""
+			
 			# record until duration or we are no longer 'recording'
 			while self.isState('recording') and (time.time() <= (self.startRecordSeconds + float(repeatDuration))):
-				self.camera.wait_recording()
+				
+				# todo
+				# this needs to by try..except
+				# be sure to catch out of disk space (or any error) with picamera.exc.PiCameraMMALError
+				
+				#try is new 20190106
+				try:
+					self.camera.wait_recording()
+				except (picamera.exc.PiCameraError, picamera.exc.PiCameraMMALError) as e:
+					logger.error('wait_recording() exception:' + e)
+					break
+				
 				if captureStill and time.time() > (self.lastStillTime + float(stillInterval)):
 					self.camera.capture(self.stillPath, use_video_port=True)
 					self.lastStillTime = time.time()
@@ -239,6 +255,12 @@ class bCamera:
 					'''
 				self.annotate()
 				self.secondsElapsedStr = str(round(time.time() - self.startRecordSeconds, 1))
+				
+				# debug camera errors
+				"""
+				if (time.time() - debugStartTime) > 2:
+					raise picamera.exc.PiCameraError
+				"""
 					
 			self.camera.stop_recording()
 
