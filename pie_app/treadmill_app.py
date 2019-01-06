@@ -106,7 +106,45 @@ def environmentlog():
 			return Response(f.read(), mimetype='text/plain')
 	else:
 		return 'No ' + logFilePath + ' found. <BR><BR>' + str(dict(treadmill.trial.config['hardware']['dhtsensor'])) + "<BR>"
-		
+@app.route('/environmentlog2/<string:intervalType>/<int:intervalNumber>')
+def environmentlog2(intervalType, intervalNumber):
+	"""
+	intervalType: ('days, weeks, months)
+	intervalNumber: number of intervalType. e.g. 2 days
+	"""
+	print('environmentlog2() intervalType:', intervalType, 'intervalNumber:', intervalNumber)
+	logFilePath = treadmill.trial.getConfig('trial', 'savePath') # '/home/pi/video/logs/environment.log'
+	logFilePath = os.path.join(logFilePath, 'logs/environment.log')
+	if os.path.isfile(logFilePath):
+		if intervalType == 'hours':
+			secondsInType = 60*60
+		elif intervalType == 'days':
+			secondsInType = 60*60*24
+		elif intervalType == 'weeks':
+			secondsInType = 60*60*24 * 7
+		elif intervalType == 'months':
+			secondsInType = 60*60*24 * 31
+		firstSeconds = time.time() - secondsInType * intervalNumber
+		with open(logFilePath, 'r') as f:
+			fileContents = f.readlines()
+			# first line is header
+			headerLine = fileContents[0]
+			del fileContents[0]
+			
+		outList = []
+		for line in reversed(fileContents):
+			#print('line:', line)
+			lineSeconds = line.split(',')[2]
+			if float(lineSeconds) > firstSeconds:
+				outList.append(line)
+			else:
+				break
+		outList = list(reversed(outList))
+		outList.insert(0, headerLine)
+		return Response(outList, mimetype='text/plain')
+	else:
+		return 'No ' + logFilePath + ' found. <BR><BR>' + str(dict(treadmill.trial.config['hardware']['dhtsensor'])) + "<BR>"
+
 @app.route('/status')
 def status():
 	return jsonify(treadmill.getStatus())

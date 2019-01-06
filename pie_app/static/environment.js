@@ -34,6 +34,25 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
     $scope.lastTemp = '-'
     $scope.lastHum = '-'
     
+    $scope.intervalNumber = 7
+    $scope.intervalType = 'days'
+    
+    $scope.loadingData = false
+    
+    $scope.setIntervalNumber = function () {
+    	console.log('$scope.intervalNumber:', $scope.intervalNumber)
+		//$scope.loadingData = true
+    	//$scope.$apply();
+    	loadData()
+		//$scope.loadingData = false
+    }
+    
+    $scope.setIntervalType = function () {
+    	console.log('$scope.intervalType:', $scope.intervalType)
+    	loadData()
+    }
+    
+    
     //
     // callback functions
     /*
@@ -86,7 +105,15 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 	var xSeconds = [] // Linux epoch (remember javascript is in milliseconds)
 	
 	var loadData = function() {
-		Plotly.d3.csv(myUrl + 'log', function(err, rows){
+		// myUrl already ends in environment, this is fetching environmentlog
+		// environmentlog2/days/2
+		//Plotly.d3.csv(myUrl + 'log', function(err, rows){
+
+	    $scope.loadingData = true
+		//$scope.$apply();
+
+		url = myUrl + 'log2/' + $scope.intervalType + '/' + $scope.intervalNumber
+		Plotly.d3.csv(url, function(err, rows){
   
 			function myUnpack(rows, key) {
 				return rows.map(function(row) { return row[key]; });
@@ -192,7 +219,8 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 			//refreshPlotly2()
 			//Plotly.redraw('myplot');
 			buildPlotly(doRedraw=true)
-			
+
+
 		})
 		}
 		
@@ -262,11 +290,13 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 				//Plotly.redraw('myplot');
 				//Plotly.restyle('myplot', 'data', mydata);
 				Plotly.react('myplot', mydata, mylayout)
+			    $scope.loadingData = false
 				$scope.$apply();
 			} else {
 				console.log('plot')
 				Plotly.plot('myplot', mydata, mylayout)
 			}
+			//$scope.$apply();
 
 	} //buildPlotly
 //
