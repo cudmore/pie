@@ -30,7 +30,7 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
     $scope.yAxisMin = 10; // celcius
     $scope.yAxisMax = 30; // celcius
     
-    $scope.lastTime = 'None'
+    $scope.lastTime = '-'
     $scope.lastTemp = '-'
     $scope.lastHum = '-'
     
@@ -313,6 +313,9 @@ app.controller('environmentController', function($scope, $rootScope, $http, $int
 				
 				//set title once
 				document.title = $scope.status.trial.systemInfo.hostname + ' Env'
+
+				loadData()
+				buildPlotly()
         	});
 	};
 
@@ -335,8 +338,6 @@ window.onresize = function() {
 	
 // main
 $scope.getStatus()
-loadData()
-buildPlotly()
 
 
 }); // environmentController
