@@ -132,13 +132,20 @@ def environmentlog2(intervalType, intervalNumber):
 			del fileContents[0]
 			
 		outList = []
-		for line in reversed(fileContents):
+		tmpNumLines = len(fileContents)
+		for idx, line in enumerate(reversed(fileContents)):
 			#print('line:', line)
-			lineSeconds = line.split(',')[2]
-			if float(lineSeconds) > firstSeconds:
-				outList.append(line)
-			else:
-				break
+			#splitLines = line.split(',')
+			#print('len(splitLines):', len(splitLines))
+			lineSeconds = line.split(',')[2] # BIG ASSUMPTION
+			try:
+				if float(lineSeconds) > firstSeconds:
+					outList.append(line)
+				else:
+					break
+			except (ValueError) as e:
+				app.logger.error('error parsing environment log file at line: ' + str(tmpNumLines - idx + 1) + ', exception:' + str(e))
+				
 		outList = list(reversed(outList))
 		outList.insert(0, headerLine)
 		return Response(outList, mimetype='text/plain')
