@@ -212,7 +212,7 @@ class PinThread(threading.Thread):
 			self.trial.lastResponse = err
 		
 		
-	def eventOut(self, name, onoff):
+	def eventOut(self, name, onoff, doLog=True):
 		""" Turn output pins on/off """
 		now = time.time()
 		pin = self.pinFromName(name)
@@ -227,7 +227,8 @@ class PinThread(threading.Thread):
 				self.pigpiod.write(pin, onoff)
 			else:
 				try:
-					logger.info(name + ' ' + str(onoff))
+					if doLog:
+						logger.info(name + ' ' + str(onoff))
 					GPIO.output(pin, onoff)
 				except (RuntimeError) as e:
 					# we will always get here with start/stop trial when out trigger is off

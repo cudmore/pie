@@ -472,8 +472,8 @@ class bTrial():
 			self.config['hardware']['eventOut'][irLEDIndex]['state'] = newIR
 
 			# set actual pins
-			self.myPinThread.eventOut('whiteLED', newWhite)
-			self.myPinThread.eventOut('irLED', newIR)
+			self.myPinThread.eventOut('whiteLED', newWhite, doLog=False)
+			self.myPinThread.eventOut('irLED', newIR, doLog=False)
 				
 			# only log when we make a change
 			if newWhite != wasWhite:
