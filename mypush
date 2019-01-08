@@ -1,0 +1,7 @@
+commitStr='xxx'
+
+python pie_app/version_increment.py
+
+git commit -am $commitStr
+
+git push
