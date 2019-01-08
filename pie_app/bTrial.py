@@ -170,6 +170,7 @@ class bTrial():
 		self.mySerialThread.daemon = True
 		self.mySerialThread.start()
 		"""
+		self.mySerialThread = None
 		if self.config['hardware']['serial']['useSerial']:
 			self.serialThread(True)
 			
@@ -213,7 +214,7 @@ class bTrial():
 				logger.info('stopping and destroying serial thread')
 				self.mySerialThread.stop()
 				self.mySerialThread.join()
-				# As far as I understand, setting to None is sufficient (=None destroys but does not remove from namespace?)
+				# As far as I understand, setting to None is sufficient ('= None' destroys but does not remove from namespace?)
 				# del(self.mySerialThread)
 				#
 				self.mySerialThread = None

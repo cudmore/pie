@@ -438,6 +438,7 @@ Swarm Status
 	<th>IP</th>
 	<th>Hostname</th>
 	<th>Log</th>
+	<th>Env</th>
 	<th>Load Homecage Config</th>
 	<th>Restart PiE Server</th>
 	<th>Update Software</th>
@@ -480,6 +481,10 @@ Swarm Status
 
 		<td>
 		<A HREF="{{ videoArray[$index].restUrl }}log" target="_{{videoArray[$index].status.system.hostname}} log" >Log</a>
+		</td>
+		
+		<td>
+		<A HREF="{{ videoArray[$index].restUrl }}environment" target="_{{videoArray[$index].status.system.hostname}} env" ><i class="fa fa-thermometer-half" aria-hidden="true"></i></a>
 		</td>
 		
 		<td>

@@ -1,7 +1,7 @@
 {
     "trial": {
         "numberOfRepeats": 1,
-        "repeatDuration": 10,
+        "repeatDuration": 1800,
         "trialNum": 1,
         "animalID": "",
         "conditionID": "",
@@ -74,7 +74,7 @@
         "dhtsensor": {
             "sensorType": "AM2302",
             "continuouslyLog": true,
-            "temperatureInterval": 60,
+            "temperatureInterval": 180,
             "readtemperature": true,
             "pin": 4
         },
@@ -112,7 +112,7 @@
         "sunrise": 7
     },
     "video": {
-        "stillInterval": 2.1,
+        "stillInterval": 1.1,
         "useCamera": true,
         "resolution": "640,480",
         "bufferSeconds": 10,
