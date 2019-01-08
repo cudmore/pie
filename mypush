@@ -1,6 +1,7 @@
 commitStr='xxx'
 
-python pie_app/version_increment.py
+cd pie_app
+python version_increment.py
 
 git commit -am $commitStr
 
