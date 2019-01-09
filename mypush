@@ -1,8 +1,13 @@
-commitStr='xxx'
+# bash script to
+#    increment version.py
+#    create a commit str
+#    push to github
 
 cd pie_app
-python version_increment.py
+commitStr=$(python version_increment.py)
 
-git commit -am $commitStr
+echo $commitStr
+
+git commit -am "$commitStr"
 
 git push

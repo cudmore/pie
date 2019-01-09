@@ -16,7 +16,7 @@ Usage:
 	deactivate
 """
 
-import version
+import version # has __version__ and __version_minor__
 
 def getVersion():
 	
@@ -35,7 +35,7 @@ def getVersion():
 
 	#
 	# PiE
-	print('=== PiE:', version.__version__)
+	print('=== PiE:', version.__version__, version.__version_minor__)
 
 	#
 	# picamera

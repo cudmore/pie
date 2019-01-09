@@ -1,1 +1,2 @@
-__version__ = '20190108a'
+__version__ = 20190108
+__version_minor__ = 186
