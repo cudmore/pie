@@ -346,7 +346,7 @@ class bTrial():
 		status['runtime']['numFrames'] = self.runtime['numFrames'] #self.numFrames
 
 		status['systemInfo'] = self.systemInfo # remember to update occasionally
-		status['systemInfo']['version'] = version.__version__ + ' ' + str(version.__version_minor__)
+		status['systemInfo']['version'] = str(version.__version__) + ' ' + str(version.__version_minor__)
 		status['systemInfo']['uptime'] = str(timedelta(seconds = time.time() - self.startTimeSeconds)).split('.')[0]
 
 		while not self.cameraErrorQueue.empty():
