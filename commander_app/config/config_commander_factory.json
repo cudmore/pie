@@ -1,6 +1,20 @@
 {
 "localFolder": "",
 "sshTimeout": 2,
+"maxNumTransfer": 20,
+"alarms":
+	[
+		{
+		"hour": 8,
+		"minute": 17,
+		"repeats": 4
+		},
+		{
+		"hour": 8,
+		"minute": 25,
+		"repeats": 4
+		}
+	],
 "serverList":
 	[
 		{
@@ -17,6 +31,51 @@
 		"ip":"192.168.1.15",
 		"username": "",
 		"password": ""
-		}
+		},
+        {
+            "ip": "10.16.81.33",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.34",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.35",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.36",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.37",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.38",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.39",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "10.16.81.41",
+            "password": "",
+            "username": ""
+        },
+        {
+            "ip": "192.168.1.13",
+            "username": "",
+            "password": ""
+        }
 	]
 }

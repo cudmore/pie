@@ -174,8 +174,14 @@ class CommanderSync(threading.Thread):
 		self.syncEstimatedTimeArrival = None # estimated time remaining
 		
 		#self.myAlarm = myAlarm(0, 15, self.syncAlarm) # set alarm for 12:15 AM (every day)
-		self.myAlarm = myAlarm(9, 28, self.syncAlarm) # set alarm for 12:15 AM (every day)
-				
+		self.myAlarms = []
+		for alarm in self.myConfig['alarms']:
+			#newAlarm = myAlarm(9, 28, self.syncAlarm) # set alarm for 12:15 AM (every day)
+			alarmHour = alarm['hour']
+			alarmMinute = alarm['minute']
+			alarmsPerDay = alarm['repeats']
+			newAlarm = myAlarm(alarmHour, alarmMinute, self.syncAlarm, alarmsPerDay=alarmsPerDay) # set alarm for 12:15 AM (every day)
+			self.myAlarms.append(newAlarm)
 		
 	def setDeleteRemoteFiles(self, onoff):
 		"""
@@ -304,7 +310,8 @@ class CommanderSync(threading.Thread):
 				
 				#
 				# check if it is time to sync
-				self.myAlarm.update()
+				for alarm in self.myAlarms:
+					alarm.update()
 					
 				try:
 					inDict = self.inQueue.get(block=False, timeout=0)
@@ -381,16 +388,24 @@ class CommanderSync(threading.Thread):
 		"""
 		Fetch all files to be copied from each ip in self.serverList
 		
-		Detalails:
+		Details:
 			Will only add files with extensions self.copyTheseExtensions
+				This is set to ['.mp4', '.txt']
+			Will not touch any remote folder names 'logs'
 		"""
 		
 		def _fetchFileList(ip, username, password, path, depth):
 			"""
 			recursively build list of files starting at path 'path'
 			"""
+			
 			#print(depth, '=== fetchFileList() path:', path)
 
+			# never sync 'logs' folder
+			if path == 'logs':
+				logger.info('skipping logs folder: ' + ip)
+				return 0
+			
 			# ftp.listdir_attr will fail if remote does not have folder self.remoteFolder
 			
 			# actualPath will be used on remote linux system, do not use os.path.join
@@ -890,7 +905,8 @@ class CommanderSync(threading.Thread):
 		
 		#
 		# create a pool of workers
-		max_workers= None # when None = cpu cores * 5
+		#max_workers= None # when None = cpu cores * 5
+		max_workers = self.myConfig['maxNumTransfer']
 		thread_name_prefix= 'myThreadPoolExecutor'
 		self.pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix=thread_name_prefix) #max_workers
 		
