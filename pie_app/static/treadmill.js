@@ -548,6 +548,18 @@ app.controller('treadmill', function($scope, $rootScope, $window, $http, $locati
         	});
     };
     
+    // davis
+    // mixing controllers, this submits main $scope.config
+    $scope.submitFanForm = function() {
+        //console.log('submitLEDForm() $scope.status.trial.config:', $scope.status.trial.config.hardware.eventOut);
+        url = $scope.myUrl + 'api/submit/fanparams'
+        $http.post(url, JSON.stringify($scope.status.trial.config)).
+        	then(function(response) {
+        		$scope.status = response.data
+        		//console.log('$scope.status:', $scope.status)
+        	});
+    };
+    
 	// new 20181225
 	$scope.hardCloseStream = 0
 	function callStreamAtTimeout() {

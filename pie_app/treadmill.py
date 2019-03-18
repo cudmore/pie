@@ -141,6 +141,9 @@ class treadmill():
 	def updateLED(self, configDict):
 		self.trial.updateLED(configDict)
 	
+	def updateFan(self, configDict):
+		self.trial.updateFan(configDict)
+	
 	def loadConfig(self, loadThis):
 		"""
 		Load a config file from disk

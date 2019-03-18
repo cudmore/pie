@@ -239,6 +239,9 @@ def submit(submitThis):
 		treadmill.updateAnimal(post)
 	if submitThis == 'ledparams':
 		treadmill.updateLED(post)
+	# davis
+	if submitThis == 'fanparams':
+		treadmill.updateFan(post)
 	if submitThis == 'motorparams':
 		treadmill.serialUpdateMotor(post)
 

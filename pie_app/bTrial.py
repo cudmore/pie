@@ -437,6 +437,15 @@ class bTrial():
 		# set actual pins
 		self.myPinThread.eventOut('whiteLED', newValue)
 		
+	# davis, this IS ASSUMING FAN IS INDEX 3 !!!!!!!!!!!!!
+	def updateFan(self, configDict):
+		#print('updateFan() configDict:', configDict)
+		fanIdx = 3
+		newValue = configDict['hardware']['eventOut'][fanIdx]['state']
+		self.config['hardware']['eventOut'][fanIdx]['state'] = newValue
+		# set actual pins
+		self.myPinThread.eventOut('fan', newValue)
+		
 	def updateLED(self, configDict, allowAuto=True):
 		
 		now = time.time()
@@ -518,6 +527,19 @@ class bTrial():
 		configpath = os.path.join(mypath, 'config') # *this/config
 		configpath = os.path.join(configpath, thisFile) # *this/config/<thisFile>
 		
+		# davis, always load facotry to compare "versionNumber"
+		factoryFileName = 'config_factory_defaults.json'
+		factoryPath = os.path.join(mypath, 'config') # *this/config
+		factoryPath = os.path.join(factoryPath, factoryFileName) # *this/config/<thisFile>
+		with open(factoryPath) as factoryFile:
+			try:
+				factoryConfig = json.load(factoryFile, object_pairs_hook=OrderedDict)
+			except ValueError as e:
+				logger.error('config.json ValueError: ' + str(e))
+				# if there is an error in loading config file (json is wrong) we REALLY want to exit
+				sys.exit(1)
+			factoryVersion = factoryConfig['versionNumber']
+			
 		if not os.path.isfile(configpath):
 			logger.info('Config file not found: ' + configpath)
 			# switch to config_factory_defaults.json
@@ -533,10 +555,24 @@ class bTrial():
 				logger.error('config.json ValueError: ' + str(e))
 				# if there is an error in loading config file (json is wrong) we REALLY want to exit
 				sys.exit(1)
-			#201812, why was thin in else clause? does else cluase get executed when 'try' suceeds?
+			#201812, why was this in else clause? does else cluase get executed when 'try' suceeds?
 			#else:
 			#logger.debug('loaded config file: ' + thisFile)
 			#logger.debug('calling initGPIO_() to re-initialize the Raspberry GPIO')
+			
+			# davis, check that we got a version in config and that it is always the same as factory default
+			useFactory = False
+			if 'versionNumber' in config:
+				loadedVersion = config['versionNumber']
+				if loadedVersion < factoryVersion:
+					useFactory = True
+			else:
+				# this is original 122018 config file, it did not have a 'versionNumber'
+				useFactory = True
+			if useFactory:
+				logger.warning('user config file version was older than factory config, defaulting to factory config')
+				config = factoryConfig
+					
 			self.config = config
 			if initGPIO:
 				self.initGPIO_()

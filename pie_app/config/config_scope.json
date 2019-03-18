@@ -1,4 +1,5 @@
 {
+    "versionNumber": 1.0,
     "trial": {
         "numberOfRepeats": 1,
         "repeatDuration": 10,
@@ -103,6 +104,22 @@
                 "state": false,
                 "name": "irLED",
                 "pin": 18
+            },
+            {
+                "idx": 3,
+                "enabled": true,
+                "defaultValue": false,
+                "state": false,
+                "name": "fan",
+                "pin": 3
+            },
+            {
+                "idx": 3,
+                "enabled": true,
+                "defaultValue": false,
+                "state": false,
+                "name": "fan",
+                "pin": 3
             }
         ]
     },
