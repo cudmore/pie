@@ -4,10 +4,10 @@
 # Date: 20180603
 # Purpose: Bash script to install uv4l for video streaming
 
-if [ $(id -u) = 0 ]; then
-   echo "Do not run with sudo. Try again without sudo"
-   exit 1
-fi
+#if [ $(id -u) = 0 ]; then
+#   echo "Do not run with sudo. Try again without sudo"
+#   exit 1
+#fi
 
 echo '==='
 echo '=== install-uv4l: Configuring source repositories for uv4l'
