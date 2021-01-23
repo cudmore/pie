@@ -33,7 +33,9 @@ dstfile=$mydir'/'$filename'.mp4'
 
 #
 # check that uv4l is available
-type avconv >/dev/null 2>&1 || { echo >&2 "avconv not installed"; exit 1; }
+# was this before 20210121
+#type avconv >/dev/null 2>&1 || { echo >&2 "avconv not installed"; exit 1; }
+type ffmpeg >/dev/null 2>&1 || { echo >&2 "ffmpeg not installed"; exit 1; }
 
 #
 # make a .lock file
@@ -41,7 +43,9 @@ touch $dstfile.lock
 
 #
 # convert to mp4
-cmd="avconv -loglevel error -framerate $2 -i $1 -vcodec copy $dstfile"
+# was this before 20210121
+#cmd="avconv -loglevel error -framerate $2 -i $1 -vcodec copy $dstfile"
+cmd="ffmpeg -loglevel error -framerate $2 -i $1 -vcodec copy $dstfile"
 echo $cmd
 $cmd
 

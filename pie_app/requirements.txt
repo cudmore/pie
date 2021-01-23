@@ -1,4 +1,6 @@
-RPi.GPIO==0.6.3 # as of Oct 2018, 0.6.4 has bug in 
+# removed for upgrade to Pi 4
+#RPi.GPIO==0.6.3 # as of Oct 2018, 0.6.4 has bug in 
+RPi.GPIO
 picamera
 pyserial
 
